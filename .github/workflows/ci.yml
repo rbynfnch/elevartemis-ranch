@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Lint, types, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          # Build-time placeholders: no page queries the database during build.
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-build-placeholder-publishable-key
+          NEXT_PUBLIC_ADMIN_HOST: admin.localhost:3000
+
+  database:
+    name: Migrations, RLS and pgTAP tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start database (applies migrations + seed)
+        run: supabase db start
+      - name: pgTAP tests (isolation, integrity, pedigree, listings)
+        run: supabase test db
+      - name: Generated types match the schema
+        run: |
+          npm run db:types
+          git diff --exit-code src/lib/database.types.ts || (echo "::error::Run 'npm run db:types' and commit the result" && exit 1)

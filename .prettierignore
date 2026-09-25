@@ -1,0 +1,4 @@
+supabase/.temp
+.next
+node_modules
+package-lock.json

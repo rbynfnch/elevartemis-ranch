@@ -19,9 +19,13 @@
     "provision:ranch": "tsx --env-file=.env.local scripts/provision-ranch.ts",
     "format": "prettier --write .",
     "reset:mfa": "tsx --env-file=.env.local scripts/reset-mfa.ts",
-    "test:e2e:auth": "tsx --env-file=.env.local scripts/e2e-auth.ts"
+    "test:e2e:auth": "tsx --env-file=.env.local scripts/e2e-auth.ts",
+    "test:e2e:animals": "tsx --env-file=.env.local scripts/e2e-animals.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@fontsource-variable/bitter": "^5.3.0",
     "@fontsource-variable/libre-franklin": "^5.3.0",
     "@fontsource-variable/source-sans-3": "^5.3.0",
@@ -30,10 +34,12 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "clsx": "^2.1.1",
+    "exifr": "^7.1.3",
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",
+    "sharp": "^0.35.4",
     "zod": "^4.6.5"
   },
   "devDependencies": {

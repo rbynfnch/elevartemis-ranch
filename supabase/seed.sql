@@ -202,13 +202,18 @@ insert into public.breeding_services (animal_id, ranch_id, status, service_types
    pg_temp.doc('[Breeding terms placeholder — the ranch supplies stud fee, season, shipping details and mare requirements.]'),
    'Ask about breeding');
 
--- ─── Cattle program: Cattle → Herefords → Bulls, Yearlings, Cows, For Sale ─
+-- ─── Menu structure ──────────────────────────────────────────────────────────
+-- Horses: platform categories under a "Quarter Horses & Appaloosas" heading.
+-- Cattle: Cattle → Herefords → Bulls, Yearlings, Cows, For Sale.
 insert into public.ranch_species_settings
   (ranch_id, species, breed_heading, categories, show_retired, show_reference, show_for_sale, show_sold)
 values
+  ('a0000000-0000-4000-8000-000000000001', 'horse', 'Quarter Horses & Appaloosas', null, true, true, true, true),
   ('a0000000-0000-4000-8000-000000000001', 'cattle', 'Herefords',
    '{cattle.bull,cattle.yearling,cattle.cow}', false, false, true, false);
 
+-- Demo weights for the herd bull are placeholders only; the ranch supplies real figures.
+-- (Inserted after the cattle below.)
 -- ─── Cattle ──────────────────────────────────────────────────────────────────
 insert into public.animals (id, ranch_id, species, record_scope, name, sex, breed, is_demo) values
   ('c2000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'pedigree_only',

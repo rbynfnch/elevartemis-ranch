@@ -561,6 +561,76 @@ export type Database = {
           },
         ];
       };
+      cattle_performance: {
+        Row: {
+          adg_lb: number | null;
+          adg_note: string | null;
+          animal_id: string;
+          birth_weight_lb: number | null;
+          epds: NonNullable<Json>;
+          epds_as_of: string | null;
+          epds_source: string | null;
+          ranch_id: string;
+          updated_at: string;
+          weaning_weight_adj_lb: number | null;
+          weaning_weight_lb: number | null;
+          yearling_weight_adj_lb: number | null;
+          yearling_weight_lb: number | null;
+        };
+        Insert: {
+          adg_lb?: number | null;
+          adg_note?: string | null;
+          animal_id: string;
+          birth_weight_lb?: number | null;
+          epds?: NonNullable<Json>;
+          epds_as_of?: string | null;
+          epds_source?: string | null;
+          ranch_id: string;
+          updated_at?: string;
+          weaning_weight_adj_lb?: number | null;
+          weaning_weight_lb?: number | null;
+          yearling_weight_adj_lb?: number | null;
+          yearling_weight_lb?: number | null;
+        };
+        Update: {
+          adg_lb?: number | null;
+          adg_note?: string | null;
+          animal_id?: string;
+          birth_weight_lb?: number | null;
+          epds?: NonNullable<Json>;
+          epds_as_of?: string | null;
+          epds_source?: string | null;
+          ranch_id?: string;
+          updated_at?: string;
+          weaning_weight_adj_lb?: number | null;
+          weaning_weight_lb?: number | null;
+          yearling_weight_adj_lb?: number | null;
+          yearling_weight_lb?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cattle_performance_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "animals";
+            referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "cattle_performance_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_animal_cards";
+            referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "cattle_performance_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
+        ];
+      };
       documents: {
         Row: {
           bytes: number | null;
@@ -1649,6 +1719,8 @@ export type Database = {
           total: number;
         }[];
       };
+      reorder_animal_photos: { Args: { p_animal: string; p_media: string[] }; Returns: undefined };
+      replace_animal_details: { Args: { p_animal: string; p_facts: Json; p_sections: Json }; Returns: undefined };
       resolve_animal_slug: {
         Args: { p_ranch: string; p_slug: string };
         Returns: {

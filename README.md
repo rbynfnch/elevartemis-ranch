@@ -7,8 +7,8 @@ photos, pedigrees, sale listings, homepage slides, updates and FAQs.
 One codebase and one database serve every ranch. Each ranch is isolated by
 Row-Level Security in Postgres and served on its own domain.
 
-**Status:** Phases 2–4 complete (scaffold, design system, database, security,
-sign-in with two-step verification, admin shell). See [docs/decisions.md](docs/decisions.md) for the architecture and
+**Status:** Phases 2–5 complete (scaffold, design system, database, security,
+sign-in with two-step verification, admin shell, animal management and photos). See [docs/decisions.md](docs/decisions.md) for the architecture and
 [Roadmap](#roadmap) for what comes next.
 
 ---
@@ -93,7 +93,9 @@ ranch), password `ranch-demo-2026`. Each works only on its own ranch's
 ```bash
 npm run check        # lint + typecheck + unit tests
 npm run test:db      # pgTAP: isolation, integrity, pedigree, listings, 2FA, breeding (needs supabase start)
-npm run test:e2e:auth  # real sign-in, two-step codes, cross-ranch checks (needs supabase start + running app)
+npm run test:e2e:auth     # real sign-in, two-step codes, cross-ranch checks
+npm run test:e2e:animals  # add/edit/sale/sold/breeding/performance/delete as a real owner
+                          # (both need `supabase start` + the app running; never production)
 npm run build
 npm run db:types     # regenerate src/lib/database.types.ts after changing migrations
 npm run db:reset     # rebuild the local database from migrations + seed
@@ -101,6 +103,15 @@ npm run db:reset     # rebuild the local database from migrations + seed
 
 CI (`.github/workflows/ci.yml`) runs all of the above on every pull request,
 and fails if generated types are out of date.
+
+## Photos: manual check
+
+Photo uploads use Supabase Storage, which the automated suites don't cover.
+After `supabase start` and `npm run dev`, open an animal in the admin and:
+upload several photos (including a large phone photo and a portrait one),
+drag to reorder, make one the main photo, adjust its focal point and check
+the three crop previews, replace one, and remove one. The files appear in
+Supabase Studio (http://127.0.0.1:54323) under Storage → `ranch-media`.
 
 ## Adding a ranch client
 
@@ -168,8 +179,8 @@ Later phases add Resend, Turnstile and Upstash keys (see `.env.example`).
 | 2 | Project structure, design system | ✅ |
 | 3 | Database, RLS, integrity rules, tests | ✅ |
 | 4 | Authentication, two-step verification, admin shell | ✅ |
-| 5 | Animal management, photo pipeline | Next |
-| 6 | Pedigree and offspring (admin builder + public tree) | |
+| 5 | Animal management, photo pipeline | ✅ |
+| 6 | Pedigree and offspring (admin builder + public tree) | Next |
 | 7 | Public website pages, SEO foundation | |
 | 8 | Homepage hero system | |
 | 9 | Happening on the Ranch | |

@@ -7,10 +7,6 @@ import { notFound } from "next/navigation";
  * precedence over this dynamic one).
  */
 const sections: Record<string, { title: string; description: string }> = {
-  animals: {
-    title: "Animals",
-    description: "Add and edit your horses and cattle, their photos, pedigrees and sale details.",
-  },
   homepage: {
     title: "Homepage",
     description: "Choose up to three large photos for the top of your homepage, with a headline and button.",
@@ -26,10 +22,6 @@ const sections: Record<string, { title: string; description: string }> = {
   "ranch-info": {
     title: "Ranch Info",
     description: "Your phone number, location, where messages go, and social media links.",
-  },
-  "recently-deleted": {
-    title: "Recently Deleted",
-    description: "Animals you've deleted wait here, so you can restore them or remove them for good.",
   },
 };
 

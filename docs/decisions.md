@@ -98,6 +98,51 @@ placeholders for the ranch to write; the EPD answer includes a general,
 factual explanation of what EPDs are. Empty groups and unanswered questions
 never render; a single group shows no heading.
 
+## Animal management (Phase 5)
+
+- **Admin:** Animals list (species tabs, filters: Hidden, For sale, No photo,
+  Sample; name search), Add Animal, a sectioned editor (Photos, Basics, On the
+  website, For Sale, Breeding Services for males, Performance for cattle,
+  Facts and stories), and Recently Deleted (restore; delete forever by typing
+  the name). Each section saves on its own.
+- **New animals start hidden** so owners can add photos before publishing.
+- **Categories offered** follow the ranch's settings (e.g. Bulls, Yearlings,
+  Cows); sex options follow the category.
+- **Dates** are entered at the precision known (year, month, or day).
+- **Rich text** is typed as plain paragraphs for now and stored as structured
+  rich text; a formatting editor arrives with the post editor (Phase 9).
+- **Code shape:** `lib/admin/animals/schemas.ts` (form → validated input) →
+  `service.ts` (plain functions over the owner's Supabase client, RLS applies)
+  → `actions.ts` (Server Actions: ranch from the request's domain, never from
+  the browser; public cache expired with `updateTag`). The e2e suite calls
+  the same service functions.
+- **Updates must change a row.** A Supabase UPDATE matching no rows isn't an
+  error, so owner-triggered updates require a returned row; otherwise the
+  owner sees "could not be found", never a false "Saved".
+- **Facts/sections and photo order** save through database functions in one
+  transaction (`replace_animal_details`, `reorder_animal_photos`), so a
+  failed save never loses data.
+
+### Photos
+
+Browser: read the "taken on" date (EXIF), correct rotation, shrink to at most
+3000 px (fast on rural connections), upload straight to Storage with a
+one-time signed URL (no size limits from the app server). Server
+(`lib/media/process.ts`, sharp): WebP at 320/640/960/1280/1920/2560 px
+(never upscaled), a tiny blur placeholder, metadata (including GPS) stripped.
+Photos are processed one at a time with progress shown. Owners reorder by
+drag (mouse, touch or keyboard), set the main photo, replace, remove, and
+pick the focal point with live previews of wide, card and phone crops.
+Removing a photo deletes the files only when nothing else uses them.
+
+### Cattle performance
+
+`cattle_performance` (one optional row per head): birth weight, actual and
+adjusted 205-day weaning weight, actual and adjusted 365-day yearling weight,
+average daily gain (+ how measured), and EPDs as a dated snapshot (trait,
+value, optional accuracy and percentile; common traits suggested, any trait
+allowed). Implausible weights are rejected (e.g. a 780 lb birth weight).
+
 ## Breeding Services
 
 `breeding_services` is a 1:1 optional row per breeding male (stallion or AI
@@ -169,6 +214,8 @@ Navigation is built from `public_nav_counts()`: empty buckets don't appear.
 | RA012 | Breeding services on something other than a stallion/bull |
 | RA013 | Category not offered by this ranch (or settings conflict) |
 | RA014 | Unknown time zone |
+| RA015 | Performance records on a non-cattle animal |
+| RA016 | Animal not found (or not yours) in an admin function |
 
 Messages are written for owners and raised by the database, so every client
 gets the same rules.
@@ -226,6 +273,15 @@ sign-in redirect, dashboard with real data, cross-ranch admin blocked both
 ways with no data leaked, TOTP enrolment with genuine codes, password-only
 sessions blocked at the database once 2FA is on, wrong/right codes, lost-phone
 reset, and ranch-required 2FA.
+
+Phase 5: 150 pgTAP assertions, 84 unit tests (including image processing:
+sizes, WebP, rotation, EXIF date, metadata stripping), and
+`scripts/e2e-animals.ts` 27/27 against real Supabase Auth + PostgREST + the
+production build (add, category and sex rules, edit, For Sale → Sold,
+atomic facts, breeding rules, performance, keep-as-foal, admin pages,
+Recently Deleted round trip, cross-ranch tampering reported as failure).
+The e2e run caught a false "Saved" on a cross-ranch edit, fixed before
+commit. Photo storage (upload/download) is verified manually (see README).
 
 ### Phases 2–3
 

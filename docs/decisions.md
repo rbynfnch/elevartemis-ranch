@@ -2,30 +2,59 @@
 
 Decisions confirmed in Phase 1 (defaults accepted) and made during Phases 2–3.
 
-## Confirmed defaults
+## Confirmed decisions (Phase 1, question J)
 
-- **Admin location:** central admin host (e.g. `manage.elevartemis.com`);
-  `ranch.com/admin` redirects there.
-- **Species:** horses and cattle both enabled for the first ranch; each ranch
-  enables its own set (`ranches.enabled_species`).
-- **Pedigree depth:** 3 generations back by default (`get_pedigree(id, 3)`,
-  capped at 5). Unknown ancestors are omitted, never shown as blank boxes.
-- **Foal → Young Horse:** manual. The admin dashboard will nudge when a foal is
-  over a year old.
-- **Deceased:** a program status. Hidden from list pages; the portfolio stays
-  reachable through pedigree and offspring links.
-- **Sold prices:** not shown. `show_on_sold_page` lets the owner hide a sale.
-- **Gallery:** owner-uploaded ranch photos plus animal photos toggled in
-  (`media.in_gallery`).
-- **About page:** the owner edits text and photos inside fixed, designed
-  sections (`pages.sections`); Elevartemis owns the layout.
-- **Inquiries:** nothing stored. On send failure the visitor sees an error and
-  the ranch phone number.
-- **Stallion services:** a "Standing at stud" flag (`breeding_available`) plus
-  Quick Facts for terms. A dedicated page can come later behind a feature flag.
-- **Extras adopted:** video links, registered vs barn name, heifer and steer
-  categories, posts linked to animals. (Embryo-transfer recipient dam is not
-  yet modelled; it would be a nullable `recipient_dam_id`.)
+1. **Admin on each ranch's own domain:** `ranch.com/admin`. The ranch is
+   determined by the domain; an owner's account only opens their ranch's admin.
+   Staff with several memberships sign in on each ranch's site.
+2. **Species per ranch:** `ranches.enabled_species`. The first ranch raises
+   Quarter Horses and Herefords; other ranches may have one species.
+3. **Pedigree depth:** 3 generations back (sire/dam, grandparents,
+   great-grandparents; 14 ancestors), the standard horse pedigree.
+   `get_pedigree(id, 3)`, capped at 5. Unknown ancestors are omitted.
+4. **Reclassification is the ranch's call.** The dashboard *suggests* moving a
+   foal/calf over a year old; "keep as is" sets `category_confirmed_at` and
+   silences it. Changing the category resets the confirmation.
+5. **In Memory:** deceased animals (`program_status = 'deceased'`, optional
+   `deceased_on`) get an In Memory page under About (`/about/in-memory`),
+   listed like Mares or Foals. The About menu item gains an "Our Story / In
+   Memory" dropdown only when there's someone to remember.
+6. **Sold prices** are not shown; `show_on_sold_page` lets the owner hide a sale.
+7. **Gallery:** owner-uploaded ranch photos plus animal photos toggled in.
+8. **About page:** owner edits text and photos inside fixed, designed sections.
+9. **Inquiry logging:** under discussion; see the Phase 4 notes. Default until
+   decided: nothing stored.
+10. **Breeding Services** on stallion portfolios (below).
+11. **Two-step verification:** offered to every owner; optional by default;
+    Elevartemis can require it per ranch (`features.require_mfa`). Enforced
+    in the database, not just the app.
+12. **Extras adopted:** video links, registered vs barn name, heifer and steer
+    categories, posts linked to animals.
+
+### Audience (first ranch)
+
+Horses: barrel racers, ropers, breeders. Cattle (Herefords): breeders seeking
+top-quality, high-producing cattle. The ranch breeds by AI. This guides
+copy, SEO, suggested Quick Facts (performance record, earnings, EPDs) and the
+service types offered (fresh, cooled, frozen).
+
+## Breeding Services
+
+`breeding_services` is a 1:1 optional row per breeding male (stallion or AI
+bull), shown when `animals.breeding_available` is on. Every field is optional:
+status (Available / Private Treaty / Retired from Breeding), stud, booking and
+collection fees (stored in cents), season, service types (Live Cover, Fresh,
+Cooled, Frozen, Other + description), shipping, mare requirements, live foal
+guarantee (+ terms), contract (uploaded PDF in `documents` or a link),
+additional terms, and a booking button (label + optional external URL; by
+default it opens the animal's inquiry form).
+
+`lib/animals/breeding.ts` turns a row into only the populated lines, with
+species wording ("Standing at Stud" / "Live foal guarantee" for horses;
+"Available for Breeding" / "Live calf guarantee" for cattle). With nothing
+filled in, the portfolio shows just the badge and the button: no empty
+heading. The `public_breeding_services` view is ready for a future Stallion
+Services page without re-entering data.
 
 ## Data model principles
 
@@ -77,6 +106,7 @@ Navigation is built from `public_nav_counts()`: empty buckets don't appear.
 | RA009 | Species change contradicts relatives |
 | RA010 | Main photo isn't one of the animal's photos |
 | RA011 | More than 3 active homepage slides |
+| RA012 | Breeding services on something other than a stallion/bull |
 
 Messages are written for owners and raised by the database, so every client
 gets the same rules.
@@ -85,13 +115,32 @@ gets the same rules.
 
 `src/proxy.ts` resolves the Host header (cached in memory for 60 s):
 
-- admin host → `/manage/…` (session refreshed)
-- ranch domain `/admin…` → redirect to the admin host
 - non-primary domain (e.g. `www.`) → 308 to the primary
-- ranch domain → rewrite to `/site/{slug}/…`
+- ranch domain `/admin…` → rewrite to `/admin/{slug}/…`; session refreshed;
+  signed-out visitors redirected to `/admin/login?next=…`; responses are
+  `private, no-store` and `noindex`
+- ranch domain, anything else → rewrite to `/site/{slug}/…`
 - unknown host → 404; `localhost`, `*.localhost` and `*.vercel.app` fall back
   to `DEFAULT_RANCH_SLUG` outside production
 - database unreachable → 503 with Retry-After (cached hosts keep working)
+
+## Authentication
+
+- Supabase Auth, invite-only. Passwords: 10+ characters with letters and digits.
+- Sign-in, code entry and password-reset requests run in the browser so
+  Supabase's per-IP rate limits apply to the owner, not to our server.
+- Email links land on `/admin/auth/confirm`, which uses the one-time token only
+  when the owner clicks Continue (a POST). Email security scanners follow links
+  with GET and would otherwise burn the token.
+- Every admin page calls `getAdminContext(slug)`: `getUser()` (validated with
+  Supabase), AAL check, membership in *this* ranch, and the ranch's two-step
+  requirement. The database re-enforces all of it.
+- Two-step verification: TOTP authenticator apps; owners can add a backup
+  authenticator. Restrictive RLS policies require an `aal2` session for anyone
+  with an authenticator, and for everyone on a ranch that requires it, so a
+  stolen password can't bypass the code screen by calling the API directly.
+- Recovery codes exist in Supabase's SDK but are marked experimental. Adopt
+  them once stable; lost phones meanwhile go through `npm run reset:mfa`.
 
 ## Caching
 
@@ -106,7 +155,17 @@ requests). Presets: `heritage` (Libre Caslon Display/Text + Libre Franklin) and
 `prairie` (Bitter + Source Sans 3). A preset is one CSS block in
 `globals.css` plus one entry in `lib/brand/tokens.ts`.
 
-## Verification performed (Phases 2–3)
+## Verification performed (Phases 2–4)
+
+Phase 4: 120 pgTAP assertions; 47 unit tests; and `scripts/e2e-auth.ts`
+passed 23/23 against the real Supabase Auth server (v2.197.0) plus PostgREST
+and the production build: invite-only sign-up, wrong password, same-domain
+sign-in redirect, dashboard with real data, cross-ranch admin blocked both
+ways with no data leaked, TOTP enrolment with genuine codes, password-only
+sessions blocked at the database once 2FA is on, wrong/right codes, lost-phone
+reset, and ranch-required 2FA.
+
+### Phases 2–3
 
 - 92 pgTAP assertions pass on Postgres 16 with a Supabase auth/storage
   stand-in (sandbox had no Docker). Please confirm with `npm run test:db` on

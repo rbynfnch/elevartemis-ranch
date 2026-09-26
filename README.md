@@ -7,8 +7,8 @@ photos, pedigrees, sale listings, homepage slides, updates and FAQs.
 One codebase and one database serve every ranch. Each ranch is isolated by
 Row-Level Security in Postgres and served on its own domain.
 
-**Status:** Phases 2–3 complete (scaffold, design system, database, security,
-tests). See [docs/decisions.md](docs/decisions.md) for the architecture and
+**Status:** Phases 2–4 complete (scaffold, design system, database, security,
+sign-in with two-step verification, admin shell). See [docs/decisions.md](docs/decisions.md) for the architecture and
 [Roadmap](#roadmap) for what comes next.
 
 ---
@@ -28,12 +28,17 @@ tests). See [docs/decisions.md](docs/decisions.md) for the architecture and
 
 ```
 src/
-  proxy.ts                  Host → ranch routing (admin host, ranch domains, redirects)
+  proxy.ts                  Host → ranch routing (public site and /admin on every ranch domain)
   app/
-    site/[ranch]/…          Public ranch website (reached via rewrite, never directly)
-    manage/…                Ranch admin (reached via the admin host)
+    site/[ranch]/…          Public ranch website    (ranch.com/…)
+    admin/[ranch]/…         Ranch admin             (ranch.com/admin/…)
+      (auth)/               Sign in, code entry, password reset, email-link landing
+      (admin)/              Dashboard, account & two-step verification, sections
   components/               brand/, ui/, site/, animals/
   lib/
+    admin/dashboard.ts      "Needs attention" rules (pure, tested)
+    animals/breeding.ts     Breeding Services display rules (only populated fields)
+    auth/                   Admin context, actions, password rules, plain-language errors
     brand/tokens.ts         Palette, font presets, WCAG contrast checks
     cache/tags.ts           Cache tags expired by admin saves
     content/                "Never show empty information" helpers, safe rich text
@@ -47,6 +52,8 @@ supabase/
   seed.sql                  Local demo data (two ranches) — never run in production
   tests/database/           pgTAP suites
 scripts/provision-ranch.ts  Create a new ranch client (Elevartemis staff)
+scripts/reset-mfa.ts        Remove an owner's authenticators after a lost phone (staff)
+scripts/e2e-auth.ts         End-to-end sign-in / two-step / isolation checks
 docs/decisions.md           Architecture decisions, listing rules, error codes
 ```
 
@@ -68,22 +75,25 @@ Then open:
 |---|---|
 | http://demo.localhost:3000 | Demo ranch ("Cottonwood Creek Ranch" — placeholder name) |
 | http://demo.localhost:3000/design-system | Temporary brand review page (draft ranches only) |
+| http://demo.localhost:3000/admin | Demo ranch admin |
 | http://second.localhost:3000 | Second test ranch (exists to prove isolation) |
 | http://localhost:3000 | Falls back to `DEFAULT_RANCH_SLUG` |
-| http://admin.localhost:3000 | Ranch admin (sign-in arrives in Phase 4) |
 
 Chrome, Edge and Firefox resolve `*.localhost` automatically. If Safari
-doesn't, add `127.0.0.1 demo.localhost second.localhost admin.localhost` to
-`/etc/hosts`.
+doesn't, add `127.0.0.1 demo.localhost second.localhost` to
+`/etc/hosts`. Sent emails (invitations, password resets) appear in the local
+mail viewer at http://127.0.0.1:54324.
 
-Local logins (seed data; the admin UI arrives in Phase 4):
-`owner@demo.test` and `owner@second.test`, password `ranch-demo-2026`.
+Local logins: `owner@demo.test` (demo ranch) and `owner@second.test` (second
+ranch), password `ranch-demo-2026`. Each works only on its own ranch's
+`/admin`.
 
 ## Checks
 
 ```bash
 npm run check        # lint + typecheck + unit tests
-npm run test:db      # pgTAP: isolation, integrity, pedigree, listing rules (needs supabase start)
+npm run test:db      # pgTAP: isolation, integrity, pedigree, listings, 2FA, breeding (needs supabase start)
+npm run test:e2e:auth  # real sign-in, two-step codes, cross-ranch checks (needs supabase start + running app)
 npm run build
 npm run db:types     # regenerate src/lib/database.types.ts after changing migrations
 npm run db:reset     # rebuild the local database from migrations + seed
@@ -103,9 +113,17 @@ npm run provision:ranch -- \
 ```
 
 This creates the ranch (in `draft`, with `noindex`), its domains (first is
-primary; the rest redirect), branding basics and the owner's invitation. Then
-add the domains to the Vercel project, and at launch set `ranches.status =
-'live'` and `ranch_seo.noindex = false`.
+primary; the rest redirect), branding basics and the owner's invitation (the
+link opens `https://<primary domain>/admin`). The script prints the remaining
+manual steps: add `https://<domain>/admin/**` to Supabase Auth → Redirect URLs,
+and add the domains to Vercel. At launch set `ranches.status = 'live'` and
+`ranch_seo.noindex = false`.
+
+To require two-step verification for a ranch:
+`update ranches set features = features || '{"require_mfa": true}' where slug = '…';`
+
+Lost phone: after confirming the owner's identity by phone,
+`npm run reset:mfa -- --email owner@example.com`.
 
 ## Environment variables
 
@@ -114,7 +132,6 @@ add the domains to the Vercel project, and at launch set `ranches.status =
 | `NEXT_PUBLIC_SUPABASE_URL` | all | Supabase API URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | all | Public key; access is enforced by RLS |
 | `SUPABASE_SECRET_KEY` | server only | Bypasses RLS — contact handler, image processing, scripts |
-| `NEXT_PUBLIC_ADMIN_HOST` | all | Host serving the admin, e.g. `manage.elevartemis.com` |
 | `DEFAULT_RANCH_SLUG` | dev/preview | Ranch shown on localhost and `*.vercel.app` previews |
 | `APP_ENV` | optional | Force `development`/`preview`/`production` |
 
@@ -125,11 +142,14 @@ Later phases add Resend, Turnstile and Upstash keys (see `.env.example`).
 1. Create Supabase projects for **staging** and **production** (Pro plan for
    production: free projects pause when idle). Link with `npx supabase link`
    and apply migrations with `npx supabase db push`. Never run `seed.sql` there.
-2. In Supabase Auth: disable sign-ups, set the Site URL to the admin host, and
-   add `https://<admin-host>/**` to redirect URLs.
+2. In Supabase Auth: disable sign-ups; set the password policy to 10+
+   characters with letters and digits; enable TOTP under Multi-Factor; add each
+   ranch's `https://<domain>/admin/**` to Redirect URLs; and paste
+   `supabase/templates/invite.html` and `recovery.html` into the Invite and
+   Reset Password email templates. Configure custom SMTP (e.g. Resend) so
+   emails don't hit Supabase's low default sending limit.
 3. Create one Vercel project from this repo. Production uses the production
-   Supabase project; Preview uses staging. Add every ranch domain and the admin
-   host to the project.
+   Supabase project; Preview uses staging. Add every ranch domain to the project.
 4. Merges to `main` deploy to production; pull requests get preview URLs.
 
 ## Roadmap
@@ -139,8 +159,8 @@ Later phases add Resend, Turnstile and Upstash keys (see `.env.example`).
 | 1 | Architecture | ✅ |
 | 2 | Project structure, design system | ✅ |
 | 3 | Database, RLS, integrity rules, tests | ✅ |
-| 4 | Authentication and admin shell | Next |
-| 5 | Animal management, photo pipeline | |
+| 4 | Authentication, two-step verification, admin shell | ✅ |
+| 5 | Animal management, photo pipeline | Next |
 | 6 | Pedigree and offspring (admin builder + public tree) | |
 | 7 | Public website pages, SEO foundation | |
 | 8 | Homepage hero system | |

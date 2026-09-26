@@ -171,7 +171,14 @@ values
   ('c1000000-0000-4000-8000-000000000022', 'a0000000-0000-4000-8000-000000000001', 'horse', 'horse.mare',
    'Unpublished Example', 'female', null, null, null, 'day', null, null, 'active', false, null, null, true),
   ('c1000000-0000-4000-8000-000000000023', 'a0000000-0000-4000-8000-000000000001', 'horse', 'horse.gelding',
-   'Archived Example', 'gelding', null, null, null, 'day', null, null, 'active', true, now(), null, true);
+   'Archived Example', 'gelding', null, null, null, 'day', null, null, 'active', true, now(), null, true),
+  -- In Memory example (dam of Prairie Song's line is outside; this mare is the ranch's own)
+  ('c1000000-0000-4000-8000-000000000024', 'a0000000-0000-4000-8000-000000000001', 'horse', 'horse.mare',
+   'Mesa Belle', 'female', 'Quarter Horse', 'Grulla', '1998-01-01', 'year', null, null, 'deceased', true, null,
+   pg_temp.doc('[In Memory placeholder — the ranch''s own words about this mare.]'), true);
+
+update public.animals set deceased_on = '2024-01-01', deceased_precision = 'year'
+where id = 'c1000000-0000-4000-8000-000000000024';
 
 insert into public.animal_facts (ranch_id, animal_id, label, value, sort_order) values
   ('a0000000-0000-4000-8000-000000000001', 'c1000000-0000-4000-8000-000000000012', 'Height',        '[e.g. 15.1 hh]', 1),
@@ -188,39 +195,49 @@ insert into public.sale_listings (animal_id, ranch_id, status, price_mode, locat
 insert into public.sale_listings (animal_id, ranch_id, status, price_mode, sold_on) values
   ('c1000000-0000-4000-8000-000000000021', 'a0000000-0000-4000-8000-000000000001', 'sold', 'hidden', '2026-06-15');
 
+-- ─── Breeding services (placeholders: the ranch supplies fees, season, terms) ─
+insert into public.breeding_services (animal_id, ranch_id, status, service_types, additional_terms, cta_label) values
+  ('c1000000-0000-4000-8000-000000000012', 'a0000000-0000-4000-8000-000000000001', 'available', '{cooled,frozen}',
+   pg_temp.doc('[Breeding terms placeholder — the ranch supplies stud fee, season, shipping details and mare requirements.]'),
+   'Ask about breeding');
+
 -- ─── Cattle ──────────────────────────────────────────────────────────────────
 insert into public.animals (id, ranch_id, species, record_scope, name, sex, breed, is_demo) values
   ('c2000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'pedigree_only',
-   'Highland Summit', 'male', 'Angus', true);
+   'Highland Summit', 'male', 'Hereford', true);
 
 insert into public.animals (id, ranch_id, species, category_id, name, sex, breed, birth_date, birth_precision,
   sire_id, dam_id, is_featured, species_attrs, is_published, is_demo)
 values
   ('c2000000-0000-4000-8000-000000000010', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.bull',
-   'CCR Anchor 401', 'male', 'Angus', '2021-01-01', 'year', 'c2000000-0000-4000-8000-000000000001', null,
+   'CCR Anchor 401', 'male', 'Hereford', '2021-01-01', 'year', 'c2000000-0000-4000-8000-000000000001', null,
    true, '{"ear_tag": "401"}', true, true),
   ('c2000000-0000-4000-8000-000000000011', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.cow',
-   'CCR Blackbird 118', 'female', 'Angus', '2018-01-01', 'year', null, null, false, '{"ear_tag": "118"}', true, true),
+   'CCR Blackbird 118', 'female', 'Hereford', '2018-01-01', 'year', null, null, false, '{"ear_tag": "118"}', true, true),
   ('c2000000-0000-4000-8000-000000000012', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.cow',
-   'CCR Maybelle 207', 'female', 'Angus', '2019-01-01', 'year', null, null, false, '{"ear_tag": "207"}', true, true),
+   'CCR Maybelle 207', 'female', 'Hereford', '2019-01-01', 'year', null, null, false, '{"ear_tag": "207"}', true, true),
   ('c2000000-0000-4000-8000-000000000017', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.bull',
-   'CCR Ridge 309', 'male', 'Angus', '2020-01-01', 'year', null, null, false, '{}', true, true);
+   'CCR Ridge 309', 'male', 'Hereford', '2020-01-01', 'year', null, null, false, '{}', true, true);
 
 insert into public.animals (id, ranch_id, species, category_id, name, sex, breed, birth_date, birth_precision,
   sire_id, dam_id, species_attrs, is_published, is_demo)
 values
   ('c2000000-0000-4000-8000-000000000013', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.bull',
-   'CCR Summit 512', 'male', 'Angus', '2023-01-01', 'year',
+   'CCR Summit 512', 'male', 'Hereford', '2023-01-01', 'year',
    'c2000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000012', '{"ear_tag": "512"}', true, true),
   ('c2000000-0000-4000-8000-000000000014', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.calf',
-   'CCR Anchor 614', 'male', 'Angus', '2026-03-10', 'day',
+   'CCR Anchor 614', 'male', 'Hereford', '2026-03-10', 'day',
    'c2000000-0000-4000-8000-000000000010', 'c2000000-0000-4000-8000-000000000011', '{"ear_tag": "614"}', true, true),
   ('c2000000-0000-4000-8000-000000000015', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.calf',
-   'CCR Maybelle 622', 'female', 'Angus', '2026-03-22', 'day',
+   'CCR Maybelle 622', 'female', 'Hereford', '2026-03-22', 'day',
    'c2000000-0000-4000-8000-000000000010', 'c2000000-0000-4000-8000-000000000012', '{"ear_tag": "622"}', true, true),
   ('c2000000-0000-4000-8000-000000000016', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.heifer',
-   'CCR Blackbird 530', 'female', 'Angus', '2025-01-01', 'year',
+   'CCR Blackbird 530', 'female', 'Hereford', '2025-01-01', 'year',
    'c2000000-0000-4000-8000-000000000010', 'c2000000-0000-4000-8000-000000000011', '{"ear_tag": "530"}', true, true);
+
+update public.animals set breeding_available = true where id = 'c2000000-0000-4000-8000-000000000010';
+insert into public.breeding_services (animal_id, ranch_id, status, service_types) values
+  ('c2000000-0000-4000-8000-000000000010', 'a0000000-0000-4000-8000-000000000001', 'available', '{frozen}');
 
 insert into public.sale_listings (animal_id, ranch_id, status, price_mode) values
   ('c2000000-0000-4000-8000-000000000013', 'a0000000-0000-4000-8000-000000000001', 'available', 'contact');

@@ -79,6 +79,13 @@ export type Database = {
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
           },
+          {
+            foreignKeyName: "animal_facts_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
         ];
       };
       animal_media: {
@@ -117,6 +124,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "animal_media_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
           },
           {
             foreignKeyName: "animal_media_ranch_id_media_id_fkey";
@@ -167,6 +181,13 @@ export type Database = {
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
           },
+          {
+            foreignKeyName: "animal_sections_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
         ];
       };
       animal_slug_history: {
@@ -202,6 +223,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "animal_slug_history_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
           },
         ];
       };
@@ -245,6 +273,13 @@ export type Database = {
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
           },
+          {
+            foreignKeyName: "animal_videos_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
         ];
       };
       animals: {
@@ -255,11 +290,14 @@ export type Database = {
           birth_year: number | null;
           breed: string | null;
           breeding_available: boolean;
+          category_confirmed_at: string | null;
           category_id: string | null;
           color: string | null;
           created_at: string;
           created_by: string | null;
           dam_id: string | null;
+          deceased_on: string | null;
+          deceased_precision: Database["public"]["Enums"]["birth_precision"];
           description: Json | null;
           display_order: number;
           id: string;
@@ -289,11 +327,14 @@ export type Database = {
           birth_year?: never;
           breed?: string | null;
           breeding_available?: boolean;
+          category_confirmed_at?: string | null;
           category_id?: string | null;
           color?: string | null;
           created_at?: string;
           created_by?: string | null;
           dam_id?: string | null;
+          deceased_on?: string | null;
+          deceased_precision?: Database["public"]["Enums"]["birth_precision"];
           description?: Json | null;
           display_order?: number;
           id?: string;
@@ -323,11 +364,14 @@ export type Database = {
           birth_year?: never;
           breed?: string | null;
           breeding_available?: boolean;
+          category_confirmed_at?: string | null;
           category_id?: string | null;
           color?: string | null;
           created_at?: string;
           created_by?: string | null;
           dam_id?: string | null;
+          deceased_on?: string | null;
+          deceased_precision?: Database["public"]["Enums"]["birth_precision"];
           description?: Json | null;
           display_order?: number;
           id?: string;
@@ -373,6 +417,13 @@ export type Database = {
             referencedColumns: ["ranch_id", "id"];
           },
           {
+            foreignKeyName: "animals_ranch_id_dam_id_fkey";
+            columns: ["ranch_id", "dam_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
+          {
             foreignKeyName: "animals_ranch_id_fkey";
             columns: ["ranch_id"];
             isOneToOne: false;
@@ -399,6 +450,158 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "animals_ranch_id_sire_id_fkey";
+            columns: ["ranch_id", "sire_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
+        ];
+      };
+      breeding_services: {
+        Row: {
+          additional_terms: Json | null;
+          animal_id: string;
+          booking_fee_cents: number | null;
+          breeding_season: string | null;
+          collection_fee_cents: number | null;
+          contract_document_id: string | null;
+          contract_url: string | null;
+          created_at: string;
+          cta_label: string | null;
+          cta_url: string | null;
+          currency: string;
+          female_requirements: Json | null;
+          live_offspring_guarantee: boolean | null;
+          live_offspring_guarantee_terms: string | null;
+          ranch_id: string;
+          service_type_other: string | null;
+          service_types: string[];
+          shipping_info: Json | null;
+          status: Database["public"]["Enums"]["breeding_status"];
+          stud_fee_cents: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          additional_terms?: Json | null;
+          animal_id: string;
+          booking_fee_cents?: number | null;
+          breeding_season?: string | null;
+          collection_fee_cents?: number | null;
+          contract_document_id?: string | null;
+          contract_url?: string | null;
+          created_at?: string;
+          cta_label?: string | null;
+          cta_url?: string | null;
+          currency?: string;
+          female_requirements?: Json | null;
+          live_offspring_guarantee?: boolean | null;
+          live_offspring_guarantee_terms?: string | null;
+          ranch_id: string;
+          service_type_other?: string | null;
+          service_types?: string[];
+          shipping_info?: Json | null;
+          status?: Database["public"]["Enums"]["breeding_status"];
+          stud_fee_cents?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          additional_terms?: Json | null;
+          animal_id?: string;
+          booking_fee_cents?: number | null;
+          breeding_season?: string | null;
+          collection_fee_cents?: number | null;
+          contract_document_id?: string | null;
+          contract_url?: string | null;
+          created_at?: string;
+          cta_label?: string | null;
+          cta_url?: string | null;
+          currency?: string;
+          female_requirements?: Json | null;
+          live_offspring_guarantee?: boolean | null;
+          live_offspring_guarantee_terms?: string | null;
+          ranch_id?: string;
+          service_type_other?: string | null;
+          service_types?: string[];
+          shipping_info?: Json | null;
+          status?: Database["public"]["Enums"]["breeding_status"];
+          stud_fee_cents?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "breeding_services_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "animals";
+            referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "breeding_services_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_animal_cards";
+            referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "breeding_services_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
+          {
+            foreignKeyName: "breeding_services_ranch_id_contract_document_id_fkey";
+            columns: ["ranch_id", "contract_document_id"];
+            isOneToOne: false;
+            referencedRelation: "documents";
+            referencedColumns: ["ranch_id", "id"];
+          },
+        ];
+      };
+      documents: {
+        Row: {
+          bytes: number | null;
+          created_at: string;
+          created_by: string | null;
+          file_name: string;
+          id: string;
+          mime_type: string;
+          ranch_id: string;
+          storage_path: string;
+          title: string | null;
+        };
+        Insert: {
+          bytes?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          file_name: string;
+          id?: string;
+          mime_type?: string;
+          ranch_id: string;
+          storage_path: string;
+          title?: string | null;
+        };
+        Update: {
+          bytes?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          file_name?: string;
+          id?: string;
+          mime_type?: string;
+          ranch_id?: string;
+          storage_path?: string;
+          title?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "documents_ranch_id_fkey";
+            columns: ["ranch_id"];
+            isOneToOne: false;
+            referencedRelation: "ranches";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -528,6 +731,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "hero_slides_ranch_id_cta_animal_id_fkey";
+            columns: ["ranch_id", "cta_animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
           },
           {
             foreignKeyName: "hero_slides_ranch_id_fkey";
@@ -699,6 +909,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
+          },
+          {
+            foreignKeyName: "post_animals_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
           },
           {
             foreignKeyName: "post_animals_ranch_id_post_id_fkey";
@@ -1174,6 +1391,13 @@ export type Database = {
             referencedRelation: "public_animal_cards";
             referencedColumns: ["ranch_id", "id"];
           },
+          {
+            foreignKeyName: "sale_listings_ranch_id_animal_id_fkey";
+            columns: ["ranch_id", "animal_id"];
+            isOneToOne: false;
+            referencedRelation: "public_breeding_services";
+            referencedColumns: ["ranch_id", "animal_id"];
+          },
         ];
       };
       social_links: {
@@ -1223,12 +1447,15 @@ export type Database = {
           birth_year: number | null;
           breed: string | null;
           breeding_available: boolean | null;
+          breeding_status: Database["public"]["Enums"]["breeding_status"] | null;
           category_id: string | null;
           category_key: string | null;
           category_label: string | null;
           category_path: string | null;
           color: string | null;
           currency: string | null;
+          deceased_on: string | null;
+          deceased_precision: Database["public"]["Enums"]["birth_precision"] | null;
           display_order: number | null;
           groups_by_birth_year: boolean | null;
           id: string | null;
@@ -1236,6 +1463,7 @@ export type Database = {
           name: string | null;
           on_category_page: boolean | null;
           on_for_sale_page: boolean | null;
+          on_memorial_page: boolean | null;
           on_reference_page: boolean | null;
           on_retired_page: boolean | null;
           on_sold_page: boolean | null;
@@ -1266,6 +1494,35 @@ export type Database = {
             referencedRelation: "animal_categories";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "animals_ranch_id_fkey";
+            columns: ["ranch_id"];
+            isOneToOne: false;
+            referencedRelation: "ranches";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      public_breeding_services: {
+        Row: {
+          animal_id: string | null;
+          birth_year: number | null;
+          breed: string | null;
+          breeding_season: string | null;
+          currency: string | null;
+          name: string | null;
+          photo_alt: string | null;
+          photo_focal_x: number | null;
+          photo_focal_y: number | null;
+          photo_variants: Json | null;
+          ranch_id: string | null;
+          service_types: string[] | null;
+          slug: string | null;
+          species: Database["public"]["Enums"]["species"] | null;
+          status: Database["public"]["Enums"]["breeding_status"] | null;
+          stud_fee_cents: number | null;
+        };
+        Relationships: [
           {
             foreignKeyName: "animals_ranch_id_fkey";
             columns: ["ranch_id"];
@@ -1321,6 +1578,13 @@ export type Database = {
           species: Database["public"]["Enums"]["species"];
         }[];
       };
+      my_mfa_requirements: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          ranch_id: string;
+          required: boolean;
+        }[];
+      };
       public_nav_counts: {
         Args: { p_ranch: string };
         Returns: {
@@ -1360,6 +1624,7 @@ export type Database = {
     Enums: {
       animal_sex: "male" | "female" | "gelding" | "steer" | "unknown";
       birth_precision: "year" | "month" | "day";
+      breeding_status: "available" | "private_treaty" | "retired";
       cta_kind: "none" | "page" | "category" | "animal" | "external";
       media_status: "processing" | "ready" | "failed";
       member_role: "owner" | "editor";
@@ -1403,9 +1668,7 @@ export type Tables<
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
@@ -1427,9 +1690,7 @@ export type TablesInsert<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
@@ -1450,9 +1711,7 @@ export type TablesUpdate<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
@@ -1473,9 +1732,7 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
@@ -1489,9 +1746,7 @@ export type CompositeTypes<
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never) = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
@@ -1502,6 +1757,7 @@ export const Constants = {
     Enums: {
       animal_sex: ["male", "female", "gelding", "steer", "unknown"],
       birth_precision: ["year", "month", "day"],
+      breeding_status: ["available", "private_treaty", "retired"],
       cta_kind: ["none", "page", "category", "animal", "external"],
       media_status: ["processing", "ready", "failed"],
       member_role: ["owner", "editor"],

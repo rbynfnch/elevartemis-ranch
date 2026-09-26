@@ -29,7 +29,6 @@ jobs:
           # Build-time placeholders: no page queries the database during build.
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-build-placeholder-publishable-key
-          NEXT_PUBLIC_ADMIN_HOST: admin.localhost:3000
 
   database:
     name: Migrations, RLS and pgTAP tests

@@ -17,7 +17,9 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local --schema public > src/lib/database.types.ts && prettier --write src/lib/database.types.ts",
     "provision:ranch": "tsx --env-file=.env.local scripts/provision-ranch.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "reset:mfa": "tsx --env-file=.env.local scripts/reset-mfa.ts",
+    "test:e2e:auth": "tsx --env-file=.env.local scripts/e2e-auth.ts"
   },
   "dependencies": {
     "@fontsource-variable/bitter": "^5.3.0",

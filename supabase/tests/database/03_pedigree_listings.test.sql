@@ -124,7 +124,7 @@ select is_empty($$ select 1 from public.get_offspring('00000000-0000-4000-8000-0
 
 select results_eq(
   $$ select bucket, total from public.public_nav_counts('00000000-0000-4000-8000-00000000000a') order by bucket $$,
-  $$ values ('foal'::text, 1), ('retired', 1), ('stallion', 1) $$,
+  $$ values ('foal'::text, 1), ('memorial', 1), ('retired', 1), ('stallion', 1) $$,
   'Navigation counts include only non-empty buckets');
 
 reset role;

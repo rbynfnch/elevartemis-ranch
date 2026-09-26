@@ -70,6 +70,18 @@ describe("buildNavigation", () => {
     expect(full.map((i) => i.label)).toEqual(["Home", "About", "Gallery", "What's Happening", "FAQ", "Contact"]);
   });
 
+  it("adds In Memory under About only when there are deceased animals", () => {
+    const without = buildNavigation({ ...base, navCounts: { horse: { stallion: 1 }, cattle: {} } });
+    expect(without.find((i) => i.label === "About")?.children).toBeUndefined();
+    const withMemorial = buildNavigation({ ...base, navCounts: { horse: { memorial: 2 }, cattle: { memorial: 1 } } });
+    expect(withMemorial.find((i) => i.label === "About")?.children).toEqual([
+      { label: "Our Story", href: "/about" },
+      { label: "In Memory", href: "/about/in-memory" },
+    ]);
+    // Memorial animals are not a species category of their own.
+    expect(withMemorial.find((i) => i.label === "Horses")).toBeUndefined();
+  });
+
   it("respects the ranch's enabled species", () => {
     const nav = buildNavigation({ ...base, enabledSpecies: ["horse"], navCounts: { horse: {}, cattle: { calf: 3 } } });
     expect(nav.find((i) => i.label === "Cattle")).toBeUndefined();

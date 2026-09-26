@@ -12,9 +12,19 @@ type NavInput = Pick<SiteSettings, "enabledSpecies" | "navCounts" | "categories"
  * animals disappears entirely; Gallery / updates / FAQ hide when empty.
  */
 export function buildNavigation(site: NavInput): NavItem[] {
+  const memorial = Object.values(site.navCounts).reduce((sum, counts) => sum + (counts?.memorial ?? 0), 0);
   const items: NavItem[] = [
     { label: "Home", href: "/" },
-    { label: "About", href: "/about" },
+    memorial > 0
+      ? {
+          label: "About",
+          href: "/about",
+          children: [
+            { label: "Our Story", href: "/about" },
+            { label: "In Memory", href: "/about/in-memory" },
+          ],
+        }
+      : { label: "About", href: "/about" },
   ];
 
   for (const species of ["horse", "cattle"] as const satisfies readonly Species[]) {

@@ -7,13 +7,14 @@ import { publicEnv } from "@/lib/env";
  * Components see a valid token. `makeResponse` rebuilds the (rewrite)
  * response after cookies change, as @supabase/ssr requires.
  *
- * This is NOT authorization: every admin page and Server Action re-checks the
- * user server-side, and RLS enforces access in the database.
+ * `signedIn` is only used for an optimistic redirect to /login. It is NOT
+ * authorization: every admin page and Server Action re-checks the user with
+ * getUser(), and RLS enforces access in the database.
  */
 export async function refreshAdminSession(
   request: NextRequest,
   makeResponse: () => NextResponse,
-): Promise<NextResponse> {
+): Promise<{ response: NextResponse; signedIn: boolean }> {
   const env = publicEnv();
   let response = makeResponse();
   const supabase = createServerClient(env.supabaseUrl, env.supabasePublishableKey, {
@@ -26,6 +27,6 @@ export async function refreshAdminSession(
       },
     },
   });
-  await supabase.auth.getClaims();
-  return response;
+  const { data } = await supabase.auth.getClaims();
+  return { response, signedIn: Boolean(data?.claims?.sub) };
 }

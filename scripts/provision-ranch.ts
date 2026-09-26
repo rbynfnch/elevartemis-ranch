@@ -28,7 +28,6 @@ const { values } = parseArgs({
     "owner-email": { type: "string" },
     "inquiry-email": { type: "string" },
     "skip-invite": { type: "boolean", default: false },
-    "admin-url": { type: "string" },
   },
 });
 
@@ -57,7 +56,9 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const secret = process.env.SUPABASE_SECRET_KEY;
 if (!url || !secret) fail("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY must be set (see .env.example)");
 
-const adminUrl = values["admin-url"] ?? `https://${process.env.NEXT_PUBLIC_ADMIN_HOST ?? "manage.elevartemis.com"}`;
+const siteOrigin = domains[0] ? `https://${domains[0]}` : null;
+if (values["owner-email"] && !values["skip-invite"] && !siteOrigin)
+  fail("Add at least one --domain so the invitation can link to the ranch's site");
 const db = createClient<Database>(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 
 async function main() {
@@ -105,7 +106,7 @@ async function main() {
     let userId: string | undefined;
     if (!values["skip-invite"]) {
       const { data, error: inviteError } = await db.auth.admin.inviteUserByEmail(ownerEmail, {
-        redirectTo: `${adminUrl}/auth/confirm`,
+        redirectTo: `${siteOrigin}/admin/auth/confirm`,
       });
       if (inviteError && !/already/i.test(inviteError.message)) fail(`Inviting owner failed: ${inviteError.message}`);
       userId = data?.user?.id;
@@ -121,7 +122,13 @@ async function main() {
     console.log(`✔ ${ownerEmail} is the owner of ${name}`);
   }
 
-  console.log(`\nNext: set ranch_seo (description, GA4, Search Console) and switch status to "live" at launch.\n`);
+  console.log(`
+Next steps:
+  • Supabase → Auth → URL Configuration → Redirect URLs: add
+${domains.map((d) => `      https://${d}/admin/**`).join("\n") || "      (add the ranch's domain)"}
+  • Vercel → Project → Domains: add ${domains.join(", ") || "the ranch's domains"}
+  • At launch: set ranch_seo (description, GA4, Search Console), then status = 'live'.
+`);
 }
 
 async function findUserId(email: string): Promise<string | undefined> {

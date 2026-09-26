@@ -23,10 +23,13 @@ export function hostPort(raw: string | null | undefined): string | undefined {
   return match?.[1];
 }
 
-/** "/admin" and "/admin/…" on a ranch domain are shortcuts to the admin host. */
-export function adminShortcutPath(pathname: string): string | null {
-  if (pathname === "/admin" || pathname === "/admin/") return "/";
-  if (pathname.startsWith("/admin/")) return pathname.slice("/admin".length);
+/**
+ * The part of an admin URL after "/admin": "/admin" → "", "/admin/animals" →
+ * "/animals". Returns null for public pages (including "/administration").
+ */
+export function adminSubpath(pathname: string): string | null {
+  if (pathname === "/admin" || pathname === "/admin/") return "";
+  if (pathname.startsWith("/admin/")) return pathname.slice("/admin".length).replace(/\/$/, "");
   return null;
 }
 

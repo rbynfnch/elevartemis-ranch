@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminShortcutPath, hostPort, isFallbackEligibleHost, normalizeHost } from "./host";
+import { adminSubpath, hostPort, isFallbackEligibleHost, normalizeHost } from "./host";
 
 describe("normalizeHost", () => {
   it("lowercases and strips port and trailing dot", () => {
@@ -19,15 +19,16 @@ describe("hostPort", () => {
   });
 });
 
-describe("adminShortcutPath", () => {
-  it("maps /admin paths to the admin host", () => {
-    expect(adminShortcutPath("/admin")).toBe("/");
-    expect(adminShortcutPath("/admin/")).toBe("/");
-    expect(adminShortcutPath("/admin/animals")).toBe("/animals");
+describe("adminSubpath", () => {
+  it("extracts the admin route", () => {
+    expect(adminSubpath("/admin")).toBe("");
+    expect(adminSubpath("/admin/")).toBe("");
+    expect(adminSubpath("/admin/animals")).toBe("/animals");
+    expect(adminSubpath("/admin/login/verify/")).toBe("/login/verify");
   });
-  it("ignores other paths", () => {
-    expect(adminShortcutPath("/administration")).toBeNull();
-    expect(adminShortcutPath("/horses")).toBeNull();
+  it("ignores public paths", () => {
+    expect(adminSubpath("/administration")).toBeNull();
+    expect(adminSubpath("/horses")).toBeNull();
   });
 });
 

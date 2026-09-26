@@ -72,7 +72,7 @@ async function Dashboard({
             Add Animal
           </Link>
           <Link href="/admin/updates/new" className={buttonClasses("secondary")}>
-            New Ranch Update
+            New Post
           </Link>
         </div>
       </header>

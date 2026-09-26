@@ -774,6 +774,7 @@ export type Database = {
           original_path: string | null;
           ranch_id: string;
           status: Database["public"]["Enums"]["media_status"];
+          taken_at: string | null;
           updated_at: string;
           variants: NonNullable<Json>;
           width: number | null;
@@ -796,6 +797,7 @@ export type Database = {
           original_path?: string | null;
           ranch_id: string;
           status?: Database["public"]["Enums"]["media_status"];
+          taken_at?: string | null;
           updated_at?: string;
           variants?: NonNullable<Json>;
           width?: number | null;
@@ -818,6 +820,7 @@ export type Database = {
           original_path?: string | null;
           ranch_id?: string;
           status?: Database["public"]["Enums"]["media_status"];
+          taken_at?: string | null;
           updated_at?: string;
           variants?: NonNullable<Json>;
           width?: number | null;
@@ -1001,6 +1004,7 @@ export type Database = {
           category_id: string | null;
           created_at: string;
           created_by: string | null;
+          date_precision: Database["public"]["Enums"]["birth_precision"];
           excerpt: string | null;
           featured_media_id: string | null;
           id: string;
@@ -1018,6 +1022,7 @@ export type Database = {
           category_id?: string | null;
           created_at?: string;
           created_by?: string | null;
+          date_precision?: Database["public"]["Enums"]["birth_precision"];
           excerpt?: string | null;
           featured_media_id?: string | null;
           id?: string;
@@ -1035,6 +1040,7 @@ export type Database = {
           category_id?: string | null;
           created_at?: string;
           created_by?: string | null;
+          date_precision?: Database["public"]["Enums"]["birth_precision"];
           excerpt?: string | null;
           featured_media_id?: string | null;
           id?: string;
@@ -1215,6 +1221,7 @@ export type Database = {
           ranch_id: string;
           region: string | null;
           tagline: string | null;
+          time_zone: string;
           updated_at: string;
         };
         Insert: {
@@ -1226,6 +1233,7 @@ export type Database = {
           ranch_id: string;
           region?: string | null;
           tagline?: string | null;
+          time_zone?: string;
           updated_at?: string;
         };
         Update: {
@@ -1237,6 +1245,7 @@ export type Database = {
           ranch_id?: string;
           region?: string | null;
           tagline?: string | null;
+          time_zone?: string;
           updated_at?: string;
         };
         Relationships: [

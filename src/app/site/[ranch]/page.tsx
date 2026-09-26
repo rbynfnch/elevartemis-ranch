@@ -27,7 +27,9 @@ async function Home({ params }: { params: PageProps<"/site/[ranch]">["params"] }
   return (
     <>
       <section className="mx-auto max-w-[88rem] px-[var(--gutter)] pb-16 pt-20 md:pt-28">
-        <h1 className="max-w-[14ch] font-display text-display text-ink">{site.profile.tagline ?? site.name}</h1>
+        <h1 className="max-w-[22ch] font-display text-3xl sm:text-display text-ink">
+          {site.profile.tagline ?? site.name}
+        </h1>
         <div className="rule-lead mt-10 max-w-xl" />
         <RichText doc={site.profile.intro} className="prose-ranch mt-8 text-ink-muted" />
         <div className="mt-10 flex flex-wrap gap-4">

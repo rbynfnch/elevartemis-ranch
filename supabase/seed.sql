@@ -63,7 +63,8 @@ update public.ranch_branding set wordmark_text = 'Second Test', wordmark_subtitl
 where ranch_id = 'a0000000-0000-4000-8000-000000000002';
 
 update public.ranch_profile set
-  tagline = 'Horses and cattle, raised with care.',
+  -- The ranch's own description (supplied by the client).
+  tagline = 'Raising and breeding registered Quarter Horses, Appaloosas and Hereford cattle.',
   intro   = pg_temp.doc('[Welcome paragraph placeholder — two or three sentences from the ranch introducing who they are and what they raise.]')
 where ranch_id = 'a0000000-0000-4000-8000-000000000001';
 
@@ -73,7 +74,7 @@ update public.ranch_private set inquiry_email = 'owner@second.test'
 where ranch_id = 'a0000000-0000-4000-8000-000000000002';
 
 update public.ranch_seo set default_description =
-  '[Meta description placeholder — Elevartemis writes this at launch.]'
+  'Raising and breeding registered Quarter Horses, Appaloosas and Hereford cattle. [Location to be added.]'
 where ranch_id = 'a0000000-0000-4000-8000-000000000001';
 
 insert into public.social_links (ranch_id, platform, url, sort_order) values
@@ -130,7 +131,7 @@ values
    true, true, 1),
   -- Second stallion, shows a registration number
   ('c1000000-0000-4000-8000-000000000013', 'a0000000-0000-4000-8000-000000000001', 'horse', 'horse.stallion',
-   'Red Mesa', 'male', 'Quarter Horse', 'Red Dun', '2016-01-01', 'year',
+   'Red Mesa', 'male', 'Appaloosa', 'Bay with blanket', '2016-01-01', 'year',
    'c1000000-0000-4000-8000-000000000010', 'c1000000-0000-4000-8000-000000000005', 'active', false, true,
    '[Registry]', 'DEMO-0000', null, true, true, 2),
   -- Featured mare (by Canyon King out of Prairie Song — both linkable)
@@ -153,7 +154,7 @@ values
    'c1000000-0000-4000-8000-000000000012', 'c1000000-0000-4000-8000-000000000014', 'active', true, null,
    pg_temp.doc('[Placeholder — a line or two about this foal.]'), true),
   ('c1000000-0000-4000-8000-000000000017', 'a0000000-0000-4000-8000-000000000001', 'horse', 'horse.foal',
-   'Mesa Spark', 'male', 'Quarter Horse', null, '2026-05-01', 'month',
+   'Mesa Spark', 'male', 'Appaloosa', null, '2026-05-01', 'month',
    'c1000000-0000-4000-8000-000000000013', 'c1000000-0000-4000-8000-000000000015', 'active', true, null, null, true),
   -- 2025 foal: over a year old, so the admin dashboard will suggest moving it up
   ('c1000000-0000-4000-8000-000000000018', 'a0000000-0000-4000-8000-000000000001', 'horse', 'horse.foal',
@@ -266,21 +267,28 @@ values
 -- ─── What's Happening on the Ranch ───────────────────────────────────────────
 insert into public.post_categories (id, ranch_id, name, slug, sort_order) values
   ('d0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001', 'Foals',      'foals',      1),
-  ('d0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000001', 'Ranch life', 'ranch-life', 2);
+  ('d0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000001', 'Ranch life', 'ranch-life', 2),
+  ('d0000000-0000-4000-8000-000000000003', 'a0000000-0000-4000-8000-000000000001', 'Cattle',     'cattle',     3);
 
-insert into public.posts (id, ranch_id, title, excerpt, body, category_id, status, published_at, is_demo) values
+insert into public.posts (id, ranch_id, title, excerpt, body, category_id, status, published_at, date_precision, is_demo) values
   ('e0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001',
-   '[Sample update] Welcome to the new website',
+   '[Sample post] Welcome to the new website',
    '[Placeholder excerpt — one or two sentences shown on the homepage.]',
-   pg_temp.doc('[Placeholder post body. The owner writes updates like this from the admin.]'),
-   'd0000000-0000-4000-8000-000000000002', 'published', '2026-08-20 15:00:00+00', true),
+   pg_temp.doc('[Placeholder post body. The owner writes posts like this from the admin.]'),
+   'd0000000-0000-4000-8000-000000000002', 'published', '2026-08-20 12:00:00-06', 'day', true),
   ('e0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000001',
-   '[Sample update] Meet the 2026 foals',
+   '[Sample post] Meet the 2026 foals',
    '[Placeholder excerpt about this year''s foals.]',
    pg_temp.doc('[Placeholder post body.]'),
-   'd0000000-0000-4000-8000-000000000001', 'published', '2026-09-12 15:00:00+00', true),
+   'd0000000-0000-4000-8000-000000000001', 'published', '2026-09-12 12:00:00-06', 'day', true),
+  -- A back-dated history post: date known only to the month, built from old photos.
+  ('e0000000-0000-4000-8000-000000000004', 'a0000000-0000-4000-8000-000000000001',
+   '[Sample history post] Moving cattle to summer pasture',
+   '[Placeholder — a line about the day, from the ranch.]',
+   pg_temp.doc('[Placeholder — the story behind these photos: where the herd went, who rode, what the day was like.]'),
+   'd0000000-0000-4000-8000-000000000003', 'published', '2019-05-01 12:00:00-06', 'month', true),
   ('e0000000-0000-4000-8000-000000000003', 'a0000000-0000-4000-8000-000000000001',
-   '[Sample draft] Not yet published', null, null, null, 'draft', null, true);
+   '[Sample draft] Not yet published', null, null, null, 'draft', null, 'day', true);
 
 insert into public.post_animals (ranch_id, post_id, animal_id) values
   ('a0000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000002', 'c1000000-0000-4000-8000-000000000016'),

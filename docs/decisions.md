@@ -57,6 +57,30 @@ platform defaults. The dashboard suggests calves → Yearlings at one year and
 Yearlings → Bulls or Cows at two; the ranch can always keep an animal where it
 is.
 
+### The ranch in its own words
+
+"Raising and breeding registered Quarter Horses, Appaloosas and Hereford
+cattle." Used as the site tagline (owner-editable) and as the basis of the
+default meta description (Elevartemis-managed; location to be added).
+
+### Happening on the Ranch
+
+The ranch's blog is called **Happening on the Ranch** (URL `/on-the-ranch`):
+posts about ranch life and what's going on. The ranch also builds a history by
+posting old photos (e.g. moving cattle) with back-dated posts:
+
+- The owner chooses the post date, known to the day, month or year
+  (`posts.date_precision`). Month/year dates are stored as noon on the 1st in
+  the ranch's time zone, so they never slip into the previous month or year.
+- Dates display in the ranch's time zone (`ranch_profile.time_zone`, default
+  America/Denver), so an evening post is never dated tomorrow.
+- A past date files the post in the history; the post page lists posts by
+  year, newest first (`groupPostsByYear`). A future date schedules the post.
+  Back-dated posts don't push newer posts off the homepage.
+- Photos record when they were taken (`media.taken_at`, from EXIF during
+  processing). When photos are added, the admin suggests a date: a day, a
+  month or a year if they agree; across years it asks (`suggestPostDate`).
+
 ### Audience (first ranch)
 
 Horses: barrel racers, ropers, breeders. Cattle (Herefords): breeders seeking
@@ -144,6 +168,7 @@ Navigation is built from `public_nav_counts()`: empty buckets don't appear.
 | RA011 | More than 3 active homepage slides |
 | RA012 | Breeding services on something other than a stallion/bull |
 | RA013 | Category not offered by this ranch (or settings conflict) |
+| RA014 | Unknown time zone |
 
 Messages are written for owners and raised by the database, so every client
 gets the same rules.

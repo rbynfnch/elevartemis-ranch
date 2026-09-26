@@ -150,7 +150,7 @@ export function summarizeDashboard(input: {
     attention.push({
       id: "draft-posts",
       tone: "info",
-      message: `${draftPosts === 1 ? "1 ranch update is" : `${draftPosts} ranch updates are`} saved as a draft.`,
+      message: `${draftPosts === 1 ? "1 Happening on the Ranch post is" : `${draftPosts} Happening on the Ranch posts are`} saved as a draft.`,
       href: "/admin/updates",
     });
   }
@@ -188,7 +188,7 @@ export function summarizeDashboard(input: {
       href: "/admin/animals?show=for-sale",
     },
     {
-      label: "Ranch updates",
+      label: "Posts",
       value: input.posts.filter((p) => p.status === "published" && !p.archived_at).length,
       href: "/admin/updates",
     },

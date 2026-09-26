@@ -81,7 +81,7 @@ describe("buildNavigation", () => {
       navCounts: { horse: {}, cattle: {} },
       contentCounts: { posts: 2, faqs: 3, gallery: 9 },
     });
-    expect(full.map((i) => i.label)).toEqual(["Home", "About", "Gallery", "What's Happening", "FAQ", "Contact"]);
+    expect(full.map((i) => i.label)).toEqual(["Home", "About", "Gallery", "Happening on the Ranch", "FAQ", "Contact"]);
   });
 
   it("adds In Memory under About only when there are deceased animals", () => {

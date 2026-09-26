@@ -172,7 +172,7 @@ Later phases add Resend, Turnstile and Upstash keys (see `.env.example`).
 | 6 | Pedigree and offspring (admin builder + public tree) | |
 | 7 | Public website pages, SEO foundation | |
 | 8 | Homepage hero system | |
-| 9 | What's Happening on the Ranch | |
+| 9 | Happening on the Ranch | |
 | 10 | Contact and animal inquiries | |
 | 11 | Responsive and mobile polish | |
 | 12 | Motion, accessibility, performance | |

@@ -16,8 +16,9 @@ const sections: Record<string, { title: string; description: string }> = {
     description: "Choose up to three large photos for the top of your homepage, with a headline and button.",
   },
   updates: {
-    title: "What's Happening",
-    description: "Share news from the ranch: new foals, shows, projects and everyday ranch life.",
+    title: "Happening on the Ranch",
+    description:
+      "Posts about ranch life: new foals, moving cattle, shows and projects. Add old photos and back-date them to build the ranch's history.",
   },
   gallery: { title: "Gallery", description: "Pick the ranch photos that appear in your website's gallery." },
   faqs: { title: "FAQs", description: "Answer the questions visitors ask most." },

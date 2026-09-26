@@ -9,7 +9,7 @@ export const adminSections = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/animals", label: "Animals" },
   { href: "/admin/homepage", label: "Homepage" },
-  { href: "/admin/updates", label: "What's Happening" },
+  { href: "/admin/updates", label: "Happening on the Ranch" },
   { href: "/admin/gallery", label: "Gallery" },
   { href: "/admin/faqs", label: "FAQs" },
   { href: "/admin/about-page", label: "About Page" },

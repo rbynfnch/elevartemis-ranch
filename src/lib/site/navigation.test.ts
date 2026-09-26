@@ -2,7 +2,21 @@ import { describe, expect, it } from "vitest";
 import { buildNavigation } from "./navigation";
 import type { CategoryRow } from "./get-site";
 
+const cattleCategory = (key: string, plural: string, path: string, sort: number): CategoryRow => ({
+  id: `cattle.${key}`,
+  species: "cattle",
+  key,
+  label_singular: plural.slice(0, -1),
+  label_plural: plural,
+  path_segment: path,
+  groups_by_birth_year: false,
+  sort_order: sort,
+});
+
 const categories: CategoryRow[] = [
+  cattleCategory("bull", "Bulls", "bulls", 10),
+  cattleCategory("yearling", "Yearlings", "yearlings", 15),
+  cattleCategory("cow", "Cows", "cows", 20),
   {
     id: "horse.stallion",
     species: "horse",
@@ -80,6 +94,59 @@ describe("buildNavigation", () => {
     ]);
     // Memorial animals are not a species category of their own.
     expect(withMemorial.find((i) => i.label === "Horses")).toBeUndefined();
+  });
+
+  it("follows the ranch's cattle program: Cattle → Herefords → Bulls, Yearlings, Cows, For Sale", () => {
+    const herefords = {
+      navLabel: null,
+      breedHeading: "Herefords",
+      categories: ["cattle.bull", "cattle.yearling", "cattle.cow"],
+      showRetired: false,
+      showReference: false,
+      showForSale: true,
+      showSold: false,
+    };
+    const counts = { bull: 2, yearling: 3, calf: 4, sold: 1, retired: 1, for_sale: 1 };
+    const nav = buildNavigation({
+      ...base,
+      speciesSettings: { cattle: herefords },
+      navCounts: { horse: {}, cattle: counts },
+    });
+    const cattle = nav.find((i) => i.label === "Cattle");
+    expect(cattle?.heading).toBe("Herefords");
+    // Cows appear once the ranch publishes one; calves, Sold and Retired aren't part of this program.
+    expect(cattle?.children?.map((c) => c.label)).toEqual(["Bulls", "Yearlings", "For Sale"]);
+
+    const withCows = buildNavigation({
+      ...base,
+      speciesSettings: { cattle: herefords },
+      navCounts: { horse: {}, cattle: { ...counts, cow: 5 } },
+    });
+    expect(withCows.find((i) => i.label === "Cattle")?.children?.map((c) => c.label)).toEqual([
+      "Bulls",
+      "Yearlings",
+      "Cows",
+      "For Sale",
+    ]);
+  });
+
+  it("uses a custom top-level label when set", () => {
+    const nav = buildNavigation({
+      ...base,
+      speciesSettings: {
+        horse: {
+          navLabel: "Quarter Horses",
+          breedHeading: null,
+          categories: null,
+          showRetired: true,
+          showReference: true,
+          showForSale: true,
+          showSold: true,
+        },
+      },
+      navCounts: { horse: { stallion: 1 }, cattle: {} },
+    });
+    expect(nav.find((i) => i.href === "/horses")?.label).toBe("Quarter Horses");
   });
 
   it("respects the ranch's enabled species", () => {

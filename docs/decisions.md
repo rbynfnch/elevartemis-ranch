@@ -31,6 +31,32 @@ Decisions confirmed in Phase 1 (defaults accepted) and made during Phases 2–3.
 12. **Extras adopted:** video links, registered vs barn name, heifer and steer
     categories, posts linked to animals.
 
+### Per-ranch categories and menu structure
+
+Platform categories are the default. `ranch_species_settings` (Elevartemis
+only) lets a ranch narrow and order categories, add a breed heading, relabel
+the top menu item, and choose which extra pages (Retired, Previous
+Stallions / Reference Sires, For Sale, Sold) appear. Animals can only use the
+categories their ranch offers (RA013), and a category can't be removed while
+animals are in it.
+
+First ranch's cattle program:
+
+```
+Cattle
+  Herefords          (breed heading)
+    Bulls
+    Yearlings        (new platform category: ~12–24 months, bulls or heifers)
+    Cows             (configured; appears once a cow is published)
+    For Sale
+```
+
+Sold, Retired and Reference Sires are off for this ranch's cattle; sold cattle
+keep their portfolios (reachable from pedigrees and offspring). Horses use the
+platform defaults. The dashboard suggests calves → Yearlings at one year and
+Yearlings → Bulls or Cows at two; the ranch can always keep an animal where it
+is.
+
 ### Audience (first ranch)
 
 Horses: barrel racers, ropers, breeders. Cattle (Herefords): breeders seeking
@@ -107,6 +133,7 @@ Navigation is built from `public_nav_counts()`: empty buckets don't appear.
 | RA010 | Main photo isn't one of the animal's photos |
 | RA011 | More than 3 active homepage slides |
 | RA012 | Breeding services on something other than a stallion/bull |
+| RA013 | Category not offered by this ranch (or settings conflict) |
 
 Messages are written for owners and raised by the database, so every client
 gets the same rules.

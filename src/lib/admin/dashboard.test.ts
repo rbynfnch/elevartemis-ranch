@@ -87,6 +87,31 @@ describe("summarizeDashboard", () => {
     expect(s.attention.find((a) => a.id === "grown-horse.foal")?.message).toMatch(/Little Juniper is over a year old/);
   });
 
+  it("suggests moving yearling cattle on at two years old", () => {
+    const s = summarizeDashboard({
+      ...base,
+      animals: [
+        animal({
+          id: "y1",
+          name: "CCR 401",
+          species: "cattle",
+          category_id: "cattle.yearling",
+          birth_date: "2024-03-01",
+        }),
+        animal({
+          id: "y2",
+          name: "CCR 614",
+          species: "cattle",
+          category_id: "cattle.yearling",
+          birth_date: "2025-03-10",
+        }),
+      ],
+    });
+    expect(s.attention.find((a) => a.id === "grown-cattle.yearling")?.message).toBe(
+      "CCR 401 is over 2 years old. Move it to Bulls or Cows?",
+    );
+  });
+
   it("respects the owner's decision to keep a foal as a foal", () => {
     const s = summarizeDashboard({
       ...base,

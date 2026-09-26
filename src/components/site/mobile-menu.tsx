@@ -62,6 +62,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
               <Link href={item.href} onClick={() => setOpen(false)} className="font-display text-3xl no-underline">
                 {item.label}
               </Link>
+              {item.heading ? <p className="mt-2 font-serif text-base italic text-ink-muted">{item.heading}</p> : null}
               {item.children ? (
                 <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-l border-rule pl-4">
                   {item.children.map((child) => (

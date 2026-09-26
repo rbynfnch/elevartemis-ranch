@@ -26,6 +26,11 @@ export function SiteHeader({ brand, items }: Props) {
                 </Link>
                 {item.children ? (
                   <ul className="invisible absolute left-1/2 top-full z-40 min-w-56 -translate-x-1/2 translate-y-1 border border-rule bg-paper py-2 opacity-0 shadow-[0_12px_30px_-18px_rgb(30_42_35/0.45)] transition duration-200 ease-[var(--ease-out)] group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                    {item.heading ? (
+                      <li aria-hidden="true" className="px-5 pb-1 pt-2 font-serif text-sm italic text-ink-muted">
+                        {item.heading}
+                      </li>
+                    ) : null}
                     {item.children.map((child) => (
                       <li key={child.href}>
                         <Link

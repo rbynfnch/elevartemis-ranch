@@ -201,6 +201,13 @@ insert into public.breeding_services (animal_id, ranch_id, status, service_types
    pg_temp.doc('[Breeding terms placeholder — the ranch supplies stud fee, season, shipping details and mare requirements.]'),
    'Ask about breeding');
 
+-- ─── Cattle program: Cattle → Herefords → Bulls, Yearlings, Cows, For Sale ─
+insert into public.ranch_species_settings
+  (ranch_id, species, breed_heading, categories, show_retired, show_reference, show_for_sale, show_sold)
+values
+  ('a0000000-0000-4000-8000-000000000001', 'cattle', 'Herefords',
+   '{cattle.bull,cattle.yearling,cattle.cow}', false, false, true, false);
+
 -- ─── Cattle ──────────────────────────────────────────────────────────────────
 insert into public.animals (id, ranch_id, species, record_scope, name, sex, breed, is_demo) values
   ('c2000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'pedigree_only',
@@ -212,10 +219,11 @@ values
   ('c2000000-0000-4000-8000-000000000010', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.bull',
    'CCR Anchor 401', 'male', 'Hereford', '2021-01-01', 'year', 'c2000000-0000-4000-8000-000000000001', null,
    true, '{"ear_tag": "401"}', true, true),
+  -- Cows: in the database as dams (pedigrees, offspring) but not yet on the website.
   ('c2000000-0000-4000-8000-000000000011', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.cow',
-   'CCR Blackbird 118', 'female', 'Hereford', '2018-01-01', 'year', null, null, false, '{"ear_tag": "118"}', true, true),
+   'CCR Blackbird 118', 'female', 'Hereford', '2018-01-01', 'year', null, null, false, '{"ear_tag": "118"}', false, true),
   ('c2000000-0000-4000-8000-000000000012', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.cow',
-   'CCR Maybelle 207', 'female', 'Hereford', '2019-01-01', 'year', null, null, false, '{"ear_tag": "207"}', true, true),
+   'CCR Maybelle 207', 'female', 'Hereford', '2019-01-01', 'year', null, null, false, '{"ear_tag": "207"}', false, true),
   ('c2000000-0000-4000-8000-000000000017', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.bull',
    'CCR Ridge 309', 'male', 'Hereford', '2020-01-01', 'year', null, null, false, '{}', true, true);
 
@@ -225,13 +233,13 @@ values
   ('c2000000-0000-4000-8000-000000000013', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.bull',
    'CCR Summit 512', 'male', 'Hereford', '2023-01-01', 'year',
    'c2000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000012', '{"ear_tag": "512"}', true, true),
-  ('c2000000-0000-4000-8000-000000000014', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.calf',
-   'CCR Anchor 614', 'male', 'Hereford', '2026-03-10', 'day',
+  ('c2000000-0000-4000-8000-000000000014', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.yearling',
+   'CCR Anchor 614', 'male', 'Hereford', '2025-03-10', 'day',
    'c2000000-0000-4000-8000-000000000010', 'c2000000-0000-4000-8000-000000000011', '{"ear_tag": "614"}', true, true),
-  ('c2000000-0000-4000-8000-000000000015', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.calf',
-   'CCR Maybelle 622', 'female', 'Hereford', '2026-03-22', 'day',
+  ('c2000000-0000-4000-8000-000000000015', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.yearling',
+   'CCR Maybelle 622', 'female', 'Hereford', '2025-03-22', 'day',
    'c2000000-0000-4000-8000-000000000010', 'c2000000-0000-4000-8000-000000000012', '{"ear_tag": "622"}', true, true),
-  ('c2000000-0000-4000-8000-000000000016', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.heifer',
+  ('c2000000-0000-4000-8000-000000000016', 'a0000000-0000-4000-8000-000000000001', 'cattle', 'cattle.yearling',
    'CCR Blackbird 530', 'female', 'Hereford', '2025-01-01', 'year',
    'c2000000-0000-4000-8000-000000000010', 'c2000000-0000-4000-8000-000000000011', '{"ear_tag": "530"}', true, true);
 

@@ -1297,6 +1297,53 @@ export type Database = {
           },
         ];
       };
+      ranch_species_settings: {
+        Row: {
+          breed_heading: string | null;
+          categories: string[] | null;
+          nav_label: string | null;
+          ranch_id: string;
+          show_for_sale: boolean;
+          show_reference: boolean;
+          show_retired: boolean;
+          show_sold: boolean;
+          species: Database["public"]["Enums"]["species"];
+          updated_at: string;
+        };
+        Insert: {
+          breed_heading?: string | null;
+          categories?: string[] | null;
+          nav_label?: string | null;
+          ranch_id: string;
+          show_for_sale?: boolean;
+          show_reference?: boolean;
+          show_retired?: boolean;
+          show_sold?: boolean;
+          species: Database["public"]["Enums"]["species"];
+          updated_at?: string;
+        };
+        Update: {
+          breed_heading?: string | null;
+          categories?: string[] | null;
+          nav_label?: string | null;
+          ranch_id?: string;
+          show_for_sale?: boolean;
+          show_reference?: boolean;
+          show_retired?: boolean;
+          show_sold?: boolean;
+          species?: Database["public"]["Enums"]["species"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ranch_species_settings_ranch_id_fkey";
+            columns: ["ranch_id"];
+            isOneToOne: false;
+            referencedRelation: "ranches";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ranches: {
         Row: {
           created_at: string;

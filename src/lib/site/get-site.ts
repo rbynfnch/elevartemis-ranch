@@ -45,7 +45,20 @@ export type SiteSettings = {
   /** bucket → count, per species. Buckets with no animals are absent. */
   navCounts: Record<Species, Record<string, number>>;
   categories: CategoryRow[];
+  /** Per-ranch choices (Elevartemis-managed). Missing species = platform defaults. */
+  speciesSettings: Partial<Record<Species, SpeciesSettings>>;
   contentCounts: { posts: number; faqs: number; gallery: number };
+};
+
+export type SpeciesSettings = {
+  navLabel: string | null;
+  breedHeading: string | null;
+  /** Ordered category ids; null = every platform category for the species. */
+  categories: string[] | null;
+  showRetired: boolean;
+  showReference: boolean;
+  showForSale: boolean;
+  showSold: boolean;
 };
 
 export type CategoryRow = {
@@ -88,11 +101,12 @@ export async function getSiteSettings(slug: string): Promise<SiteSettings | null
   const { data: counts, error: countError } = await db.rpc("public_nav_counts", { p_ranch: ranch.id });
   if (countError) throw new Error(`Loading navigation failed: ${countError.message}`);
 
-  const [categories, posts, faqs, gallery] = await Promise.all([
+  const [categories, speciesRows, posts, faqs, gallery] = await Promise.all([
     db
       .from("animal_categories")
       .select("id, species, key, label_singular, label_plural, path_segment, groups_by_birth_year, sort_order")
       .order("sort_order"),
+    db.from("ranch_species_settings").select("*").eq("ranch_id", ranch.id),
     db
       .from("posts")
       .select("id", { count: "exact", head: true })
@@ -107,7 +121,7 @@ export async function getSiteSettings(slug: string): Promise<SiteSettings | null
       .eq("in_gallery", true)
       .eq("status", "ready"),
   ]);
-  for (const r of [categories, posts, faqs, gallery]) {
+  for (const r of [categories, speciesRows, posts, faqs, gallery]) {
     if (r.error) throw new Error(`Loading site settings failed: ${r.error.message}`);
   }
 
@@ -151,6 +165,20 @@ export async function getSiteSettings(slug: string): Promise<SiteSettings | null
       .map(({ platform, url, label }) => ({ platform, url, label })),
     navCounts,
     categories: categories.data ?? [],
+    speciesSettings: Object.fromEntries(
+      (speciesRows.data ?? []).map((r) => [
+        r.species,
+        {
+          navLabel: r.nav_label,
+          breedHeading: r.breed_heading,
+          categories: r.categories,
+          showRetired: r.show_retired,
+          showReference: r.show_reference,
+          showForSale: r.show_for_sale,
+          showSold: r.show_sold,
+        },
+      ]),
+    ),
     contentCounts: { posts: posts.count ?? 0, faqs: faqs.count ?? 0, gallery: gallery.count ?? 0 },
   };
 }

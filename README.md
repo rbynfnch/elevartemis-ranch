@@ -119,6 +119,14 @@ manual steps: add `https://<domain>/admin/**` to Supabase Auth → Redirect URLs
 and add the domains to Vercel. At launch set `ranches.status = 'live'` and
 `ranch_seo.noindex = false`.
 
+Menu structure per ranch (categories, order, breed heading, which extra pages
+show) lives in `ranch_species_settings`, e.g. the first ranch's cattle:
+
+```sql
+insert into ranch_species_settings (ranch_id, species, breed_heading, categories, show_sold, show_retired, show_reference)
+values ('<ranch id>', 'cattle', 'Herefords', '{cattle.bull,cattle.yearling,cattle.cow}', false, false, false);
+```
+
 To require two-step verification for a ranch:
 `update ranches set features = features || '{"require_mfa": true}' where slug = '…';`
 

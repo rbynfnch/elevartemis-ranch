@@ -36,9 +36,11 @@ export type DashboardSummary = {
   attention: AttentionItem[];
 };
 
-const youngCategory: Record<string, { label: string; verb: string }> = {
-  "horse.foal": { label: "Young Horses", verb: "foaled" },
-  "cattle.calf": { label: "a grown category", verb: "calved" },
+/** Suggested next category once an animal reaches an age. Always a suggestion: the ranch decides. */
+const growthSuggestions: Record<string, { years: number; next: string }> = {
+  "horse.foal": { years: 1, next: "Young Horses" },
+  "cattle.calf": { years: 1, next: "Yearlings" },
+  "cattle.yearling": { years: 2, next: "Bulls or Cows" },
 };
 
 function listNames(names: string[], max = 3): string {
@@ -48,12 +50,16 @@ function listNames(names: string[], max = 3): string {
   return `${names.slice(0, max).join(", ")} and ${names.length - max} more`;
 }
 
-/** True when the animal is at least a year old on `today` (ISO date). */
-export function isOverAYearOld(birthDate: string | null, today: string): boolean {
+/** True when the animal is at least `years` old on `today` (ISO dates). */
+export function isAtLeastYearsOld(birthDate: string | null, today: string, years: number): boolean {
   if (!birthDate) return false;
   const [y, m, d] = today.split("-").map(Number);
-  const cutoff = `${String(y - 1).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  const cutoff = `${String(y - years).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   return birthDate <= cutoff;
+}
+
+export function isOverAYearOld(birthDate: string | null, today: string): boolean {
+  return isAtLeastYearsOld(birthDate, today, 1);
 }
 
 export function summarizeDashboard(input: {
@@ -93,15 +99,19 @@ export function summarizeDashboard(input: {
     });
   }
 
-  for (const [categoryId, info] of Object.entries(youngCategory)) {
+  for (const [categoryId, info] of Object.entries(growthSuggestions)) {
     const grown = live.filter(
-      (a) => a.category_id === categoryId && !a.category_confirmed_at && isOverAYearOld(a.birth_date, input.today),
+      (a) =>
+        a.category_id === categoryId &&
+        !a.category_confirmed_at &&
+        isAtLeastYearsOld(a.birth_date, input.today, info.years),
     );
     if (grown.length) {
+      const age = info.years === 1 ? "a year" : `${info.years} years`;
       attention.push({
         id: `grown-${categoryId}`,
         tone: "action",
-        message: `${listNames(grown.map((a) => a.name))} ${grown.length === 1 ? "is" : "are"} over a year old. Move ${grown.length === 1 ? "it" : "them"} to ${info.label}?`,
+        message: `${listNames(grown.map((a) => a.name))} ${grown.length === 1 ? "is" : "are"} over ${age} old. Move ${grown.length === 1 ? "it" : "them"} to ${info.next}?`,
         href: `/admin/animals?show=${categoryId}`,
       });
     }

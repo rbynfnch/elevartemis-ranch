@@ -286,16 +286,29 @@ insert into public.post_animals (ranch_id, post_id, animal_id) values
   ('a0000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000002', 'c1000000-0000-4000-8000-000000000016'),
   ('a0000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000002', 'c1000000-0000-4000-8000-000000000017');
 
--- ─── FAQs ────────────────────────────────────────────────────────────────────
-insert into public.faqs (ranch_id, question, answer, sort_order, is_demo) values
-  ('a0000000-0000-4000-8000-000000000001', 'Can I visit the ranch?',
-   pg_temp.doc('[Placeholder answer — to be supplied by the ranch.]'), 1, true),
-  ('a0000000-0000-4000-8000-000000000001', 'Do you ship or deliver animals?',
-   pg_temp.doc('[Placeholder answer — to be supplied by the ranch.]'), 2, true),
-  ('a0000000-0000-4000-8000-000000000001', 'How do I ask about an animal for sale?',
-   pg_temp.doc('Every animal''s page has a short form. Send a message there and it comes straight to us.'), 3, true),
-  ('a0000000-0000-4000-8000-000000000001', 'Do you offer breeding services?',
-   pg_temp.doc('[Placeholder answer — to be supplied by the ranch.]'), 4, true);
+-- ─── FAQs (topics chosen by the ranch; bracketed answers are theirs to supply) ─
+-- Rich-text helper for paragraphs is pg_temp.doc(). General explanations (what an
+-- EPD is) are factual; anything about THIS ranch's cattle or horses is a placeholder.
+insert into public.faqs (ranch_id, group_label, question, answer, sort_order, is_demo) values
+  ('a0000000-0000-4000-8000-000000000001', 'Horses', 'What bloodlines are your horses from?',
+   pg_temp.doc('[Ranch to supply: the main sire and dam lines in the program and what they''re known for — for barrel racing, roping or breeding.]',
+               'Every horse''s page also shows a three-generation pedigree.'), 10, true),
+
+  ('a0000000-0000-4000-8000-000000000001', 'Cattle', 'What bloodlines are in your Hereford herd?',
+   pg_temp.doc('[Ranch to supply: the sire and cow lines in the herd and why you chose them.]',
+               'Each animal''s page shows its pedigree.'), 20, true),
+  ('a0000000-0000-4000-8000-000000000001', 'Cattle', 'How do your cattle gain?',
+   pg_temp.doc('[Ranch to supply: typical weight gains, such as average daily gain, and how they''re measured — on grass, on feed or on test.]'), 21, true),
+  ('a0000000-0000-4000-8000-000000000001', 'Cattle', 'Do you have EPDs for your cattle?',
+   pg_temp.doc('EPDs (expected progeny differences) are the American Hereford Association''s estimates of how an animal''s calves are expected to perform compared with other registered Herefords, for traits such as calving ease, birth weight, weaning weight and yearling weight. They''re calculated from the animal''s own records and those of its relatives and offspring, and they''re updated as new data comes in.',
+               '[Ranch to supply: where buyers can see EPDs for your cattle.]'), 22, true),
+  ('a0000000-0000-4000-8000-000000000001', 'Cattle', 'What are your weaning weights?',
+   pg_temp.doc('[Ranch to supply: typical actual and/or adjusted 205-day weaning weights for your calves.]'), 23, true),
+  ('a0000000-0000-4000-8000-000000000001', 'Cattle', 'What are your birth weights?',
+   pg_temp.doc('[Ranch to supply: typical birth weights, and whether you select for calving ease.]'), 24, true),
+
+  ('a0000000-0000-4000-8000-000000000001', 'General', 'How do I ask about an animal?',
+   pg_temp.doc('Every animal''s page has a short form. Send a message there and it comes straight to the ranch.'), 90, true);
 
 -- ─── Second ranch (isolation) ────────────────────────────────────────────────
 insert into public.animals (id, ranch_id, species, category_id, name, sex, is_published) values

@@ -64,6 +64,16 @@ top-quality, high-producing cattle. The ranch breeds by AI. This guides
 copy, SEO, suggested Quick Facts (performance record, earnings, EPDs) and the
 service types offered (fresh, cooled, frozen).
 
+### FAQs (first ranch)
+
+Grouped on the FAQ page by `faqs.group_label`, in the order of each group's
+first question (`lib/faq/group.ts`): **Horses** — bloodlines; **Cattle** —
+bloodlines, weight gains, EPDs, weaning weights, birth weights; **General** —
+how to ask about an animal. Answers about the ranch's own animals are
+placeholders for the ranch to write; the EPD answer includes a general,
+factual explanation of what EPDs are. Empty groups and unanswered questions
+never render; a single group shows no heading.
+
 ## Breeding Services
 
 `breeding_services` is a 1:1 optional row per breeding male (stallion or AI

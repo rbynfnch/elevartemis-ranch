@@ -30,7 +30,6 @@ async function rpc(fn: "resolve_host" | "resolve_ranch_slug", body: Record<strin
     method: "POST",
     headers: {
       apikey: env.supabasePublishableKey,
-      Authorization: `Bearer ${env.supabasePublishableKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),

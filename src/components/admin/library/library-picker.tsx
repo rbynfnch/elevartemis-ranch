@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { attachLibraryPhotosAction, listLibraryAction } from "@/lib/admin/library/actions";
@@ -25,6 +25,9 @@ export function LibraryPicker({
 }) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  // Where the lists were scrolled when a photo was clicked, so selecting never moves them.
+  const keepScroll = useRef<{ list: number; dialog: number } | null>(null);
   const [photos, setPhotos] = useState<LibraryPhoto[] | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
@@ -49,6 +52,19 @@ export function LibraryPicker({
       return;
     }
     setPhotos(result.data);
+  }
+
+  useLayoutEffect(() => {
+    const kept = keepScroll.current;
+    if (!kept) return;
+    keepScroll.current = null;
+    if (list.current) list.current.scrollTop = kept.list;
+    if (dialog.current) dialog.current.scrollTop = kept.dialog;
+  }, [picked]);
+
+  function toggle(id: string) {
+    keepScroll.current = { list: list.current?.scrollTop ?? 0, dialog: dialog.current?.scrollTop ?? 0 };
+    setPicked((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
   }
 
   const q = query.trim().toLowerCase();
@@ -78,9 +94,9 @@ export function LibraryPicker({
       <dialog
         ref={dialog}
         aria-labelledby="library-picker-title"
-        className="m-auto w-[min(60rem,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] border border-rule bg-paper p-0 text-ink backdrop:bg-night/60"
+        className="m-auto w-[min(60rem,calc(100vw-2rem))] border border-rule bg-paper p-0 text-ink backdrop:bg-night/60"
       >
-        <div className="flex max-h-[calc(100dvh-2rem)] flex-col">
+        <div className="flex h-[min(46rem,calc(100dvh-2rem))] flex-col">
           <div className="flex items-center justify-between gap-4 border-b border-rule px-6 py-4">
             <h3 id="library-picker-title" className="font-display text-2xl">
               Choose from your Photo Library
@@ -90,7 +106,7 @@ export function LibraryPicker({
             </button>
           </div>
 
-          <div className="space-y-4 overflow-y-auto px-6 py-5">
+          <div ref={list} className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-5">
             <FormMessage tone="error">{error}</FormMessage>
             <div>
               <label htmlFor="picker-search" className="text-sm font-semibold">
@@ -120,18 +136,17 @@ export function LibraryPicker({
                   const on = picked.includes(p.id);
                   return (
                     <li key={p.id}>
-                      <label
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        // Keeps focus where it is on a mouse click, so the browser never scrolls to "reveal" it.
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => toggle(p.id)}
                         className={clsx(
-                          "block cursor-pointer border-2 p-1.5",
+                          "block w-full cursor-pointer border-2 p-1.5 text-left",
                           on ? "border-primary bg-primary/5" : "border-transparent hover:border-rule",
                         )}
                       >
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={on}
-                          onChange={() => setPicked(on ? picked.filter((id) => id !== p.id) : [...picked, p.id])}
-                        />
                         <span className="block aspect-[4/3] overflow-hidden bg-surface">
                           {p.thumb ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -150,7 +165,7 @@ export function LibraryPicker({
                           </span>
                           {p.fileName ?? "Untitled photo"}
                         </span>
-                      </label>
+                      </button>
                     </li>
                   );
                 })}

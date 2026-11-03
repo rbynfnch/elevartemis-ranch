@@ -23,6 +23,8 @@ export type LibraryPhoto = {
   usedBy: string[];
   /** Species of those animals, once each, for sorting the library. */
   species: Species[];
+  /** Category the owner filed the photo under, if any. */
+  category: Species | null;
   /** True when something other than an animal uses it (homepage slide, update post, gallery). */
   usedElsewhere: boolean;
 };
@@ -32,7 +34,7 @@ const LIMIT = 1000;
 export async function listLibrary(db: Db, ranchId: string): Promise<Result<LibraryPhoto[]>> {
   const { data: media, error } = await db
     .from("media")
-    .select("id, file_name, variants, width, height, created_at, in_gallery")
+    .select("id, file_name, variants, width, height, created_at, in_gallery, species")
     .eq("ranch_id", ranchId)
     .eq("status", "ready")
     .order("created_at", { ascending: false })
@@ -75,6 +77,7 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
         createdAt: m.created_at,
         usedBy: usedBy.get(m.id) ?? [],
         species: [...(speciesOf.get(m.id) ?? [])],
+        category: m.species,
         usedElsewhere: elsewhere.has(m.id),
       };
     }),
@@ -191,4 +194,62 @@ export async function attachExistingPhotos(
   const { error: insertError } = await db.from("animal_media").insert(rows);
   if (insertError) return fail(dbErrorMessage(insertError));
   return ok({ added: rows.length });
+}
+
+/** Files photos under a species, or clears it (null). Only photos of this ranch are touched. */
+export async function setPhotoCategory(
+  db: Db,
+  ranchId: string,
+  mediaIds: string[],
+  species: Species | null,
+): Promise<Result<{ changed: number }>> {
+  if (!mediaIds.length) return ok({ changed: 0 });
+  const { data, error } = await db
+    .from("media")
+    .update({ species })
+    .eq("ranch_id", ranchId)
+    .in("id", mediaIds)
+    .select("id");
+  if (error) return fail(dbErrorMessage(error));
+  return ok({ changed: data?.length ?? 0 });
+}
+
+/** Deletes each photo nothing uses; reports the ones it had to keep. */
+export async function deleteLibraryPhotos(
+  db: Db,
+  ranchId: string,
+  mediaIds: string[],
+): Promise<Result<{ deleted: number; kept: number }>> {
+  let deleted = 0;
+  let kept = 0;
+  for (const id of mediaIds) {
+    const result = await deleteLibraryPhoto(db, ranchId, id);
+    if (result.ok) deleted++;
+    else kept++;
+  }
+  return ok({ deleted, kept });
+}
+
+export type AnimalChoice = { id: string; name: string; detail: string };
+
+/** Animals matching what the owner typed, for "Add to an animal". */
+export async function searchAnimals(db: Db, ranchId: string, query: string): Promise<Result<AnimalChoice[]>> {
+  const q = query.trim().replace(/[%_,()]/g, "");
+  let request = db
+    .from("animals")
+    .select("id, name, species, animal_categories ( label_singular )")
+    .eq("ranch_id", ranchId)
+    .eq("record_scope", "inventory")
+    .is("archived_at", null)
+    .order("name")
+    .limit(20);
+  if (q) request = request.ilike("name", `%${q}%`);
+  const { data, error } = await request;
+  if (error) return fail(dbErrorMessage(error));
+  return ok(
+    data.map((a) => {
+      const cat = Array.isArray(a.animal_categories) ? a.animal_categories[0] : a.animal_categories;
+      return { id: a.id, name: a.name, detail: cat?.label_singular ?? a.species };
+    }),
+  );
 }

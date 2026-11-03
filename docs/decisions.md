@@ -373,3 +373,18 @@ commit. Photo storage (upload/download) is verified manually (see README).
   Manual check list: upload two photos with the same name; rename to a taken
   name (expect an error); attach from the picker; remove from the animal and
   see it remain in the library; try deleting a used photo (expect refusal).
+
+### Photo Library: categories and bulk actions
+
+- `media.species` (migration `20260928000200`): an optional category the owner
+  files a photo under before it is on any animal. A photo shows under a
+  species tab when it is filed under it OR an animal of that species uses it.
+  The "Uncategorized" tab = no category and no animal. Tabs come from the
+  ranch's enabled species, so sheep or goats appear when enabled.
+- Bulk bar above the grid (WordPress-style): Select all, Deselect, click a
+  photo to select (Shift-click for a range), an action menu and Apply.
+  Actions: File under <species> / No category, Add to an animal (search by
+  name), Delete (photos in use are kept and reported). Renaming stays
+  double-click on the name.
+- Category is validated server-side against the ranch's enabled species.
+- Not verified against a real database or in a browser.

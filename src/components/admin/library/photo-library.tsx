@@ -56,7 +56,6 @@ export function PhotoLibrary({
   const [pageSize, setPageSize] = useState(50);
   const [page, setPage] = useState(1);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [bulk, setBulk] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [action, setAction] = useState("");
   const [applying, setApplying] = useState(false);
@@ -113,8 +112,7 @@ export function PhotoLibrary({
     setSelected(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
   }
 
-  function endBulk() {
-    setBulk(false);
+  function clearSelection() {
     setSelected([]);
     setAction("");
   }
@@ -172,7 +170,7 @@ export function PhotoLibrary({
             }
           : { tone: "error", text: result.message },
       );
-      if (result.ok) endBulk();
+      if (result.ok) clearSelection();
     } else if (action === "delete") {
       if (!window.confirm(`Delete ${count} ${noun} for good? Photos that are in use are kept. This can't be undone.`)) {
         setApplying(false);
@@ -185,7 +183,7 @@ export function PhotoLibrary({
           tone: kept ? "error" : "success",
           text: `${deleted} deleted.${kept ? ` ${kept} kept because they're in use. Remove them where they're used first.` : ""}`,
         });
-        endBulk();
+        clearSelection();
       } else setMessage({ tone: "error", text: result.message });
     }
     setApplying(false);
@@ -195,7 +193,6 @@ export function PhotoLibrary({
   const rowProps = (p: LibraryPhoto) => ({
     photo: p,
     onMessage: setMessage,
-    selecting: bulk,
     selected: selected.includes(p.id),
     onToggle: (shift: boolean) => toggle(p.id, shift),
     categoryLabel: p.category ? (speciesLabel[p.category] ?? p.category) : null,
@@ -362,9 +359,16 @@ export function PhotoLibrary({
 
             <button
               type="button"
-              className={buttonClasses(bulk ? "primary" : "secondary", "min-h-10! gap-2 px-3! py-1.5! text-sm!")}
-              aria-pressed={bulk}
-              onClick={() => (bulk ? endBulk() : setBulk(true))}
+              className={buttonClasses("secondary", "min-h-10! gap-2 px-3! py-1.5! text-sm!")}
+              aria-pressed={allShownSelected}
+              disabled={shownIds.length === 0}
+              onClick={() =>
+                setSelected(
+                  allShownSelected
+                    ? selected.filter((id) => !shownIds.includes(id))
+                    : [...new Set([...selected, ...shownIds])],
+                )
+              }
             >
               <svg
                 viewBox="0 0 24 24"
@@ -378,7 +382,7 @@ export function PhotoLibrary({
               >
                 <path d="M4 5h4v4H4zM4 15h4v4H4zM12 7h8M12 17h8" />
               </svg>
-              {bulk ? "Cancel" : "Bulk select"}
+              {allShownSelected ? "Unselect page" : "Select page"}
             </button>
 
             <div className="relative ml-auto">
@@ -408,38 +412,18 @@ export function PhotoLibrary({
             </div>
           </div>
 
-          {bulk ? (
+          {selected.length > 0 ? (
             <div
               role="group"
               aria-label="Actions for selected photos"
-              className="flex flex-wrap items-center gap-x-5 gap-y-3 border border-rule bg-white px-4 py-3"
+              className="sticky bottom-3 z-20 flex flex-wrap items-center gap-x-5 gap-y-3 border border-primary bg-white px-4 py-3 shadow-[0_8px_24px_-12px_rgb(30_42_35/0.5)]"
             >
-              <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
-                <input
-                  type="checkbox"
-                  checked={allShownSelected}
-                  disabled={shownIds.length === 0}
-                  onChange={() =>
-                    setSelected(
-                      allShownSelected
-                        ? selected.filter((id) => !shownIds.includes(id))
-                        : [...new Set([...selected, ...shownIds])],
-                    )
-                  }
-                />
-                Select all on this page
-              </label>
-              <button
-                type="button"
-                className={buttonClasses("quiet")}
-                onClick={() => setSelected([])}
-                disabled={selected.length === 0}
-              >
+              <p className="text-sm font-semibold" aria-live="polite">
+                {selected.length} selected
+              </p>
+              <button type="button" className={buttonClasses("quiet")} onClick={() => setSelected([])}>
                 Deselect
               </button>
-              <p className="text-sm text-ink-muted" aria-live="polite">
-                {selected.length ? `${selected.length} selected` : "Click photos to select them."}
-              </p>
               <div className="ml-auto flex flex-wrap items-center gap-3">
                 <Select
                   id="bulk-action"
@@ -447,7 +431,6 @@ export function PhotoLibrary({
                   value={action}
                   onChange={(e) => setAction(e.target.value)}
                   className={clsx(compactSelect, "min-w-52!")}
-                  disabled={selected.length === 0}
                 >
                   <option value="">Choose an action…</option>
                   <optgroup label="File under">
@@ -479,7 +462,7 @@ export function PhotoLibrary({
               : `Showing ${firstIndex + 1}–${firstIndex + shown.length} of ${filtered.length}${
                   filtered.length === photos.length ? "" : ` (${photos.length} in total)`
                 }.`}{" "}
-            Double-click a name to rename it.
+            Click a photo to select it. Double-click a name to rename it.
           </p>
         </>
       ) : null}
@@ -504,11 +487,9 @@ export function PhotoLibrary({
             <caption className="sr-only">Photos</caption>
             <thead>
               <tr className="border-b border-rule text-sm text-ink-muted">
-                {bulk ? (
-                  <th scope="col" className="w-12 py-2 pr-2">
-                    <span className="sr-only">Select</span>
-                  </th>
-                ) : null}
+                <th scope="col" className="w-12 py-2 pr-2">
+                  <span className="sr-only">Select</span>
+                </th>
                 <th scope="col" className="w-24 py-2 pr-4">
                   <span className="sr-only">Photo</span>
                 </th>
@@ -569,7 +550,7 @@ export function PhotoLibrary({
         onDone={(text) => {
           setAnimalDialog(false);
           setMessage({ tone: "success", text });
-          endBulk();
+          clearSelection();
           router.refresh();
         }}
       />
@@ -621,7 +602,6 @@ function ViewButton({
 type RowProps = {
   photo: LibraryPhoto;
   onMessage: (m: Message) => void;
-  selecting: boolean;
   selected: boolean;
   onToggle: (shift: boolean) => void;
   categoryLabel: string | null;
@@ -635,7 +615,7 @@ const usageText = (p: LibraryPhoto) =>
       ? "Used on the website"
       : "Not used yet";
 
-function GridCard({ photo, onMessage, selecting, selected, onToggle, categoryLabel }: RowProps) {
+function GridCard({ photo, onMessage, selected, onToggle, categoryLabel }: RowProps) {
   const label = photoLabel(photo);
   const thumb = photo.thumb ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -644,33 +624,29 @@ function GridCard({ photo, onMessage, selecting, selected, onToggle, categoryLab
 
   return (
     <article className="space-y-3">
-      {selecting ? (
-        <button
-          type="button"
-          aria-pressed={selected}
-          aria-label={`Select ${label}`}
-          onClick={(e) => onToggle(e.shiftKey)}
+      <button
+        type="button"
+        aria-pressed={selected}
+        aria-label={`Select ${label}`}
+        onClick={(e) => onToggle(e.shiftKey)}
+        className={clsx(
+          "group relative block aspect-[4/3] w-full cursor-pointer overflow-hidden bg-surface outline-offset-2",
+          selected && "ring-4 ring-primary",
+        )}
+      >
+        {thumb}
+        <span
+          aria-hidden="true"
           className={clsx(
-            "group relative block aspect-[4/3] w-full overflow-hidden bg-surface outline-offset-2",
-            selected && "ring-4 ring-primary",
+            "absolute left-2 top-2 inline-flex size-6 items-center justify-center border-2 text-sm font-bold",
+            selected
+              ? "border-primary bg-primary text-on-primary"
+              : "border-white bg-black/30 text-transparent group-hover:text-white/70",
           )}
         >
-          {thumb}
-          <span
-            aria-hidden="true"
-            className={clsx(
-              "absolute left-2 top-2 inline-flex size-6 items-center justify-center border-2 text-sm font-bold",
-              selected
-                ? "border-primary bg-primary text-on-primary"
-                : "border-white bg-black/30 text-transparent group-hover:text-white/70",
-            )}
-          >
-            ✓
-          </span>
-        </button>
-      ) : (
-        <div className="aspect-[4/3] overflow-hidden bg-surface">{thumb}</div>
-      )}
+          ✓
+        </span>
+      </button>
 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -684,23 +660,21 @@ function GridCard({ photo, onMessage, selecting, selected, onToggle, categoryLab
   );
 }
 
-function ListRow({ photo, onMessage, selecting, selected, onToggle, categoryLabel }: RowProps) {
+function ListRow({ photo, onMessage, selected, onToggle, categoryLabel }: RowProps) {
   const label = photoLabel(photo);
   return (
     <tr className={clsx("border-b border-rule align-middle", selected && "bg-primary/5")}>
-      {selecting ? (
-        <td className="py-2 pr-2">
-          <input
-            type="checkbox"
-            aria-label={`Select ${label}`}
-            checked={selected}
-            className="size-5"
-            // Checkbox clicks carry shiftKey too, so ranges work in the list as well.
-            onClick={(e) => onToggle(e.shiftKey)}
-            onChange={() => {}}
-          />
-        </td>
-      ) : null}
+      <td className="py-2 pr-2">
+        <input
+          type="checkbox"
+          aria-label={`Select ${label}`}
+          checked={selected}
+          className="size-5"
+          // Checkbox clicks carry shiftKey too, so ranges work in the list as well.
+          onClick={(e) => onToggle(e.shiftKey)}
+          onChange={() => {}}
+        />
+      </td>
       <td className="py-2 pr-4">
         <div className="aspect-[4/3] w-20 overflow-hidden bg-surface">
           {photo.thumb ? (

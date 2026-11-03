@@ -396,8 +396,10 @@ commit. Photo storage (upload/download) is verified manually (see README).
   photos per page (25, 50, 100, 250; default 50), Bulk select, search.
 - Upload is hidden behind the "Upload Photos" button next to the title and
   expands to the drag-and-drop box.
-- Bulk select is a mode: selection checkmarks and the action bar (select all
-  on this page, Deselect, action menu, Apply) appear only while it is on.
+- Photos can be selected at any time (no mode): click a photo or tick its row;
+  Shift-click selects a range. "Select page" in the toolbar selects everything
+  on the current page. As soon as one is selected, a sticky action bar appears
+  (count, Deselect, action menu, Apply).
 - List view is a table (thumbnail, name, category, used by, added); details
   collapse under the name on narrow screens.
 - Changing any filter, the sort, the search or the page size returns to page 1.

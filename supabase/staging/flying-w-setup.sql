@@ -27,6 +27,17 @@ set tagline = 'Raising and breeding registered Quarter Horses, Appaloosas and He
     time_zone = 'America/Denver'
 where ranch_id = (select id from public.ranches where slug = 'flying-w-ranch');
 
+-- First homepage slide: the client-approved headline and tagline, no photo yet.
+-- Shows as text over the brand colour until real photography is uploaded.
+-- Only inserted if the ranch has no slides, so re-running never duplicates it.
+insert into public.hero_slides (ranch_id, headline, subheadline, cta_label, cta_kind, cta_page, sort_order)
+select r.id, 'Quality Horses. Productive Cattle. Lasting Legacies.',
+  'Raising and breeding registered Quarter Horses, Appaloosas and Hereford cattle.',
+  'Explore our ranch', 'page', 'about', 1
+from public.ranches r
+where r.slug = 'flying-w-ranch'
+  and not exists (select 1 from public.hero_slides h where h.ranch_id = r.id and h.archived_at is null);
+
 -- Check: expect 2 settings rows and the tagline.
 select s.species, s.breed_heading, s.categories, s.show_sold, p.tagline, p.time_zone
 from public.ranches r

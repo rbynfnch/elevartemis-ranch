@@ -4,7 +4,7 @@
  *   npm run provision:ranch -- \
  *     --slug flying-w-ranch --name "Flying W Ranch" \
  *     --domain flyingwranch.example --domain www.flyingwranch.example \
- *     --species horse,cattle --mark CC --subtitle Ranch \
+ *     --species horse,cattle --mark FW --subtitle Ranch \
  *     --owner-email owner@example.com --inquiry-email owner@example.com
  *
  * The first --domain is primary; others redirect to it. The owner receives an

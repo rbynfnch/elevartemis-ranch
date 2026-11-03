@@ -8,6 +8,10 @@ import { formatPartialDate, performanceDisplay, plainSummary, quickFacts, saleDi
 import { richTextIsEmpty } from "@/lib/content/empty";
 import { RichText } from "@/lib/content/rich-text";
 import { speciesTerms, type Species } from "@/lib/domain/species";
+import { resolveListing } from "@/lib/site/listing-pages";
+import { ranchCategories } from "@/lib/site/navigation";
+import { ListingPageView } from "@/components/animals/listing-page";
+import { Crumbs } from "@/components/animals/listing";
 import { PhotoGallery } from "@/components/animals/photo-gallery";
 import { PhotoPlaceholder } from "@/components/animals/photo-placeholder";
 import { ButtonLink } from "@/components/ui/button";
@@ -26,6 +30,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const species = speciesFromPath(path);
   const site = species ? await getSiteSettings(ranch) : null;
   if (!species || !site) return {};
+  const resolved = resolveListing(site, species, slug);
+  if (resolved.type === "none") return {};
+  if (resolved.type === "listing") {
+    return {
+      title: resolved.title,
+      description: `${resolved.title} from ${site.name}.`,
+      alternates: { canonical: `/${path}/${slug}` },
+    };
+  }
   const lookup = await getAnimalPage(site.ranchId, site.slug, species, slug);
   if (lookup.kind !== "found") return {};
   const a = lookup.animal;
@@ -62,6 +75,10 @@ async function Portfolio({ params }: { params: Params }) {
   const site = await getSiteSettings(ranch);
   if (!site) notFound();
 
+  const resolved = resolveListing(site, species, slug);
+  if (resolved.type === "none") notFound();
+  if (resolved.type === "listing") return <ListingPageView site={site} species={species} page={resolved} />;
+
   const lookup = await getAnimalPage(site.ranchId, site.slug, species, slug);
   if (lookup.kind === "moved") permanentRedirect(`/${path}/${lookup.slug}`);
   if (lookup.kind === "missing") notFound();
@@ -83,6 +100,14 @@ async function Portfolio({ params }: { params: Params }) {
   const breeding = breedingDisplay(a.species, a.breedingAvailable, a.breeding);
   const performance = a.species === "cattle" ? performanceDisplay(a.performance) : null;
   const memorial = a.programStatus === "deceased" ? formatPartialDate(a.deceasedOn, a.deceasedPrecision) : null;
+  const settings = site.speciesSettings?.[a.species];
+  const speciesLabel = settings?.navLabel ?? speciesTerms[a.species].plural;
+  // The category crumb links only to a category page the ranch actually offers.
+  const categoryRow = site.categories.find((c) => c.id === a.categoryId);
+  const categoryPage =
+    categoryRow && ranchCategories(a.species, site.categories, settings).some((c) => c.id === categoryRow.id)
+      ? categoryRow
+      : null;
   const inquiryHref = `/contact?animal=${encodeURIComponent(a.slug)}`;
   const hasStory = !richTextIsEmpty(a.description);
 
@@ -94,9 +119,17 @@ async function Portfolio({ params }: { params: Params }) {
 
   return (
     <article className="mx-auto max-w-[88rem] px-[var(--gutter)] py-8 lg:py-12">
-      <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.22em] text-ink-muted">
-        {[speciesTerms[a.species].plural, category].filter(Boolean).join(" · ")}
-      </p>
+      <Crumbs
+        items={[
+          { label: speciesLabel, href: `/${path}` },
+          ...(categoryPage
+            ? [{ label: categoryPage.label_plural, href: `/${path}/${categoryPage.path_segment}` }]
+            : category
+              ? [{ label: category }]
+              : []),
+          { label: a.name },
+        ]}
+      />
 
       <div className="mt-5 grid gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-14">
         <div>

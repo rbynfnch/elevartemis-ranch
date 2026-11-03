@@ -498,3 +498,26 @@ commit. Photo storage (upload/download) is verified manually (see README).
   services and cattle performance columns.
 - Covered by unit tests of the reader and the planning rules. The saving and export
   steps have not been run against a real database yet.
+
+### Group pages and menu
+
+- `/horses`, `/cattle` (overview): the ranch's own heading (breed heading above the
+  title, e.g. "Herefords"), then a section per category in the ranch's order, each
+  with up to 8 animals and "View all N", then links to For Sale / Retired /
+  Previous Stallions / Sold when the ranch offers them and they have animals.
+- `/<species>/<category>` (Bulls, Stallions…): all animals in that category; foals
+  and calves are grouped by birth year, newest first, animals with no year last
+  with no heading. `/<species>/for-sale`, `/sold`, `/retired`, `/previous-stallions`
+  or `/reference-sires` use the same layout. The second path segment is resolved
+  by `resolveListing` (a listing page, "none" for a page or category the ranch
+  turned off, otherwise an animal's own page), so an animal can't be reached under
+  a category's or a special page's address.
+- `/for-sale`: horses and cattle together, one section per species. The menu has a
+  single top-level "For Sale" item whenever any species has animals for sale and
+  the ranch hasn't turned for-sale pages off.
+- For-sale cards show the price as the owner chose (price, "Contact for price", or
+  nothing). A category page with no animals shows a short invitation to get in touch.
+- Breadcrumbs on every one of these pages and on the animal page; the category
+  crumb is a link only when the ranch offers that category page.
+- Known limits: a mistyped address shows the not-found page with a 200 status (the
+  pages stream); In Memory (`/about/in-memory`) is not built yet.

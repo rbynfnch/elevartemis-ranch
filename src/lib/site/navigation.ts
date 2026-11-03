@@ -46,6 +46,12 @@ export function buildNavigation(site: NavInput): NavItem[] {
     });
   }
 
+  // One "For Sale" for horses and cattle together, when any species has animals for sale.
+  const anyForSale = site.enabledSpecies.some(
+    (species) => (site.speciesSettings?.[species]?.showForSale ?? true) && (site.navCounts[species]?.for_sale ?? 0) > 0,
+  );
+  if (anyForSale) items.push({ label: "For Sale", href: "/for-sale" });
+
   if (site.contentCounts.gallery > 0) items.push({ label: "Gallery", href: "/gallery" });
   if (site.contentCounts.posts > 0) items.push({ label: "Happening on the Ranch", href: "/on-the-ranch" });
   if (site.contentCounts.faqs > 0) items.push({ label: "FAQ", href: "/faq" });

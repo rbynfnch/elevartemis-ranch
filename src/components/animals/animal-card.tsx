@@ -8,6 +8,8 @@ export type AnimalCardData = {
   breed?: string | null;
   birthYear?: number | null;
   badge?: "For Sale" | "Sale Pending" | "Sold" | null;
+  /** Shown under the details on for-sale cards. */
+  price?: string | null;
   photo?: { src: string; alt: string; focalX: number; focalY: number } | null;
 };
 
@@ -54,6 +56,7 @@ export function AnimalCard({ animal, brandMark }: { animal: AnimalCardData; bran
         </Link>
       </h3>
       {details.length > 0 ? <p className="mt-1.5 text-sm text-ink-muted">{details.join(" · ")}</p> : null}
+      {animal.price ? <p className="mt-1.5 font-semibold">{animal.price}</p> : null}
       <p
         className="mt-3 inline-flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-primary"
         aria-hidden="true"

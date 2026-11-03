@@ -165,4 +165,36 @@ describe("buildNavigation", () => {
       href: "/cattle/reference-sires",
     });
   });
+
+  it("adds one For Sale item when anything is for sale, and not otherwise", () => {
+    const none = buildNavigation({ ...base, navCounts: { horse: { stallion: 1 }, cattle: {} } });
+    expect(none.find((i) => i.label === "For Sale")).toBeUndefined();
+    const some = buildNavigation({
+      ...base,
+      navCounts: { horse: { stallion: 1, for_sale: 1 }, cattle: { for_sale: 2 } },
+    });
+    expect(some.find((i) => i.label === "For Sale")).toEqual({ label: "For Sale", href: "/for-sale" });
+    // It comes after the species and before Contact.
+    const labels = some.map((i) => i.label);
+    expect(labels.indexOf("For Sale")).toBeGreaterThan(labels.indexOf("Horses"));
+    expect(labels.indexOf("For Sale")).toBeLessThan(labels.indexOf("Contact"));
+  });
+
+  it("leaves out For Sale when the ranch turned it off for every species", () => {
+    const off = {
+      navLabel: null,
+      breedHeading: null,
+      categories: null,
+      showRetired: true,
+      showReference: true,
+      showForSale: false,
+      showSold: true,
+    };
+    const nav = buildNavigation({
+      ...base,
+      speciesSettings: { horse: off, cattle: off },
+      navCounts: { horse: { for_sale: 2 }, cattle: { for_sale: 1 } },
+    });
+    expect(nav.find((i) => i.label === "For Sale")).toBeUndefined();
+  });
 });

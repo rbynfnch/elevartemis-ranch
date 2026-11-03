@@ -844,6 +844,7 @@ export type Database = {
           mime_type: string | null;
           original_path: string | null;
           ranch_id: string;
+          species: Database["public"]["Enums"]["species"] | null;
           status: Database["public"]["Enums"]["media_status"];
           taken_at: string | null;
           updated_at: string;
@@ -868,6 +869,7 @@ export type Database = {
           mime_type?: string | null;
           original_path?: string | null;
           ranch_id: string;
+          species?: Database["public"]["Enums"]["species"] | null;
           status?: Database["public"]["Enums"]["media_status"];
           taken_at?: string | null;
           updated_at?: string;
@@ -892,6 +894,7 @@ export type Database = {
           mime_type?: string | null;
           original_path?: string | null;
           ranch_id?: string;
+          species?: Database["public"]["Enums"]["species"] | null;
           status?: Database["public"]["Enums"]["media_status"];
           taken_at?: string | null;
           updated_at?: string;

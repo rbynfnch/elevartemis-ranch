@@ -41,7 +41,8 @@ export function parseEpdRows(
     const entry: EpdEntry = { trait, value };
     if (row.accuracy?.trim()) {
       const acc = Number(row.accuracy);
-      if (!Number.isFinite(acc) || acc < 0 || acc > 1) return { error: `${trait} accuracy should be between 0 and 1 (for example .45).` };
+      if (!Number.isFinite(acc) || acc < 0 || acc > 1)
+        return { error: `${trait} accuracy should be between 0 and 1 (for example .45).` };
       entry.accuracy = acc;
     }
     if (row.percentile?.trim()) {

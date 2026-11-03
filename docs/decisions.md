@@ -443,3 +443,28 @@ commit. Photo storage (upload/download) is verified manually (see README).
   common breeds, so one click adds them back. Saving an animal (form or CSV)
   with a hidden breed's name restores it. Hiding is refused while animals use
   the breed, like deleting.
+
+### Public animal page
+
+- `/horses/<name>`, `/cattle/<name>` (`src/app/site/[ranch]/[species]/[slug]`):
+  gallery (main photo first, thumbnails, full-screen view with arrow keys),
+  header with category, status badges (For Sale / Sale Pending / Sold, Retired,
+  Previous Stallion / Reference Sire, In Memory, Standing at Stud), name,
+  registered name, a Quick Facts panel (basics, then the owner's own facts), a
+  sale box (price as the owner chose: price, "Contact for price", or none), an
+  inquiry button, then description, story sections, Breeding Services and, for
+  cattle, Performance (weights and an EPD table).
+- Everything is built by `src/lib/animals/portfolio.ts`, which returns only what
+  exists (no blank labels, no "N/A"; a date shows only as precisely as known;
+  a sold animal never shows a price; a missing EPD accuracy/rank column is hidden).
+- Renamed animals redirect (301) from their old address; hidden, deleted or
+  unknown animals are not found. Page title, description, canonical address and
+  Open Graph image are set per animal.
+- Known limits: the "Inquire / Ask about" button goes to `/contact?animal=…`
+  (the contact page is a later phase); an unknown address shows the not-found
+  page with status 200 because the page streams (Next marks it noindex);
+  pedigree and offspring arrive with Phase 6; the category breadcrumb isn't a
+  link until category pages exist.
+- Verified with unit tests, lint, typecheck, a production build and desktop and
+  phone screenshots against a fake database server (fixture photos from the
+  mockup). Not yet seen against the real staging data.

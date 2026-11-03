@@ -468,3 +468,33 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - Verified with unit tests, lint, typecheck, a production build and desktop and
   phone screenshots against a fake database server (fixture photos from the
   mockup). Not yet seen against the real staging data.
+
+### CSV import and export of animals
+
+- `/admin/animals/import` (button "Import CSV" on the Animals list): upload a CSV,
+  see a preview (what will be added or updated, every problem with its row and
+  column, new breeds, photos missing from the library), then confirm. Nothing is
+  saved before the confirmation; rows with problems are skipped and reported, the
+  rest import. The server re-reads the file on confirm, so the preview can't be
+  tampered with.
+- Columns: id, name, species, category, sex, breed, color, registered_name,
+  registry, registration_number, birth_date, description, status, published,
+  featured, for_sale, price, quick_facts, photos. Friendly header names are
+  accepted (DOB, Show on website…); unknown columns are listed, not silently used.
+  Semicolon- and tab-separated files and Excel's byte-order mark are handled.
+- Matching: a row with an `id` updates that animal; otherwise the same name and
+  species updates the existing animal (two animals with one name needs the id);
+  otherwise a new animal is added.
+- A blank cell never erases anything. Quick facts add to or replace by label and
+  story sections are kept. A sex that the category implies (a Bull) is filled in.
+  New animals are shown on the website and Active unless the sheet says otherwise.
+- Photos are matched to Photo Library names, with or without the file type,
+  ignoring capitals; the first listed becomes the main photo. A missing photo is
+  a warning, not an error.
+- Breeds typed in the sheet are added to the breed list by the database trigger.
+- "Download template" (header only) and "Download my animals" (same columns, so an
+  edited download can be uploaded again). Up to 500 animals and about 900 KB per file.
+- Not built yet: sire and dam (pedigree arrives with Phase 6), videos, breeding
+  services and cattle performance columns.
+- Covered by unit tests of the reader and the planning rules. The saving and export
+  steps have not been run against a real database yet.

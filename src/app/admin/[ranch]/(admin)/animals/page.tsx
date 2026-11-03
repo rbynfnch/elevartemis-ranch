@@ -56,9 +56,14 @@ async function Animals({
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-3xl">Animals</h1>
-        <Link href="/admin/animals/new" className={buttonClasses("primary")}>
-          Add Animal
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/admin/animals/import" className={buttonClasses("secondary")}>
+            Import CSV
+          </Link>
+          <Link href="/admin/animals/new" className={buttonClasses("primary")}>
+            Add Animal
+          </Link>
+        </div>
       </header>
 
       {str(q.moved) ? (

@@ -38,7 +38,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
-        className="relative z-50 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold"
+        className={`relative z-50 inline-flex min-h-11 items-center gap-2 px-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] ${open ? "text-ink" : "text-on-night"}`}
       >
         {open ? "Close" : "Menu"}
         <svg viewBox="0 0 20 20" className="size-5" aria-hidden="true">
@@ -54,7 +54,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
         id={panelId}
         aria-label="Main"
         hidden={!open}
-        className="fixed inset-0 z-40 overflow-y-auto bg-paper px-[var(--gutter)] pb-12 pt-24"
+        className="fixed inset-0 z-40 overflow-y-auto bg-paper px-[var(--gutter)] pb-12 pt-24 text-ink"
       >
         <ul className="space-y-6">
           {items.map((item) => (

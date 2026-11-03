@@ -8,12 +8,22 @@ type WordmarkProps = {
   mark?: string | null;
   href?: string;
   tone?: "ink" | "light";
+  /** Letter-spaced capitals on one line, as in the header and footer. */
+  caps?: boolean;
   className?: string;
 };
 
 /** Ranch wordmark: brass brand mark + name in the display face + italic subtitle. */
-export function Wordmark({ name, subtitle, mark, href = "/", tone = "ink", className }: WordmarkProps) {
-  const content = (
+export function Wordmark({ name, subtitle, mark, href = "/", tone = "ink", caps = false, className }: WordmarkProps) {
+  const content = caps ? (
+    <>
+      {mark ? <BrandMark letters={mark} className="h-9 w-12 shrink-0 text-accent" /> : null}
+      <span className="text-[0.8125rem] font-medium uppercase leading-tight tracking-[0.3em] sm:text-sm">
+        {name}
+        {subtitle ? <> {subtitle}</> : null}
+      </span>
+    </>
+  ) : (
     <>
       {mark ? <BrandMark letters={mark} className="h-9 w-12 shrink-0 text-accent" /> : null}
       <span className="flex flex-col leading-none">

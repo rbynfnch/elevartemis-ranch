@@ -17,8 +17,8 @@ export type AnimalCardData = {
  * category is still a complete card.
  */
 export function AnimalCard({ animal, brandMark }: { animal: AnimalCardData; brandMark?: string | null }) {
-  const details = [animal.categoryLabel, animal.breed, animal.birthYear ? String(animal.birthYear) : null].filter(
-    (d): d is string => Boolean(d && d.trim()),
+  const details = [animal.breed, animal.birthYear ? String(animal.birthYear) : null].filter((d): d is string =>
+    Boolean(d && d.trim()),
   );
 
   return (
@@ -45,20 +45,20 @@ export function AnimalCard({ animal, brandMark }: { animal: AnimalCardData; bran
         ) : null}
       </div>
 
-      <h3 className="mt-4 font-display text-xl leading-tight">
+      <p className="mt-4 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-ink-muted">
+        {animal.categoryLabel}
+      </p>
+      <h3 className="mt-1 font-display text-xl leading-tight">
         <Link href={animal.href} className="no-underline after:absolute after:inset-0">
           {animal.name}
         </Link>
       </h3>
-      {details.length > 0 ? (
-        <ul className="mt-1.5 space-y-0.5 text-sm text-ink-muted">
-          {details.map((d) => (
-            <li key={d}>{d}</li>
-          ))}
-        </ul>
-      ) : null}
-      <p className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary" aria-hidden="true">
-        View portfolio
+      {details.length > 0 ? <p className="mt-1.5 text-sm text-ink-muted">{details.join(" · ")}</p> : null}
+      <p
+        className="mt-3 inline-flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-primary"
+        aria-hidden="true"
+      >
+        View details
         <svg viewBox="0 0 16 16" className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
           <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
         </svg>

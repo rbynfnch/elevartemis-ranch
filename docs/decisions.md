@@ -308,3 +308,28 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - `demo.localhost` refusing connections could not be reproduced in the cloud
   sandbox (no IPv6). The README documents the diagnosis; the hosts-file entry
   is the dependable fix.
+
+### Public homepage restyle (to the Flying W mockup)
+
+- Header and footer are dark (`night`) with letter-spaced capitals; no search
+  icon; footer is slim with nav, social icons and the tagline.
+- Hero (`HeroSlider`): photo full-bleed, text block on the right, from
+  `hero_slides`. Autoplay only without reduced motion, pauses on hover/focus
+  and has a Pause button. A slide with no ready photo still shows its text
+  over the brand colour, so the hero is never blank before photography exists.
+  Buttons resolve through `slideHref`; a button whose target is gone is dropped.
+- Icon row is built from the real navigation: no species, no tile. Tile lines
+  use the ranch's own breed heading or short claim-free descriptors.
+- Story section appears only when the owner has written an intro (about text),
+  never from filler. The mockup's "More Than a Ranch" copy and Angus/animal
+  details were NOT used (not client-confirmed). The story photo is not built
+  yet: there is no field for it.
+- Featured-animal cards show category, name, and "breed · year" from real
+  data only.
+- Not built yet: combined top-level "For Sale" nav item and its icon tile
+  (appears automatically once the nav includes it), story photo, "Ranch Life"
+  tile (named "Happening on the Ranch" per the client).
+- Verified with lint, typecheck, unit tests, a production build, and desktop
+  and phone screenshots against a fake PostgREST server with fixture photos
+  cropped from the mockup. Not verified: the no-slides/no-animals fallback,
+  slider autoplay, a real database.

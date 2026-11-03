@@ -31,6 +31,7 @@ import {
   startPhotoUploadAction,
   updatePhotoAction,
 } from "@/lib/admin/animals/actions";
+import { LibraryPicker } from "@/components/admin/library/library-picker";
 import { buttonClasses } from "@/components/ui/button";
 import { FormMessage, TextInput } from "@/components/admin/forms";
 
@@ -85,7 +86,13 @@ export function PhotoManager({
       .storage.from("ranch-originals")
       .uploadToSignedUrl(start.data.path, start.data.token, blob, { contentType: "image/jpeg" });
     if (error) throw new Error(`${file.name} didn't upload. Check your connection and try again.`);
-    const finish = await finishPhotoUploadAction({ mediaId: start.data.mediaId, animalId, takenAt, altText: null });
+    const finish = await finishPhotoUploadAction({
+      mediaId: start.data.mediaId,
+      animalId,
+      fileName: file.name,
+      takenAt,
+      altText: null,
+    });
     if (!finish.ok) throw new Error(finish.message);
     return start.data.mediaId;
   }
@@ -148,7 +155,7 @@ export function PhotoManager({
   }
 
   async function remove(id: string) {
-    if (!window.confirm("Remove this photo?")) return;
+    if (!window.confirm("Take this photo off this animal? It stays in your Photo Library.")) return;
     setPhotos(photos.filter((p) => p.id !== id));
     const result = await removePhotoAction(animalId, id);
     if (!result.ok) setMessage({ tone: "error", text: result.message });
@@ -180,14 +187,28 @@ export function PhotoManager({
         )}
       >
         <p className="font-semibold">Drag photos here, or</p>
-        <button
-          type="button"
-          className={buttonClasses("primary")}
-          onClick={() => fileInput.current?.click()}
-          disabled={!!progress}
-        >
-          Upload Photos
-        </button>
+        <div className="flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            className={buttonClasses("primary")}
+            onClick={() => fileInput.current?.click()}
+            disabled={!!progress}
+          >
+            Upload Photos
+          </button>
+          <LibraryPicker
+            animalId={animalId}
+            alreadyOnAnimal={photos.map((p) => p.id)}
+            disabled={!!progress}
+            onAdded={(count) =>
+              setMessage(
+                count
+                  ? { tone: "success", text: count === 1 ? "Photo added." : `${count} photos added.` }
+                  : { tone: "error", text: "Those photos are already on this animal." },
+              )
+            }
+          />
+        </div>
         <p className="max-w-md text-sm text-ink-muted">
           Any size or shape is fine. Large photos are resized automatically, and you can choose the part of each photo
           that matters most.

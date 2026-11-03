@@ -352,3 +352,24 @@ commit. Photo storage (upload/download) is verified manually (see README).
   manage; add a label by using it once.
 - Not verified in a browser against a real signed-in session; covered by unit
   tests, lint, typecheck and a production build. Run the e2e scripts locally.
+
+### Photo Library
+
+- `media.file_name` (migration `20260928000100`) keeps each photo's upload
+  name, unique per ranch ignoring capitals. Duplicate uploads become
+  `name-2.jpg`, `name-3.jpg`. Photos from before the migration are "Untitled"
+  and can be named in the library.
+- `/admin/photos` lists every ready photo: upload many, rename, copy name,
+  search, and delete only when nothing uses it (animals, update posts,
+  homepage slides, Gallery). A used photo's Delete is disabled and says where.
+- Animal pages can "Choose from library" (multi-select; photos already on the
+  animal are hidden) as well as upload.
+- Behaviour change: "Remove" on an animal's photo now only takes it off that
+  animal; the file stays in the library. Previously it deleted unused files.
+  Deleting for good happens in the library (and Delete forever on an animal
+  still removes photos only that animal used).
+- The CSV importer (next) will match its `photos` column against these names.
+- Not verified against a real database or in a browser (no Docker here).
+  Manual check list: upload two photos with the same name; rename to a taken
+  name (expect an error); attach from the picker; remove from the animal and
+  see it remain in the library; try deleting a used photo (expect refusal).

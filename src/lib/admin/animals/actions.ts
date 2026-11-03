@@ -144,7 +144,9 @@ export async function startPhotoUploadAction() {
 
 export async function finishPhotoUploadAction(input: {
   mediaId: string;
-  animalId: string;
+  /** Omit when uploading to the Photo Library (no animal yet). */
+  animalId?: string | null;
+  fileName?: string | null;
   takenAt: string | null;
   altText: string | null;
 }) {
@@ -153,7 +155,8 @@ export async function finishPhotoUploadAction(input: {
   const parsed = z
     .object({
       mediaId: uuid,
-      animalId: uuid,
+      animalId: uuid.nullish(),
+      fileName: z.string().max(500).nullish(),
       takenAt: z.iso.datetime().nullable(),
       altText: z.string().max(300).nullable(),
     })

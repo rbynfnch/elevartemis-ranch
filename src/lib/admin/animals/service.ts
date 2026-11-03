@@ -8,6 +8,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/database.types";
 import { dbErrorMessage } from "@/lib/auth/messages";
 import { processImage } from "@/lib/media/process";
+import { takenFileNames } from "@/lib/admin/library/service";
+import { uniqueFileName } from "@/lib/admin/library/file-names";
 import type { BasicsInput, BreedingInput, DetailsInput, PerformanceInput, SaleInput, StatusInput } from "./schemas";
 
 export type Db = SupabaseClient<Database>;
@@ -306,7 +308,7 @@ export async function finishPhotoUpload(
   db: Db,
   ranchId: string,
   mediaId: string,
-  opts: { animalId: string; takenAt?: string | null; altText?: string | null },
+  opts: { animalId?: string | null; fileName?: string | null; takenAt?: string | null; altText?: string | null },
 ): Promise<Result<{ mediaId: string }>> {
   const { data: media, error } = await db.from("media").select("original_path").eq("id", mediaId).maybeSingle();
   if (error) return dbFail(error);
@@ -326,9 +328,11 @@ export async function finishPhotoUpload(
       if (uploadError) throw uploadError;
       variants[String(v.width)] = { path, w: v.width, h: v.height };
     }
+    const fileName = uniqueFileName(opts.fileName ?? "", await takenFileNames(db, ranchId));
     const { error: updateError } = await db
       .from("media")
       .update({
+        file_name: fileName,
         status: "ready",
         variants,
         width: processed.width,
@@ -345,6 +349,9 @@ export async function finishPhotoUpload(
     await db.from("media").update({ status: "failed" }).eq("id", mediaId);
     return fail("We couldn't read that photo. Try a JPEG or PNG, or take a screenshot of it and upload that.");
   }
+
+  // From the Photo Library there is no animal yet: the photo just joins the library.
+  if (!opts.animalId) return ok({ mediaId });
 
   const { data: last } = await db
     .from("animal_media")
@@ -387,11 +394,10 @@ export async function updatePhoto(
   );
 }
 
-/** Removes the photo from this animal; deletes the file too if nothing else uses it. */
-export async function removePhoto(db: Db, ranchId: string, animalId: string, mediaId: string): Promise<Result> {
+/** Takes the photo off this animal. The file stays in the Photo Library; delete it there when nothing needs it. */
+export async function removePhoto(db: Db, _ranchId: string, animalId: string, mediaId: string): Promise<Result> {
   const { error } = await db.from("animal_media").delete().eq("animal_id", animalId).eq("media_id", mediaId);
   if (error) return dbFail(error);
-  await deleteMediaIfUnused(db, ranchId, mediaId);
   return ok(null);
 }
 

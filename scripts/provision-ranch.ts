@@ -2,8 +2,8 @@
  * Provision a new ranch client (Elevartemis staff only).
  *
  *   npm run provision:ranch -- \
- *     --slug cottonwood-creek --name "Cottonwood Creek Ranch" \
- *     --domain cottonwoodcreekranch.com --domain www.cottonwoodcreekranch.com \
+ *     --slug flying-w-ranch --name "Flying W Ranch" \
+ *     --domain flyingwranch.example --domain www.flyingwranch.example \
  *     --species horse,cattle --mark CC --subtitle Ranch \
  *     --owner-email owner@example.com --inquiry-email owner@example.com
  *
@@ -13,6 +13,7 @@
  *
  * Uses SUPABASE_SECRET_KEY from .env.local — run it only from a trusted machine.
  */
+import { keyAwareFetch } from "../src/lib/supabase/api-key";
 import { parseArgs } from "node:util";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../src/lib/database.types";
@@ -59,7 +60,10 @@ if (!url || !secret) fail("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY must
 const siteOrigin = domains[0] ? `https://${domains[0]}` : null;
 if (values["owner-email"] && !values["skip-invite"] && !siteOrigin)
   fail("Add at least one --domain so the invitation can link to the ranch's site");
-const db = createClient<Database>(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+const db = createClient<Database>(url, secret, {
+  auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: keyAwareFetch(secret) },
+});
 
 async function main() {
   const { data: existing } = await db.from("ranches").select("id").eq("slug", slug!).maybeSingle();

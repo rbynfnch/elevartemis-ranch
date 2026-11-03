@@ -8,6 +8,7 @@
  * Creates its own test animals and removes them at the end. Photo uploads need
  * Supabase Storage and are exercised manually (see README).
  */
+import { keyAwareFetch } from "../src/lib/supabase/api-key";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../src/lib/database.types";
 import * as svc from "../src/lib/admin/animals/service";
@@ -37,7 +38,10 @@ const basics = (over: Partial<Parameters<typeof svc.createAnimal>[2]> = {}) => (
 async function main() {
   const { jar, client } = await signIn("owner@demo.test");
   const db = client as unknown as svc.Db;
-  const anon = createClient<Database>(SUPABASE_URL, PUBLISHABLE, { auth: { persistSession: false } });
+  const anon = createClient<Database>(SUPABASE_URL, PUBLISHABLE, {
+    auth: { persistSession: false },
+    global: { fetch: keyAwareFetch(PUBLISHABLE) },
+  });
   const cleanup: string[] = [];
 
   // ─── Add and edit ──────────────────────────────────────────────────────────

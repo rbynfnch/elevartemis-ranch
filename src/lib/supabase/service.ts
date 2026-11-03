@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { publicEnv } from "@/lib/env";
+import { keyAwareFetch } from "@/lib/supabase/api-key";
 
 /**
  * Service-role client: BYPASSES Row-Level Security.
@@ -17,5 +18,6 @@ export function createServiceSupabase() {
   if (!secret) throw new Error("SUPABASE_SECRET_KEY is not set");
   return createClient<Database>(publicEnv().supabaseUrl, secret, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { fetch: keyAwareFetch(secret) },
   });
 }

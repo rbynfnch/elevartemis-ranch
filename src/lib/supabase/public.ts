@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { publicEnv } from "@/lib/env";
+import { keyAwareFetch } from "@/lib/supabase/api-key";
 
 /**
  * Anonymous, cookie-free client for PUBLIC website reads.
@@ -12,5 +13,6 @@ export function createPublicClient() {
   const env = publicEnv();
   return createClient<Database>(env.supabaseUrl, env.supabasePublishableKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { fetch: keyAwareFetch(env.supabasePublishableKey) },
   });
 }

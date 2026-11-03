@@ -73,7 +73,7 @@ Then open:
 
 | URL | What |
 |---|---|
-| http://demo.localhost:3000 | Demo ranch ("Cottonwood Creek Ranch" — placeholder name) |
+| http://demo.localhost:3000 | Demo ranch ("Flying W Ranch") |
 | http://demo.localhost:3000/design-system | Temporary brand review page (draft ranches only) |
 | http://demo.localhost:3000/admin | Demo ranch admin |
 | http://second.localhost:3000 | Second test ranch (exists to prove isolation) |
@@ -117,8 +117,8 @@ Supabase Studio (http://127.0.0.1:54323) under Storage → `ranch-media`.
 
 ```bash
 npm run provision:ranch -- \
-  --slug cottonwood-creek --name "Cottonwood Creek Ranch" \
-  --domain cottonwoodcreekranch.com --domain www.cottonwoodcreekranch.com \
+  --slug flying-w-ranch --name "Flying W Ranch" \
+  --domain flyingwranch.example --domain www.flyingwranch.example \
   --species horse,cattle --mark CC --subtitle Ranch \
   --owner-email owner@example.com
 ```

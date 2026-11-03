@@ -8,6 +8,7 @@
  * after itself (authenticators removed, ranch settings restored).
  * Never run against production.
  */
+import { keyAwareFetch } from "../src/lib/supabase/api-key";
 import http from "node:http";
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -38,6 +39,7 @@ type Jar = Map<string, string>;
 /** A server-style Supabase client whose cookies we can replay against the app. */
 function sessionClient(jar: Jar) {
   return createServerClient(SUPABASE_URL, PUBLISHABLE, {
+    global: { fetch: keyAwareFetch(PUBLISHABLE) },
     cookies: {
       getAll: () => [...jar].map(([name, value]) => ({ name, value })),
       setAll: (list) => list.forEach(({ name, value }) => (value ? jar.set(name, value) : jar.delete(name))),
@@ -96,11 +98,17 @@ async function signIn(email: string) {
   return { jar, client };
 }
 
-const service = createClient(SUPABASE_URL, SECRET, { auth: { persistSession: false, autoRefreshToken: false } });
+const service = createClient(SUPABASE_URL, SECRET, {
+  auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: keyAwareFetch(SECRET) },
+});
 
 async function main() {
   // ─── Accounts ──────────────────────────────────────────────────────────────
-  const anon = createClient(SUPABASE_URL, PUBLISHABLE, { auth: { persistSession: false } });
+  const anon = createClient(SUPABASE_URL, PUBLISHABLE, {
+    auth: { persistSession: false },
+    global: { fetch: keyAwareFetch(PUBLISHABLE) },
+  });
   const signUp = await anon.auth.signUp({ email: "stranger@example.com", password: "a-long-password-1" });
   check("Public sign-up is disabled (invite-only)", Boolean(signUp.error));
   const wrong = await anon.auth.signInWithPassword({ email: "owner@demo.test", password: "not-the-password-1" });

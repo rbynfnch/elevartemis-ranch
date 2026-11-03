@@ -8,6 +8,7 @@
  * authenticator. If their ranch REQUIRES two-step verification, they'll be
  * asked to set one up before they can manage anything.
  */
+import { keyAwareFetch } from "../src/lib/supabase/api-key";
 import { parseArgs } from "node:util";
 import { createClient } from "@supabase/supabase-js";
 
@@ -24,7 +25,10 @@ if (!url || !secret) {
   console.error("✖ NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY must be set");
   process.exit(1);
 }
-const db = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+const db = createClient(url, secret, {
+  auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: keyAwareFetch(secret) },
+});
 
 async function main() {
   let userId: string | undefined;

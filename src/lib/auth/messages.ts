@@ -19,6 +19,8 @@ const authMessages: Record<string, string> = {
   session_expired: "Your session ended. Please sign in again.",
   user_banned: "This account is disabled. Contact Elevartemis for help.",
   email_address_invalid: "Enter a valid email address.",
+  email_provider_disabled: "Email sign-in isn't available right now. Contact Elevartemis for help.",
+  signup_disabled: "Sign-ups are closed. Ask Elevartemis for an invitation.",
   too_many_enrolled_mfa_factors: "You've reached the limit of authenticator apps. Remove one first.",
 };
 
@@ -26,7 +28,14 @@ export function authErrorMessage(error: AuthLikeError): string {
   if (!error) return "";
   if (error.code && authMessages[error.code]) return authMessages[error.code];
   if (error.status === 429) return authMessages.over_request_rate_limit;
-  return "Something went wrong. Please try again.";
+  const generic = "Something went wrong. Please try again.";
+  // In development, show the real cause so a generic message never hides it.
+  if (process.env.NODE_ENV === "development") {
+    const detail = [error.code, error.status, error.message].filter(Boolean).join(" · ");
+    console.error("[auth] unmapped error:", error);
+    return detail ? `${generic} [dev: ${detail}]` : generic;
+  }
+  return generic;
 }
 
 type DbLikeError = { code?: string; message?: string } | null | undefined;

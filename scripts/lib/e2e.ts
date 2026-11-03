@@ -1,4 +1,5 @@
 /** Shared helpers for the end-to-end scripts (local Supabase + running app only). */
+import { keyAwareFetch } from "../../src/lib/supabase/api-key";
 import http from "node:http";
 import { createServerClient } from "@supabase/ssr";
 
@@ -29,6 +30,7 @@ export type Jar = Map<string, string>;
 
 export function sessionClient(jar: Jar) {
   return createServerClient(SUPABASE_URL, PUBLISHABLE, {
+    global: { fetch: keyAwareFetch(PUBLISHABLE) },
     cookies: {
       getAll: () => [...jar].map(([name, value]) => ({ name, value })),
       setAll: (list) => list.forEach(({ name, value }) => (value ? jar.set(name, value) : jar.delete(name))),

@@ -2,14 +2,14 @@
 -- LOCAL DEVELOPMENT SEED — never run against production.
 --
 -- Two ranches:
---   "Cottonwood Creek Ranch"  demo.localhost  — the demonstration ranch.
---       The ranch name, animals, posts and copy are ALL PLACEHOLDERS.
+--   "Flying W Ranch"          demo.localhost  — the demonstration ranch.
+--       The ranch name and tagline are real; animals, posts and other copy are PLACEHOLDERS.
 --       Every demo record has is_demo = true; square-bracketed copy marks text
 --       the real ranch must supply.
 --   "Second Test Ranch"       second.localhost — exists to prove isolation.
 --
 -- Local logins (password for both: ranch-demo-2026)
---   owner@demo.test    → Cottonwood Creek Ranch
+--   owner@demo.test    → Flying W Ranch
 --   owner@second.test  → Second Test Ranch
 --
 -- No photos are seeded here; `npm run seed:media` (Phase 5) uploads placeholders.
@@ -45,7 +45,7 @@ where u.id in ('b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-
 
 -- ─── Ranches (settings rows are created by trigger) ──────────────────────────
 insert into public.ranches (id, slug, name, status, enabled_species) values
-  ('a0000000-0000-4000-8000-000000000001', 'cottonwood-creek', 'Cottonwood Creek Ranch', 'draft', '{horse,cattle}'),
+  ('a0000000-0000-4000-8000-000000000001', 'flying-w-ranch', 'Flying W Ranch', 'draft', '{horse,cattle}'),
   ('a0000000-0000-4000-8000-000000000002', 'second-test',      'Second Test Ranch',      'draft', '{horse}');
 
 insert into public.ranch_domains (hostname, ranch_id, is_primary) values
@@ -56,7 +56,7 @@ insert into public.ranch_memberships (ranch_id, user_id, role) values
   ('a0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000001', 'owner'),
   ('a0000000-0000-4000-8000-000000000002', 'b0000000-0000-4000-8000-000000000002', 'owner');
 
-update public.ranch_branding set wordmark_text = 'Cottonwood Creek', wordmark_subtitle = 'Ranch', brand_mark = 'CC'
+update public.ranch_branding set wordmark_text = 'Flying W', wordmark_subtitle = 'Ranch', brand_mark = 'FW'
 where ranch_id = 'a0000000-0000-4000-8000-000000000001';
 update public.ranch_branding set wordmark_text = 'Second Test', wordmark_subtitle = 'Ranch', brand_mark = 'ST',
   font_preset = 'prairie'
@@ -262,7 +262,7 @@ insert into public.sale_listings (animal_id, ranch_id, status, price_mode, sold_
 insert into public.hero_slides (ranch_id, headline, subheadline, cta_label, cta_kind, cta_page,
   cta_category_id, cta_animal_id, sort_order, is_demo)
 values
-  ('a0000000-0000-4000-8000-000000000001', '[Headline placeholder]', '[Subheadline placeholder — one short sentence.]',
+  ('a0000000-0000-4000-8000-000000000001', 'Quality Horses. Productive Cattle. Lasting Legacies.', 'Raising and breeding registered Quarter Horses, Appaloosas and Hereford cattle.',
    'See our stallions', 'category', null, 'horse.stallion', null, 1, true),
   ('a0000000-0000-4000-8000-000000000001', 'Meet Juniper Blue', '[Placeholder line about this stallion.]',
    'View his portfolio', 'animal', null, null, 'c1000000-0000-4000-8000-000000000012', 2, true),

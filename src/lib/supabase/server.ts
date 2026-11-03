@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/database.types";
 import { publicEnv } from "@/lib/env";
+import { keyAwareFetch } from "@/lib/supabase/api-key";
 
 /**
  * Per-request client carrying the signed-in user's session (admin area).
@@ -13,6 +14,7 @@ export async function createServerSupabase() {
   const env = publicEnv();
   const store = await cookies();
   return createServerClient<Database>(env.supabaseUrl, env.supabasePublishableKey, {
+    global: { fetch: keyAwareFetch(env.supabasePublishableKey) },
     cookies: {
       getAll: () => store.getAll(),
       setAll(list) {

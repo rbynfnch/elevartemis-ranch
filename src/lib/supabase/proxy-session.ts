@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import type { NextRequest, NextResponse } from "next/server";
 import { publicEnv } from "@/lib/env";
+import { keyAwareFetch } from "@/lib/supabase/api-key";
 
 /**
  * Refreshes the admin's Supabase session inside the proxy so Server
@@ -18,6 +19,7 @@ export async function refreshAdminSession(
   const env = publicEnv();
   let response = makeResponse();
   const supabase = createServerClient(env.supabaseUrl, env.supabasePublishableKey, {
+    global: { fetch: keyAwareFetch(env.supabasePublishableKey) },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(list) {

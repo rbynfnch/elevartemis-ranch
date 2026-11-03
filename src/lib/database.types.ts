@@ -1200,6 +1200,38 @@ export type Database = {
           },
         ];
       };
+      ranch_breeds: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          ranch_id: string;
+          species: Database["public"]["Enums"]["species"];
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          ranch_id: string;
+          species: Database["public"]["Enums"]["species"];
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          ranch_id?: string;
+          species?: Database["public"]["Enums"]["species"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ranch_breeds_ranch_id_fkey";
+            columns: ["ranch_id"];
+            isOneToOne: false;
+            referencedRelation: "ranches";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ranch_domains: {
         Row: {
           created_at: string;
@@ -1725,6 +1757,7 @@ export type Database = {
           total: number;
         }[];
       };
+      rename_breed: { Args: { p_breed: string; p_name: string }; Returns: undefined };
       reorder_animal_photos: { Args: { p_animal: string; p_media: string[] }; Returns: undefined };
       replace_animal_details: { Args: { p_animal: string; p_facts: Json; p_sections: Json }; Returns: undefined };
       resolve_animal_slug: {

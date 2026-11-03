@@ -6,7 +6,7 @@ import type { Json } from "@/lib/database.types";
 import { dbErrorMessage } from "@/lib/auth/messages";
 import { mediaUrl, pickVariant } from "@/lib/media/variants";
 import type { Db, Result } from "@/lib/admin/animals/service";
-import { checkFileName } from "./file-names";
+import { checkFileName, extensionFor } from "./file-names";
 
 const ok = <T>(data: T): Result<T> => ({ ok: true, data });
 const fail = (message: string): Result<never> => ({ ok: false, message });
@@ -87,7 +87,15 @@ export async function takenFileNames(db: Db, ranchId: string): Promise<string[]>
 }
 
 export async function renamePhoto(db: Db, mediaId: string, rawName: string): Promise<Result<{ name: string }>> {
-  const checked = checkFileName(rawName);
+  const { data: current, error: readError } = await db
+    .from("media")
+    .select("file_name, mime_type")
+    .eq("id", mediaId)
+    .maybeSingle();
+  if (readError) return fail(dbErrorMessage(readError));
+  if (!current) return fail("That photo could not be found. Refresh the page and try again.");
+
+  const checked = checkFileName(rawName, extensionFor(current.file_name, current.mime_type));
   if (!checked.ok) return fail(checked.message);
   const { data, error } = await db.from("media").update({ file_name: checked.name }).eq("id", mediaId).select("id");
   if (error) {

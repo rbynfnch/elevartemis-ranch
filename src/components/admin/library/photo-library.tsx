@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { deleteLibraryPhotoAction, renameLibraryPhotoAction } from "@/lib/admin/library/actions";
 import type { LibraryPhoto } from "@/lib/admin/library/service";
+import { splitFileName } from "@/lib/admin/library/file-names";
 import { FormMessage, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
 import { isImageFile, uploadToLibrary } from "./upload";
@@ -149,7 +150,9 @@ export function PhotoLibrary({ photos }: { photos: LibraryPhoto[] }) {
 function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m: Message) => void }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(photo.fileName ?? "");
+  // The owner edits only the name; the photo keeps its file type (.jpg, .png…) automatically.
+  const { base, ext } = splitFileName(photo.fileName ?? "");
+  const [name, setName] = useState(base);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const used = photo.usedBy.length > 0 || photo.usedElsewhere;
@@ -210,13 +213,16 @@ function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m:
           <label htmlFor={`name-${photo.id}`} className="sr-only">
             File name
           </label>
-          <TextInput
-            id={`name-${photo.id}`}
-            value={name}
-            maxLength={200}
-            onChange={(e) => setName(e.target.value)}
-            invalid={!!error}
-          />
+          <div className="flex items-center gap-2">
+            <TextInput
+              id={`name-${photo.id}`}
+              value={name}
+              maxLength={190}
+              onChange={(e) => setName(e.target.value)}
+              invalid={!!error}
+            />
+            {ext ? <span className="text-ink-muted">{ext}</span> : null}
+          </div>
           {error ? <p className="text-sm font-semibold text-[#8a2b1d]">{error}</p> : null}
           <div className="flex gap-2">
             <button type="submit" className={buttonClasses("primary", "px-4 py-2")} disabled={busy}>
@@ -227,7 +233,7 @@ function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m:
               className={buttonClasses("quiet")}
               onClick={() => {
                 setEditing(false);
-                setName(photo.fileName ?? "");
+                setName(base);
                 setError("");
               }}
             >

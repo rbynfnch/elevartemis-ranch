@@ -37,11 +37,39 @@ export function uniqueFileName(desired: string, taken: Iterable<string>): string
   return `${stem.slice(0, 180)}-${Date.now()}${ext}`;
 }
 
-/** Validates a name the owner typed when renaming. */
-export function checkFileName(raw: string): { ok: true; name: string } | { ok: false; message: string } {
-  const name = cleanFileName(raw);
-  if (!name) return { ok: false, message: "Enter a file name." };
-  if (/[\\/]/.test(raw.trim())) return { ok: false, message: "A file name can't contain slashes." };
-  if (!/\.[A-Za-z0-9]{2,5}$/.test(name)) return { ok: false, message: "End the name with .jpg, .png or similar." };
+const IMAGE_EXTENSION = /\.(jpe?g|png|webp|gif|heic|heif|avif|tiff?|bmp)$/i;
+const MIME_EXTENSION: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "image/heic": ".heic",
+  "image/heif": ".heif",
+  "image/avif": ".avif",
+};
+
+/** "Stallion 1.JPG" → { base: "Stallion 1", ext: ".JPG" }. A name with no image extension has an empty ext. */
+export function splitFileName(name: string): { base: string; ext: string } {
+  const match = IMAGE_EXTENSION.exec(name);
+  return match ? { base: name.slice(0, match.index), ext: match[0] } : { base: name, ext: "" };
+}
+
+/** The extension a photo keeps when renamed: the one it already has, else from its file type, else .jpg. */
+export function extensionFor(currentName: string | null, mimeType: string | null): string {
+  const own = currentName ? splitFileName(currentName).ext : "";
+  return own || MIME_EXTENSION[(mimeType ?? "").toLowerCase()] || ".jpg";
+}
+
+/**
+ * The owner types only the name; the photo's file type is added for them, so
+ * nobody needs to know whether a photo is a .jpg or a .png. If they do type an
+ * image extension it is ignored in favour of the real one.
+ */
+export function checkFileName(raw: string, ext: string): { ok: true; name: string } | { ok: false; message: string } {
+  if (/[\\/]/.test(raw.trim())) return { ok: false, message: "A name can't contain slashes." };
+  const base = splitFileName(cleanFileName(raw)).base.trim();
+  if (!base) return { ok: false, message: "Enter a name." };
+  const name = `${base}${ext}`;
+  if (name.length > 200) return { ok: false, message: "Use a shorter name." };
   return { ok: true, name };
 }

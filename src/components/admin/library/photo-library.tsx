@@ -12,18 +12,36 @@ import { isImageFile, uploadToLibrary } from "./upload";
 
 type Message = { tone: "error" | "success"; text: string } | null;
 
-export function PhotoLibrary({ photos }: { photos: LibraryPhoto[] }) {
+/** "all" = everything; a species key = photos on animals of that species; "none" = not on any animal. */
+type Group = string;
+
+export function PhotoLibrary({
+  photos,
+  species,
+}: {
+  photos: LibraryPhoto[];
+  /** The ranch's enabled species, in the order tabs should appear. */
+  species: { value: string; label: string }[];
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [unusedOnly, setUnusedOnly] = useState(false);
+  const [group, setGroup] = useState<Group>("all");
   const [progress, setProgress] = useState<{ done: number; total: number; current: string } | null>(null);
   const [message, setMessage] = useState<Message>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const q = query.trim().toLowerCase();
+  const inGroup = (p: LibraryPhoto, g: Group) =>
+    g === "all" ? true : g === "none" ? p.usedBy.length === 0 : (p.species as string[]).includes(g);
+  const tabs = [{ value: "all", label: "All" }, ...species, { value: "none", label: "Not on an animal" }].map((t) => ({
+    ...t,
+    count: photos.filter((p) => inGroup(p, t.value)).length,
+  }));
   const shown = photos.filter(
     (p) =>
+      inGroup(p, group) &&
       (!q ||
         (p.fileName ?? "untitled").toLowerCase().includes(q) ||
         p.usedBy.some((n) => n.toLowerCase().includes(q))) &&
@@ -107,6 +125,28 @@ export function PhotoLibrary({ photos }: { photos: LibraryPhoto[] }) {
       </div>
 
       {message ? <FormMessage tone={message.tone}>{message.text}</FormMessage> : null}
+
+      <div role="group" aria-label="Show photos of" className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            aria-pressed={group === t.value}
+            onClick={() => setGroup(t.value)}
+            className={clsx(
+              "inline-flex min-h-11 items-center gap-2 border px-4 text-[0.9375rem] font-semibold",
+              group === t.value
+                ? "border-primary bg-primary text-on-primary"
+                : "border-rule bg-white text-ink hover:border-primary",
+            )}
+          >
+            {t.label}
+            <span className={clsx("text-sm font-normal", group === t.value ? "opacity-85" : "text-ink-muted")}>
+              {t.count}
+            </span>
+          </button>
+        ))}
+      </div>
 
       <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-60 flex-1">

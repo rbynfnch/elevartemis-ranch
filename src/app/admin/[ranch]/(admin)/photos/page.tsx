@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth/admin-context";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { listLibrary } from "@/lib/admin/library/service";
+import { speciesTerms } from "@/lib/domain/species";
 import { PhotoLibrary } from "@/components/admin/library/photo-library";
 import { FormMessage } from "@/components/admin/forms";
 
@@ -30,7 +31,14 @@ async function Photos({ params }: { params: PageProps<"/admin/[ranch]/photos">["
           Removing a photo from an animal never deletes it from here.
         </p>
       </header>
-      {result.ok ? <PhotoLibrary photos={result.data} /> : <FormMessage tone="error">{result.message}</FormMessage>}
+      {result.ok ? (
+        <PhotoLibrary
+          photos={result.data}
+          species={ctx.ranch.enabledSpecies.map((s) => ({ value: s, label: speciesTerms[s].plural }))}
+        />
+      ) : (
+        <FormMessage tone="error">{result.message}</FormMessage>
+      )}
     </div>
   );
 }

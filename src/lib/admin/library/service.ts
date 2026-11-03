@@ -3,6 +3,7 @@
  * uses it. Plain functions over the owner's Supabase client, so RLS applies.
  */
 import type { Json } from "@/lib/database.types";
+import type { Species } from "@/lib/domain/species";
 import { dbErrorMessage } from "@/lib/auth/messages";
 import { mediaUrl, pickVariant } from "@/lib/media/variants";
 import type { Db, Result } from "@/lib/admin/animals/service";
@@ -20,6 +21,8 @@ export type LibraryPhoto = {
   createdAt: string;
   /** Animals using this photo, by name. */
   usedBy: string[];
+  /** Species of those animals, once each, for sorting the library. */
+  species: Species[];
   /** True when something other than an animal uses it (homepage slide, update post, gallery). */
   usedElsewhere: boolean;
 };
@@ -39,7 +42,7 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
 
   const ids = media.map((m) => m.id);
   const [animalLinks, postLinks, featured, slides] = await Promise.all([
-    db.from("animal_media").select("media_id, animals ( name )").eq("ranch_id", ranchId).in("media_id", ids),
+    db.from("animal_media").select("media_id, animals ( name, species )").eq("ranch_id", ranchId).in("media_id", ids),
     db.from("post_media").select("media_id").in("media_id", ids),
     db.from("posts").select("featured_media_id").eq("ranch_id", ranchId).in("featured_media_id", ids),
     db.from("hero_slides").select("media_id").eq("ranch_id", ranchId).in("media_id", ids),
@@ -47,9 +50,11 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
   for (const r of [animalLinks, postLinks, featured, slides]) if (r.error) return fail(dbErrorMessage(r.error));
 
   const usedBy = new Map<string, string[]>();
+  const speciesOf = new Map<string, Set<Species>>();
   for (const link of animalLinks.data ?? []) {
     const animal = Array.isArray(link.animals) ? link.animals[0] : link.animals;
     if (animal?.name) usedBy.set(link.media_id, [...(usedBy.get(link.media_id) ?? []), animal.name]);
+    if (animal?.species) speciesOf.set(link.media_id, (speciesOf.get(link.media_id) ?? new Set()).add(animal.species));
   }
   const elsewhere = new Set<string>([
     ...(postLinks.data ?? []).map((r) => r.media_id),
@@ -69,6 +74,7 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
         height: m.height,
         createdAt: m.created_at,
         usedBy: usedBy.get(m.id) ?? [],
+        species: [...(speciesOf.get(m.id) ?? [])],
         usedElsewhere: elsewhere.has(m.id),
       };
     }),

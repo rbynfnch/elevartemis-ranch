@@ -102,7 +102,19 @@ async function EditAnimal({
           <FormMessage tone="info">This is sample content. Replace it with a real animal before launch.</FormMessage>
         ) : null}
         {q.added === "1" ? (
-          <FormMessage tone="success">{animal.name} was added and is on your website. Add photos next.</FormMessage>
+          <FormMessage tone="success">
+            {animal.name} was added and is on your website. Add photos next.{" "}
+            {animal.is_published ? (
+              <a
+                href={publicHref}
+                target="_blank"
+                rel="noopener"
+                className="font-semibold underline decoration-accent decoration-2 underline-offset-4"
+              >
+                View {animal.name} on the website<span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            ) : null}
+          </FormMessage>
         ) : null}
         {q.kept === "1" ? (
           <FormMessage tone="success">Got it. We won&apos;t suggest moving {animal.name} again.</FormMessage>

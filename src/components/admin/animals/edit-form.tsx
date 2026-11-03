@@ -44,8 +44,19 @@ export function AnimalEditForm({ animalId, children }: { animalId: string; child
             >
               {pending ? "Saving…" : "Save"}
             </button>
-            <div className="min-w-0 flex-1" aria-live="polite">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1" aria-live="polite">
               <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
+              {state.ok && state.link ? (
+                <a
+                  href={state.link.href}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-sm font-semibold text-primary underline decoration-accent decoration-2 underline-offset-4"
+                >
+                  {state.link.label}
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              ) : null}
             </div>
           </div>
         </div>

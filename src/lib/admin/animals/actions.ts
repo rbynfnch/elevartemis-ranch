@@ -4,13 +4,20 @@ import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { z } from "zod";
 import { cacheTags } from "@/lib/cache/tags";
+import { speciesTerms } from "@/lib/domain/species";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin-context";
 import { currentRanchSlug } from "@/lib/auth/current-ranch";
 import * as service from "./service";
 import { parseAnimalEdit, parseBasics } from "./schemas";
 
-export type ActionState = { ok?: boolean; message?: string; fieldErrors?: Record<string, string> };
+export type ActionState = {
+  ok?: boolean;
+  message?: string;
+  fieldErrors?: Record<string, string>;
+  /** Shown beside the message after a save, e.g. "View Midnight Sonata on the website". */
+  link?: { href: string; label: string };
+};
 
 const uuid = z.uuid();
 
@@ -89,11 +96,23 @@ export async function saveAnimalAction(_prev: ActionState, fd: FormData): Promis
     done.push(label);
   }
   refreshSite(c.slug);
-  return saved(
-    d.status.is_published
-      ? "Saved. This animal is on your website."
-      : "Saved. This animal is hidden from your website.",
-  );
+
+  // The page's web address comes from its name, so read it back after the save.
+  let link: ActionState["link"];
+  if (d.status.is_published) {
+    const { data } = await c.db.from("animals").select("slug, species, name").eq("id", id).maybeSingle();
+    if (data?.slug) {
+      link = { href: `/${speciesTerms[data.species].path}/${data.slug}`, label: `View ${data.name} on the website` };
+    }
+  }
+  return {
+    ...saved(
+      d.status.is_published
+        ? "Saved. This animal is on your website."
+        : "Saved. This animal is hidden from your website.",
+    ),
+    link,
+  };
 }
 
 export async function keepCategoryAction(fd: FormData): Promise<void> {

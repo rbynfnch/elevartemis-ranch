@@ -19,6 +19,7 @@
     "provision:ranch": "tsx --env-file=.env.local scripts/provision-ranch.ts",
     "format": "prettier --write .",
     "reset:mfa": "tsx --env-file=.env.local scripts/reset-mfa.ts",
+    "set:password": "tsx --env-file=.env.local scripts/set-password.ts",
     "test:e2e:auth": "tsx --env-file=.env.local scripts/e2e-auth.ts",
     "test:e2e:animals": "tsx --env-file=.env.local scripts/e2e-animals.ts"
   },

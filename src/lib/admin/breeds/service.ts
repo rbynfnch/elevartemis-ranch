@@ -47,8 +47,12 @@ export async function listBreeds(db: Db, ranchId: string): Promise<Result<BreedI
     db.from("ranch_breeds").select("id, species, name, hidden").eq("ranch_id", ranchId).limit(2000),
     db.from("animals").select("species, breed").eq("ranch_id", ranchId).not("breed", "is", null).limit(20000),
   ]);
-  if (breeds.error) return fail(dbErrorMessage(breeds.error));
-  if (animals.error) return fail(dbErrorMessage(animals.error));
+  const failed = breeds.error ?? animals.error;
+  if (failed) {
+    // The real cause goes to the server log; the owner gets a plain message that is right for a failed read.
+    console.error("[breeds] loading the list failed:", failed);
+    return fail("We couldn't load your breeds. Refresh the page. If it keeps happening, let Elevartemis know.");
+  }
 
   const counts = new Map<string, number>();
   for (const a of animals.data) {

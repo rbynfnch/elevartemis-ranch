@@ -81,7 +81,13 @@ Then open:
 
 Chrome, Edge and Firefox resolve `*.localhost` automatically. If Safari
 doesn't, add `127.0.0.1 demo.localhost second.localhost` to
-`/etc/hosts`. Sent emails (invitations, password resets) appear in the local
+`/etc/hosts`. If `demo.localhost` gives ERR_CONNECTION_REFUSED while `localhost:3000`
+works (seen in Chrome on Windows), the name is probably resolving to IPv6
+(`::1`) while the dev server listens on IPv4 only. Diagnose with
+`curl -H "Host: demo.localhost:3000" http://127.0.0.1:3000/` and the same
+against `http://[::1]:3000/`. The fix that always works is the hosts-file
+entry for `127.0.0.1` (Windows: `C:\Windows\System32\drivers\etc\hosts`,
+edited as administrator), which forces IPv4. Sent emails (invitations, password resets) appear in the local
 mail viewer at http://127.0.0.1:54324.
 
 Local logins: `owner@demo.test` (demo ranch) and `owner@second.test` (second

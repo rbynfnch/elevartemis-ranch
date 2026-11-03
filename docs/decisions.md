@@ -294,3 +294,17 @@ commit. Photo storage (upload/download) is verified manually (see README).
   cross-ranch or draft leakage in HTML, www redirect, unknown-host 404,
   preview fallback, and 503 on database outage were all checked.
 - The provisioning script was run against the same database.
+
+### Supabase API keys and ESLint 10
+
+- Every Supabase client goes through `keyAwareFetch` (`src/lib/supabase/api-key.ts`).
+  New-style `sb_publishable_` / `sb_secret_` keys are not JWTs, so they are
+  sent only in the `apikey` header and never as the Bearer token. Legacy JWT
+  keys are unaffected. Verified by unit tests; still to confirm against a real
+  project using `sb_` keys.
+- ESLint 10 with `eslint-config-next` 16.4.4 (16.3.6 crashes under ESLint 10
+  in eslint-plugin-react). Some nested plugins still declare an ESLint 9 peer
+  range; `npm ci`, lint and tests pass regardless.
+- `demo.localhost` refusing connections could not be reproduced in the cloud
+  sandbox (no IPv6). The README documents the diagnosis; the hosts-file entry
+  is the dependable fix.

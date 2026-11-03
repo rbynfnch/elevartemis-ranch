@@ -388,3 +388,18 @@ commit. Photo storage (upload/download) is verified manually (see README).
   double-click on the name.
 - Category is validated server-side against the ranch's enabled species.
 - Not verified against a real database or in a browser.
+
+### Photo Library: toolbar, views, sorting, paging
+
+- One toolbar row (after WordPress's Media Library): list/thumbnail toggle,
+  category filter, "Not used yet" filter, sort (newest, oldest, name A–Z/Z–A),
+  photos per page (25, 50, 100, 250; default 50), Bulk select, search.
+- Upload is hidden behind the "Upload Photos" button next to the title and
+  expands to the drag-and-drop box.
+- Bulk select is a mode: selection checkmarks and the action bar (select all
+  on this page, Deselect, action menu, Apply) appear only while it is on.
+- List view is a table (thumbnail, name, category, used by, added); details
+  collapse under the name on narrow screens.
+- Changing any filter, the sort, the search or the page size returns to page 1.
+- Paging and sorting happen in the browser over up to 1000 photos, the most the
+  library loads. A real server-side page is needed beyond that.

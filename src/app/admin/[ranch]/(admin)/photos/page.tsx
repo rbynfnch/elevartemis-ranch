@@ -22,23 +22,15 @@ async function Photos({ params }: { params: PageProps<"/admin/[ranch]/photos">["
   if (!ctx) return null;
   const result = await listLibrary(await createServerSupabase(), ctx.ranch.id);
 
-  return (
-    <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="font-display text-3xl">Photo Library</h1>
-        <p className="max-w-[62ch] text-ink-muted">
-          Every photo you&apos;ve uploaded, in one place. Add photos here once, then choose them for any animal.
-          Removing a photo from an animal never deletes it from here.
-        </p>
-      </header>
-      {result.ok ? (
-        <PhotoLibrary
-          photos={result.data}
-          species={ctx.ranch.enabledSpecies.map((s) => ({ value: s, label: speciesTerms[s].plural }))}
-        />
-      ) : (
-        <FormMessage tone="error">{result.message}</FormMessage>
-      )}
+  return result.ok ? (
+    <PhotoLibrary
+      photos={result.data}
+      species={ctx.ranch.enabledSpecies.map((s) => ({ value: s, label: speciesTerms[s].plural }))}
+    />
+  ) : (
+    <div className="space-y-4">
+      <h1 className="font-display text-3xl">Photo Library</h1>
+      <FormMessage tone="error">{result.message}</FormMessage>
     </div>
   );
 }

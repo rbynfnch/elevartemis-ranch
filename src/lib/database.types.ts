@@ -1203,6 +1203,7 @@ export type Database = {
       ranch_breeds: {
         Row: {
           created_at: string;
+          hidden: boolean;
           id: string;
           name: string;
           ranch_id: string;
@@ -1210,6 +1211,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          hidden?: boolean;
           id?: string;
           name: string;
           ranch_id: string;
@@ -1217,6 +1219,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          hidden?: boolean;
           id?: string;
           name?: string;
           ranch_id?: string;

@@ -1,7 +1,7 @@
 -- Breeds: each ranch's own list, kept in step with its animals.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(13);
 
 insert into auth.users (id, email) values
   ('00000000-0000-4000-8000-0000000000a1', 'a@br.test'), ('00000000-0000-4000-8000-0000000000b1', 'b@br.test');
@@ -41,6 +41,16 @@ select throws_ok($$ delete from public.ranch_breeds where name = 'Quarter Horse'
   'RA017', null, 'A breed animals still use cannot be deleted');
 select lives_ok($$ insert into public.ranch_breeds (ranch_id, species, name) values ('00000000-0000-4000-8000-00000000000a', 'cattle', 'Angus');
   delete from public.ranch_breeds where name = 'Angus' $$, 'An unused breed can be deleted');
+
+-- Removing from the list hides the breed; using its name again brings it back.
+select throws_ok($$ update public.ranch_breeds set hidden = true where name = 'Quarter Horse' $$,
+  'RA017', null, 'A breed animals still use cannot be hidden either');
+select lives_ok($$ insert into public.ranch_breeds (ranch_id, species, name) values ('00000000-0000-4000-8000-00000000000a', 'cattle', 'Charolais');
+  update public.ranch_breeds set hidden = true where name = 'Charolais' $$, 'An unused breed can be hidden');
+insert into public.animals (id, ranch_id, species, category_id, name, sex, breed) values
+  ('00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000000a', 'cattle', 'cattle.bull', 'Bull One', 'male', 'charolais');
+select is((select hidden from public.ranch_breeds where name = 'Charolais'), false,
+  'Saving an animal with a hidden breed''s name brings the breed back');
 
 -- Ranches never see each other's lists.
 set local request.jwt.claims to '{"sub": "00000000-0000-4000-8000-0000000000b1", "role": "authenticated"}';

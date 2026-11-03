@@ -126,7 +126,7 @@ export function PhotoLibrary({ photos }: { photos: LibraryPhoto[] }) {
           Only photos nothing uses
         </label>
         <p className="min-h-11 content-center text-sm text-ink-muted">
-          {shown.length} of {photos.length} {photos.length === 1 ? "photo" : "photos"}
+          Double-click a name to rename it. {shown.length} of {photos.length} {photos.length === 1 ? "photo" : "photos"}
         </p>
       </div>
 
@@ -149,15 +149,36 @@ export function PhotoLibrary({ photos }: { photos: LibraryPhoto[] }) {
 
 function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m: Message) => void }) {
   const router = useRouter();
-  const [editing, setEditing] = useState(false);
   // The owner edits only the name; the photo keeps its file type (.jpg, .png…) automatically.
   const { base, ext } = splitFileName(photo.fileName ?? "");
+  const [editing, setEditing] = useState(false);
   const [name, setName] = useState(base);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Set once an edit is finished (saved or cancelled), so the box losing focus afterwards can't save again.
+  const finished = useRef(true);
   const used = photo.usedBy.length > 0 || photo.usedElsewhere;
+  const label = photo.fileName ?? "Untitled photo";
+
+  function startEditing() {
+    finished.current = false;
+    setName(base);
+    setError("");
+    setEditing(true);
+  }
+
+  function cancel() {
+    finished.current = true;
+    setEditing(false);
+    setError("");
+  }
 
   async function save() {
+    if (busy || finished.current) return;
+    if (name.trim() === base.trim()) {
+      cancel();
+      return;
+    }
     setBusy(true);
     setError("");
     const result = await renameLibraryPhotoAction(photo.id, name);
@@ -166,12 +187,13 @@ function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m:
       setError(result.message);
       return;
     }
+    finished.current = true;
     setEditing(false);
     router.refresh();
   }
 
   async function remove() {
-    if (!window.confirm(`Delete ${photo.fileName ?? "this photo"} for good? This can't be undone.`)) return;
+    if (!window.confirm(`Delete ${label} for good? This can't be undone.`)) return;
     setBusy(true);
     const result = await deleteLibraryPhotoAction(photo.id);
     setBusy(false);
@@ -183,16 +205,6 @@ function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m:
     router.refresh();
   }
 
-  async function copy() {
-    if (!photo.fileName) return;
-    try {
-      await navigator.clipboard.writeText(photo.fileName);
-      onMessage({ tone: "success", text: `Copied ${photo.fileName}.` });
-    } catch {
-      onMessage({ tone: "error", text: "Couldn't copy. Select the name and copy it yourself." });
-    }
-  }
-
   return (
     <article className="space-y-3">
       <div className="aspect-[4/3] overflow-hidden bg-surface">
@@ -202,48 +214,83 @@ function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m:
         ) : null}
       </div>
 
-      {editing ? (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void save();
-          }}
-          className="space-y-2"
-        >
-          <label htmlFor={`name-${photo.id}`} className="sr-only">
-            File name
-          </label>
-          <div className="flex items-center gap-2">
-            <TextInput
-              id={`name-${photo.id}`}
-              value={name}
-              maxLength={190}
-              onChange={(e) => setName(e.target.value)}
-              invalid={!!error}
-            />
-            {ext ? <span className="text-ink-muted">{ext}</span> : null}
-          </div>
-          {error ? <p className="text-sm font-semibold text-[#8a2b1d]">{error}</p> : null}
-          <div className="flex gap-2">
-            <button type="submit" className={buttonClasses("primary", "px-4 py-2")} disabled={busy}>
-              {busy ? "Saving…" : "Save name"}
-            </button>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {editing ? (
+            <div className="space-y-1.5">
+              <label htmlFor={`name-${photo.id}`} className="sr-only">
+                Photo name. Press Enter to save or Escape to cancel.
+              </label>
+              <div className="flex items-center gap-2">
+                <TextInput
+                  id={`name-${photo.id}`}
+                  value={name}
+                  maxLength={190}
+                  autoFocus
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => void save()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void save();
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      cancel();
+                    }
+                  }}
+                  invalid={!!error}
+                  disabled={busy}
+                />
+                {ext ? <span className="text-ink-muted">{ext}</span> : null}
+              </div>
+              {error ? <p className="text-sm font-semibold text-[#8a2b1d]">{error}</p> : null}
+            </div>
+          ) : (
             <button
               type="button"
-              className={buttonClasses("quiet")}
-              onClick={() => {
-                setEditing(false);
-                setName(base);
-                setError("");
+              title="Double-click to rename"
+              aria-label={`${label}. Double-click or press Enter to rename.`}
+              className="block min-h-11 w-full break-all text-left font-semibold hover:underline hover:decoration-accent hover:decoration-2 hover:underline-offset-4"
+              onDoubleClick={startEditing}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "F2") {
+                  e.preventDefault();
+                  startEditing();
+                }
+              }}
+              // Touch screens don't double-click reliably, so one tap renames there.
+              onClick={(e) => {
+                if ((e.nativeEvent as PointerEvent).pointerType === "touch") startEditing();
               }}
             >
-              Cancel
+              {label}
             </button>
-          </div>
-        </form>
-      ) : (
-        <p className="break-all font-semibold">{photo.fileName ?? "Untitled photo"}</p>
-      )}
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={remove}
+          disabled={busy || used}
+          aria-label={`Delete ${label}`}
+          title={used ? "This photo is in use. Remove it where it's used first." : "Delete this photo"}
+          className="inline-flex size-11 shrink-0 items-center justify-center text-[#8a2b1d] hover:bg-[#8a2b1d]/10 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16M9 7V4.500h6V7M6.500 7l1 12.500h9l1-12.500M10 11v5.500M14 11v5.500" />
+          </svg>
+        </button>
+      </div>
 
       <p className="text-sm text-ink-muted">
         {photo.usedBy.length
@@ -252,28 +299,6 @@ function LibraryCard({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m:
             ? "Used on the website"
             : "Not used yet"}
       </p>
-
-      {!editing ? (
-        <div className="flex flex-wrap gap-x-4">
-          <button type="button" className={buttonClasses("quiet")} onClick={() => setEditing(true)}>
-            {photo.fileName ? "Rename" : "Name it"}
-          </button>
-          {photo.fileName ? (
-            <button type="button" className={buttonClasses("quiet")} onClick={copy}>
-              Copy name
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="min-h-11 text-[#8a2b1d] underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-40"
-            onClick={remove}
-            disabled={busy || used}
-            title={used ? "Remove it from where it's used first." : undefined}
-          >
-            Delete
-          </button>
-        </div>
-      ) : null}
     </article>
   );
 }

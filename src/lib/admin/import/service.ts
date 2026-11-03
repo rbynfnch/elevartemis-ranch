@@ -72,6 +72,7 @@ export type ImportPreview = {
   toCreate: number;
   toUpdate: number;
   withProblems: number;
+  skippedExamples: number;
   newBreeds: string[];
   restoredBreeds: string[];
   missingPhotos: string[];
@@ -147,6 +148,7 @@ export async function previewImport(
     toCreate: rows.filter((r) => r.action === "create").length,
     toUpdate: rows.filter((r) => r.action === "update").length,
     withProblems: rows.filter((r) => r.errors.length > 0).length,
+    skippedExamples: plan.skippedExamples,
     newBreeds,
     restoredBreeds,
     missingPhotos: plan.missingPhotos,
@@ -307,8 +309,6 @@ export async function commitImport(
 }
 
 // ─── Export ──────────────────────────────────────────────────────────────────
-export const templateCsv = () => toCsv([...importColumns], []);
-
 const birthText = (date: string | null, precision: string) =>
   !date ? "" : precision === "year" ? date.slice(0, 4) : precision === "month" ? date.slice(0, 7) : date;
 

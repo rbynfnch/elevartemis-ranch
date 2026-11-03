@@ -7,6 +7,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { listAnimals } from "@/lib/admin/animals/service";
 import { AnimalThumb } from "@/components/admin/animals/animal-thumb";
 import { FormMessage } from "@/components/admin/forms";
+import { TemplateButton } from "@/components/admin/import/template-button";
 import { buttonClasses } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Animals" };
@@ -57,6 +58,7 @@ async function Animals({
       <header className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-3xl">Animals</h1>
         <div className="flex flex-wrap gap-3">
+          <TemplateButton />
           <Link href="/admin/animals/import" className={buttonClasses("secondary")}>
             Import CSV
           </Link>

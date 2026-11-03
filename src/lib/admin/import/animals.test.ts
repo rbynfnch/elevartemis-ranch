@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseCsv } from "./csv";
+import { templateCsv } from "./template";
 import {
   buildPhotoIndex,
   findPhoto,
@@ -152,5 +153,44 @@ describe("planImport", () => {
     expect(plan("breed\nX").fileErrors[0]).toContain("“name” column");
     const many = `name,category\n${"X,Bull\n".repeat(501)}`;
     expect(plan(many).fileErrors[0]).toContain("500");
+  });
+});
+
+describe("the downloadable template", () => {
+  it("has every column, and its example rows are skipped, not imported", () => {
+    const csv = parseCsv(templateCsv());
+    expect(csv.header).toEqual([
+      "id",
+      "name",
+      "species",
+      "category",
+      "sex",
+      "breed",
+      "color",
+      "registered_name",
+      "registry",
+      "registration_number",
+      "birth_date",
+      "description",
+      "status",
+      "published",
+      "featured",
+      "for_sale",
+      "price",
+      "quick_facts",
+      "photos",
+    ]);
+    expect(csv.rows).toHaveLength(2);
+    const result = planImport(csv, ctx);
+    expect(result.skippedExamples).toBe(2);
+    expect(result.results).toEqual([]);
+    expect(result.fileErrors).toEqual([]);
+  });
+  it("still imports a real animal sitting next to the example rows", () => {
+    const rows = parseCsv(templateCsv());
+    rows.rows.push(["", "Copper Ridge", "cattle", "Bull", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    const result = planImport(rows, ctx);
+    expect(result.results).toHaveLength(1);
+    expect(result.results[0].planned?.action).toBe("create");
   });
 });

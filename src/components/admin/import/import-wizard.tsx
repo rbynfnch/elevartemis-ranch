@@ -4,22 +4,13 @@ import Link from "next/link";
 import { useRef, useState, type DragEvent } from "react";
 import clsx from "clsx";
 import { commitImportAction, exportAnimalsAction, previewImportAction } from "@/lib/admin/import/actions";
-import { importColumns } from "@/lib/admin/import/animals";
-import { toCsv } from "@/lib/admin/import/csv";
+import { templateCsv } from "@/lib/admin/import/template";
 import type { ImportPreview, ImportResult } from "@/lib/admin/import/service";
 import { FormMessage } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
+import { downloadCsv } from "./download";
 
 type Message = { tone: "error" | "success"; text: string } | null;
-
-function download(name: string, text: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -103,7 +94,7 @@ export function ImportWizard() {
     const response = await exportAnimalsAction();
     setBusy("");
     if (!response.ok) setMessage({ tone: "error", text: response.message });
-    else download(`animals-${today()}.csv`, response.data);
+    else downloadCsv(`animals-${today()}.csv`, response.data);
   }
 
   function onDrop(e: DragEvent) {
@@ -120,9 +111,9 @@ export function ImportWizard() {
         <button
           type="button"
           className={buttonClasses("secondary", "py-2")}
-          onClick={() => download("animals-template.csv", toCsv([...importColumns], []))}
+          onClick={() => downloadCsv("animals-template.csv", templateCsv())}
         >
-          Download template
+          Download template (with examples)
         </button>
         <button
           type="button"
@@ -247,6 +238,12 @@ function Preview({
             .
           </p>
 
+          {preview.skippedExamples ? (
+            <p className="text-sm text-ink-muted">
+              Skipped {preview.skippedExamples} example {preview.skippedExamples === 1 ? "row" : "rows"} from the
+              template.
+            </p>
+          ) : null}
           {preview.unknownColumns.length ? (
             <p className="text-sm text-ink-muted">
               Ignored columns: {preview.unknownColumns.join(", ")}. Check the spelling against the template if you meant

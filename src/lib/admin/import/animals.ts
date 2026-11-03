@@ -39,6 +39,55 @@ export const importColumns = [
 ] as const;
 export type ImportColumn = (typeof importColumns)[number];
 
+/** Rows of the downloadable template that show what each column looks like. They are skipped on upload. */
+const EXAMPLE = /^example\b/i;
+export const isExampleName = (name: string) => EXAMPLE.test(name.trim());
+
+export const templateExamples: Record<ImportColumn, string>[] = [
+  {
+    id: "",
+    name: "EXAMPLE Horse (delete this row)",
+    species: "horse",
+    category: "Mare",
+    sex: "female",
+    breed: "Quarter Horse",
+    color: "Bay",
+    registered_name: "Example Registered Name",
+    registry: "AQHA",
+    registration_number: "1234567",
+    birth_date: "2021-04-12",
+    description: "A sentence or two about this horse.",
+    status: "active",
+    published: "yes",
+    featured: "no",
+    for_sale: "available",
+    price: "8500",
+    quick_facts: "Height: 15.1 hands; Discipline: Barrel racing",
+    photos: "example-mare-front.jpg; example-mare-side.jpg",
+  },
+  {
+    id: "",
+    name: "EXAMPLE Bull (delete this row)",
+    species: "cattle",
+    category: "Bull",
+    sex: "",
+    breed: "Hereford",
+    color: "",
+    registered_name: "",
+    registry: "",
+    registration_number: "",
+    birth_date: "2022",
+    description: "",
+    status: "",
+    published: "",
+    featured: "",
+    for_sale: "",
+    price: "",
+    quick_facts: "Ear tag: 118",
+    photos: "",
+  },
+];
+
 const aliases: Record<string, ImportColumn> = {
   animal_id: "id",
   animal_name: "name",
@@ -305,6 +354,8 @@ export type PlannedAnimal = {
 export type RowResult = { line: number; name: string; errors: string[]; planned: PlannedAnimal | null };
 
 export type ImportPlan = {
+  /** Template example rows that were left out. */
+  skippedExamples: number;
   fileErrors: string[];
   unknownColumns: string[];
   results: RowResult[];
@@ -323,9 +374,16 @@ function findCategory(ctx: ImportContext, raw: string, species: Species | null) 
 }
 
 export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
-  const plan: ImportPlan = { fileErrors: [], unknownColumns: [], results: [], missingPhotos: [], breeds: [] };
+  const plan: ImportPlan = {
+    skippedExamples: 0,
+    fileErrors: [],
+    unknownColumns: [],
+    results: [],
+    missingPhotos: [],
+    breeds: [],
+  };
   if (csv.header.length === 0) {
-    plan.fileErrors.push("The file is empty. Use Download template for the columns to fill in.");
+    plan.fileErrors.push("The file is empty. Download the template for the columns to fill in.");
     return plan;
   }
   const { columns, unknown } = mapHeader(csv.header);
@@ -359,6 +417,10 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
     const fail = (column: string, message: string) => errors.push(`${column}: ${message}`);
 
     const name = cell("name");
+    if (isExampleName(name)) {
+      plan.skippedExamples++;
+      return;
+    }
     if (!name) fail("name", "enter a name.");
     else if (name.length > 120) fail("name", "use 120 characters or fewer.");
 

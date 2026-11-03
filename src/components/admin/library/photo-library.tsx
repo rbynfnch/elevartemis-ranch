@@ -21,6 +21,8 @@ type View = "grid" | "list";
 type Sort = "newest" | "oldest" | "name-asc" | "name-desc";
 
 const PAGE_SIZES = [25, 50, 100, 250];
+/** The form controls are full width by default; "!" lets these win so the toolbar stays on one row. */
+const compactSelect = "w-auto! min-h-10! py-1.5! text-sm!";
 
 const sorters: Record<Sort, (a: LibraryPhoto, b: LibraryPhoto) => number> = {
   newest: (a, b) => b.createdAt.localeCompare(a.createdAt),
@@ -275,7 +277,7 @@ export function PhotoLibrary({
           <div
             role="toolbar"
             aria-label="Find and arrange photos"
-            className="flex flex-wrap items-center gap-3 border border-rule bg-white px-4 py-3"
+            className="flex flex-wrap items-center gap-x-2.5 gap-y-2 border border-rule bg-white px-3 py-2"
           >
             <div role="group" aria-label="View" className="flex">
               <ViewButton current={view} value="list" label="List view" onSelect={setView}>
@@ -291,7 +293,7 @@ export function PhotoLibrary({
               aria-label="Show category"
               value={category}
               onChange={(e) => changing(setCategory)(e.target.value)}
-              className="min-h-11 w-auto"
+              className={compactSelect}
             >
               <option value="all">All categories</option>
               {species.map((s) => (
@@ -306,7 +308,7 @@ export function PhotoLibrary({
               aria-label="Show photos"
               value={usage}
               onChange={(e) => changing(setUsage)(e.target.value)}
-              className="min-h-11 w-auto"
+              className={compactSelect}
             >
               <option value="all">All photos</option>
               <option value="unused">Not used yet</option>
@@ -316,7 +318,7 @@ export function PhotoLibrary({
               aria-label="Sort by"
               value={sort}
               onChange={(e) => changing(setSort)(e.target.value as Sort)}
-              className="min-h-11 w-auto"
+              className={compactSelect}
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -328,35 +330,59 @@ export function PhotoLibrary({
               aria-label="Photos per page"
               value={String(pageSize)}
               onChange={(e) => changing(setPageSize)(Number(e.target.value))}
-              className="min-h-11 w-auto"
+              className={compactSelect}
             >
               {PAGE_SIZES.map((n) => (
                 <option key={n} value={n}>
-                  {n} per page
+                  {n} / page
                 </option>
               ))}
             </Select>
 
             <button
               type="button"
-              className={buttonClasses(bulk ? "primary" : "secondary", "min-h-11 py-2")}
+              className={buttonClasses(bulk ? "primary" : "secondary", "min-h-10! gap-2 px-3! py-1.5! text-sm!")}
               aria-pressed={bulk}
               onClick={() => (bulk ? endBulk() : setBulk(true))}
             >
-              {bulk ? "Cancel selection" : "Bulk select"}
+              <svg
+                viewBox="0 0 24 24"
+                className="size-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 5h4v4H4zM4 15h4v4H4zM12 7h8M12 17h8" />
+              </svg>
+              {bulk ? "Cancel" : "Bulk select"}
             </button>
 
-            <div className="ml-auto flex items-center gap-2">
-              <label htmlFor="library-search" className="text-sm text-ink-muted">
-                Search photos
+            <div className="relative ml-auto">
+              <label htmlFor="library-search" className="sr-only">
+                Search photos by name or animal
               </label>
+              <svg
+                viewBox="0 0 24 24"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-muted"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="6" />
+                <path d="m20 20-4.500-4.500" />
+              </svg>
               <TextInput
                 id="library-search"
                 type="search"
                 value={query}
-                placeholder="Name or animal"
+                placeholder="Search photos"
                 onChange={(e) => changing(setQuery)(e.target.value)}
-                className="min-h-11 w-56"
+                className="min-h-10! w-52! py-1.5! pl-9! text-sm!"
               />
             </div>
           </div>
@@ -399,7 +425,7 @@ export function PhotoLibrary({
                   aria-label="Action for selected photos"
                   value={action}
                   onChange={(e) => setAction(e.target.value)}
-                  className="min-h-11 w-auto min-w-56"
+                  className={clsx(compactSelect, "min-w-52!")}
                   disabled={selected.length === 0}
                 >
                   <option value="">Choose an action…</option>
@@ -551,7 +577,7 @@ function ViewButton({
       aria-pressed={current === value}
       onClick={() => onSelect(value)}
       className={clsx(
-        "inline-flex size-11 items-center justify-center",
+        "inline-flex size-10 items-center justify-center",
         current === value ? "text-ink" : "text-ink-muted hover:text-ink",
       )}
     >

@@ -16,11 +16,14 @@ export type LibraryPhoto = {
   id: string;
   fileName: string | null;
   thumb: string | null;
+  /** A larger size for the full-size viewer. */
+  large: string | null;
+  bytes: number | null;
   width: number | null;
   height: number | null;
   createdAt: string;
-  /** Animals using this photo, by name. */
-  usedBy: string[];
+  /** Animals using this photo, so the library can link to them. */
+  animals: { id: string; name: string }[];
   /** Species of those animals, once each, for sorting the library. */
   species: Species[];
   /** Category the owner filed the photo under, if any. */
@@ -34,7 +37,7 @@ const LIMIT = 1000;
 export async function listLibrary(db: Db, ranchId: string): Promise<Result<LibraryPhoto[]>> {
   const { data: media, error } = await db
     .from("media")
-    .select("id, file_name, variants, width, height, created_at, in_gallery, species")
+    .select("id, file_name, variants, width, height, bytes, created_at, in_gallery, species")
     .eq("ranch_id", ranchId)
     .eq("status", "ready")
     .order("created_at", { ascending: false })
@@ -44,18 +47,23 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
 
   const ids = media.map((m) => m.id);
   const [animalLinks, postLinks, featured, slides] = await Promise.all([
-    db.from("animal_media").select("media_id, animals ( name, species )").eq("ranch_id", ranchId).in("media_id", ids),
+    db
+      .from("animal_media")
+      .select("media_id, animals ( id, name, species )")
+      .eq("ranch_id", ranchId)
+      .in("media_id", ids),
     db.from("post_media").select("media_id").in("media_id", ids),
     db.from("posts").select("featured_media_id").eq("ranch_id", ranchId).in("featured_media_id", ids),
     db.from("hero_slides").select("media_id").eq("ranch_id", ranchId).in("media_id", ids),
   ]);
   for (const r of [animalLinks, postLinks, featured, slides]) if (r.error) return fail(dbErrorMessage(r.error));
 
-  const usedBy = new Map<string, string[]>();
+  const usedBy = new Map<string, { id: string; name: string }[]>();
   const speciesOf = new Map<string, Set<Species>>();
   for (const link of animalLinks.data ?? []) {
     const animal = Array.isArray(link.animals) ? link.animals[0] : link.animals;
-    if (animal?.name) usedBy.set(link.media_id, [...(usedBy.get(link.media_id) ?? []), animal.name]);
+    if (animal?.name && animal.id)
+      usedBy.set(link.media_id, [...(usedBy.get(link.media_id) ?? []), { id: animal.id, name: animal.name }]);
     if (animal?.species) speciesOf.set(link.media_id, (speciesOf.get(link.media_id) ?? new Set()).add(animal.species));
   }
   const elsewhere = new Set<string>([
@@ -68,14 +76,17 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
   return ok(
     media.map((m) => {
       const thumb = pickVariant(m.variants as Json, 480);
+      const large = pickVariant(m.variants as Json, 1600);
       return {
         id: m.id,
         fileName: m.file_name,
         thumb: thumb ? mediaUrl(thumb.path) : null,
+        large: large ? mediaUrl(large.path) : null,
+        bytes: m.bytes,
         width: m.width,
         height: m.height,
         createdAt: m.created_at,
-        usedBy: usedBy.get(m.id) ?? [],
+        animals: usedBy.get(m.id) ?? [],
         species: [...(speciesOf.get(m.id) ?? [])],
         category: m.species,
         usedElsewhere: elsewhere.has(m.id),

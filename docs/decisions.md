@@ -405,3 +405,15 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - Changing any filter, the sort, the search or the page size returns to page 1.
 - Paging and sorting happen in the browser over up to 1000 photos, the most the
   library loads. A real server-side page is needed beyond that.
+
+### Photo Library: larger view, animal links, Assigned / Unassigned
+
+- Each photo has an expand icon (grid: top-right corner, so clicking the photo
+  still selects; list: the thumbnail itself) that opens a larger view with the
+  name, category, assigned animals, size and date, and previous/next (arrow
+  keys; Esc closes). Moves through the photos on the current page.
+- "Assigned to" names are links to the animal's edit page. Filters, sort, view,
+  page size, page and search are kept in the address bar (replaceState), so
+  Back from an animal returns to the same view. Selection is not kept.
+- The usage filter is All photos / Assigned / Unassigned. Assigned = on an
+  animal, a homepage slide, an update post or the Gallery.

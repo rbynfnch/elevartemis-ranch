@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, type DragEvent, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import {
   deleteLibraryPhotoAction,
@@ -14,6 +15,7 @@ import { splitFileName } from "@/lib/admin/library/file-names";
 import { FormMessage, Select, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
 import { AnimalDialog } from "./animal-dialog";
+import { PhotoViewer } from "./photo-viewer";
 import { isImageFile, uploadToLibrary } from "./upload";
 
 type Message = { tone: "error" | "success"; text: string } | null;
@@ -48,13 +50,25 @@ export function PhotoLibrary({
   species: { value: string; label: string }[];
 }) {
   const router = useRouter();
-  const [view, setView] = useState<View>("grid");
-  const [sort, setSort] = useState<Sort>("newest");
-  const [category, setCategory] = useState("all");
-  const [usage, setUsage] = useState("all");
-  const [query, setQuery] = useState("");
-  const [pageSize, setPageSize] = useState(50);
-  const [page, setPage] = useState(1);
+  // The view settings live in the address bar, so coming Back from an animal's page returns to the same view.
+  const params = useSearchParams();
+  const pick = <T extends string>(key: string, allowed: readonly T[], fallback: T): T => {
+    const v = params.get(key);
+    return v && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
+  };
+  const [view, setView] = useState<View>(() => pick("view", ["grid", "list"], "grid"));
+  const [sort, setSort] = useState<Sort>(() => pick("sort", ["newest", "oldest", "name-asc", "name-desc"], "newest"));
+  const [category, setCategory] = useState(() =>
+    pick("category", ["all", "none", ...species.map((x) => x.value)], "all"),
+  );
+  const [usage, setUsage] = useState(() => pick("show", ["all", "assigned", "unassigned"], "all"));
+  const [query, setQuery] = useState(() => params.get("q") ?? "");
+  const [pageSize, setPageSize] = useState(() => {
+    const n = Number(params.get("per"));
+    return PAGE_SIZES.includes(n) ? n : 50;
+  });
+  const [page, setPage] = useState(() => Math.max(1, Math.floor(Number(params.get("page"))) || 1));
+  const [viewingId, setViewingId] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [action, setAction] = useState("");
@@ -71,17 +85,17 @@ export function PhotoLibrary({
     c === "all"
       ? true
       : c === "none"
-        ? p.category === null && p.usedBy.length === 0
+        ? p.category === null && p.animals.length === 0
         : p.category === c || (p.species as string[]).includes(c);
   const q = query.trim().toLowerCase();
   const filtered = photos
     .filter(
       (p) =>
         inCategory(p, category) &&
-        (usage === "all" || (p.usedBy.length === 0 && !p.usedElsewhere)) &&
+        (usage === "all" || (usage === "assigned") === isAssigned(p)) &&
         (!q ||
           (p.fileName ?? "untitled").toLowerCase().includes(q) ||
-          p.usedBy.some((n) => n.toLowerCase().includes(q))),
+          p.animals.some((a) => a.name.toLowerCase().includes(q))),
     )
     .sort(sorters[sort]);
 
@@ -91,6 +105,22 @@ export function PhotoLibrary({
   const shown = filtered.slice(firstIndex, firstIndex + pageSize);
   const shownIds = shown.map((p) => p.id);
   const allShownSelected = shownIds.length > 0 && shownIds.every((id) => selected.includes(id));
+
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (view !== "grid") next.set("view", view);
+    if (sort !== "newest") next.set("sort", sort);
+    if (category !== "all") next.set("category", category);
+    if (usage !== "all") next.set("show", usage);
+    if (pageSize !== 50) next.set("per", String(pageSize));
+    if (currentPage > 1) next.set("page", String(currentPage));
+    if (query.trim()) next.set("q", query.trim());
+    const qs = next.toString();
+    const url = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+    if (url !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }, [view, sort, category, usage, pageSize, currentPage, query]);
 
   /** Any change to what's listed starts again from page 1. */
   function changing<T>(set: (v: T) => void) {
@@ -190,12 +220,16 @@ export function PhotoLibrary({
     router.refresh();
   }
 
+  const viewingIndex = viewingId ? shown.findIndex((p) => p.id === viewingId) : -1;
+  const categoryOf = (p: LibraryPhoto) => (p.category ? (speciesLabel[p.category] ?? p.category) : null);
+
   const rowProps = (p: LibraryPhoto) => ({
+    onOpen: () => setViewingId(p.id),
     photo: p,
     onMessage: setMessage,
     selected: selected.includes(p.id),
     onToggle: (shift: boolean) => toggle(p.id, shift),
-    categoryLabel: p.category ? (speciesLabel[p.category] ?? p.category) : null,
+    categoryLabel: categoryOf(p),
   });
 
   return (
@@ -329,7 +363,8 @@ export function PhotoLibrary({
               className={compactSelect}
             >
               <option value="all">All photos</option>
-              <option value="unused">Not used yet</option>
+              <option value="assigned">Assigned</option>
+              <option value="unassigned">Unassigned</option>
             </Select>
             <Select
               id="library-sort"
@@ -543,6 +578,14 @@ export function PhotoLibrary({
         </nav>
       ) : null}
 
+      <PhotoViewer
+        photos={shown}
+        index={viewingIndex}
+        categoryLabel={categoryOf}
+        onIndex={(i) => setViewingId(shown[i]?.id ?? null)}
+        onClose={() => setViewingId(null)}
+      />
+
       <AnimalDialog
         open={animalDialog}
         photoIds={selected}
@@ -601,6 +644,8 @@ function ViewButton({
 
 type RowProps = {
   photo: LibraryPhoto;
+  /** Opens the larger view. */
+  onOpen: () => void;
   onMessage: (m: Message) => void;
   selected: boolean;
   onToggle: (shift: boolean) => void;
@@ -608,14 +653,29 @@ type RowProps = {
 };
 
 const photoLabel = (p: LibraryPhoto) => p.fileName ?? "Untitled photo";
-const usageText = (p: LibraryPhoto) =>
-  p.usedBy.length
-    ? `${p.usedBy.slice(0, 3).join(", ")}${p.usedBy.length > 3 ? ` and ${p.usedBy.length - 3} more` : ""}`
-    : p.usedElsewhere
-      ? "Used on the website"
-      : "Not used yet";
+const isAssigned = (p: LibraryPhoto) => p.animals.length > 0 || p.usedElsewhere;
 
-function GridCard({ photo, onMessage, selected, onToggle, categoryLabel }: RowProps) {
+/** Where a photo is assigned: links to its animals, "On the website", or "Unassigned". */
+function AssignedTo({ photo, prefix }: { photo: LibraryPhoto; prefix?: boolean }) {
+  if (photo.animals.length === 0) return <>{photo.usedElsewhere ? "Used on the website" : "Unassigned"}</>;
+  const shown = photo.animals.slice(0, 3);
+  return (
+    <>
+      {prefix ? "On: " : null}
+      {shown.map((a, i) => (
+        <span key={a.id}>
+          {i > 0 ? ", " : null}
+          <Link href={`/admin/animals/${a.id}`} className="text-primary underline decoration-accent underline-offset-4">
+            {a.name}
+          </Link>
+        </span>
+      ))}
+      {photo.animals.length > 3 ? ` and ${photo.animals.length - 3} more` : null}
+    </>
+  );
+}
+
+function GridCard({ photo, onMessage, selected, onToggle, onOpen, categoryLabel }: RowProps) {
   const label = photoLabel(photo);
   const thumb = photo.thumb ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -624,29 +684,51 @@ function GridCard({ photo, onMessage, selected, onToggle, categoryLabel }: RowPr
 
   return (
     <article className="space-y-3">
-      <button
-        type="button"
-        aria-pressed={selected}
-        aria-label={`Select ${label}`}
-        onClick={(e) => onToggle(e.shiftKey)}
-        className={clsx(
-          "group relative block aspect-[4/3] w-full cursor-pointer overflow-hidden bg-surface outline-offset-2",
-          selected && "ring-4 ring-primary",
-        )}
-      >
-        {thumb}
-        <span
-          aria-hidden="true"
+      <div className="relative">
+        <button
+          type="button"
+          aria-pressed={selected}
+          aria-label={`Select ${label}`}
+          onClick={(e) => onToggle(e.shiftKey)}
           className={clsx(
-            "absolute left-2 top-2 inline-flex size-6 items-center justify-center border-2 text-sm font-bold",
-            selected
-              ? "border-primary bg-primary text-on-primary"
-              : "border-white bg-black/30 text-transparent group-hover:text-white/70",
+            "group relative block aspect-[4/3] w-full cursor-pointer overflow-hidden bg-surface outline-offset-2",
+            selected && "ring-4 ring-primary",
           )}
         >
-          ✓
-        </span>
-      </button>
+          {thumb}
+          <span
+            aria-hidden="true"
+            className={clsx(
+              "absolute left-2 top-2 inline-flex size-6 items-center justify-center border-2 text-sm font-bold",
+              selected
+                ? "border-primary bg-primary text-on-primary"
+                : "border-white bg-black/30 text-transparent group-hover:text-white/70",
+            )}
+          >
+            ✓
+          </span>
+        </button>
+        <button
+          type="button"
+          aria-label={`View ${label} larger`}
+          title="View larger"
+          onClick={onOpen}
+          className="absolute right-2 top-2 inline-flex size-8 items-center justify-center bg-black/45 text-white hover:bg-black/70"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" />
+          </svg>
+        </button>
+      </div>
 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -655,12 +737,14 @@ function GridCard({ photo, onMessage, selected, onToggle, categoryLabel }: RowPr
         <TrashButton photo={photo} onMessage={onMessage} />
       </div>
       {categoryLabel ? <p className="text-sm font-semibold text-primary">{categoryLabel}</p> : null}
-      <p className="text-sm text-ink-muted">{photo.usedBy.length ? `On: ${usageText(photo)}` : usageText(photo)}</p>
+      <p className="text-sm text-ink-muted">
+        <AssignedTo photo={photo} prefix />
+      </p>
     </article>
   );
 }
 
-function ListRow({ photo, onMessage, selected, onToggle, categoryLabel }: RowProps) {
+function ListRow({ photo, onMessage, selected, onToggle, onOpen, categoryLabel }: RowProps) {
   const label = photoLabel(photo);
   return (
     <tr className={clsx("border-b border-rule align-middle", selected && "bg-primary/5")}>
@@ -676,23 +760,32 @@ function ListRow({ photo, onMessage, selected, onToggle, categoryLabel }: RowPro
         />
       </td>
       <td className="py-2 pr-4">
-        <div className="aspect-[4/3] w-20 overflow-hidden bg-surface">
+        <button
+          type="button"
+          aria-label={`View ${label} larger`}
+          title="View larger"
+          onClick={onOpen}
+          className="block aspect-[4/3] w-20 cursor-zoom-in overflow-hidden bg-surface"
+        >
           {photo.thumb ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photo.thumb} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
           ) : null}
-        </div>
+        </button>
       </td>
       <td className="py-2 pr-4">
         <RenameName photo={photo} />
         <p className="text-sm text-ink-muted md:hidden">
-          {[categoryLabel, usageText(photo)].filter(Boolean).join(" · ")}
+          {categoryLabel ? `${categoryLabel} · ` : null}
+          <AssignedTo photo={photo} />
         </p>
       </td>
       <td className="hidden py-2 pr-4 text-sm md:table-cell">
         {categoryLabel ?? <span className="text-ink-muted">—</span>}
       </td>
-      <td className="hidden py-2 pr-4 text-sm text-ink-muted lg:table-cell">{usageText(photo)}</td>
+      <td className="hidden py-2 pr-4 text-sm text-ink-muted lg:table-cell">
+        <AssignedTo photo={photo} />
+      </td>
       <td className="hidden py-2 pr-4 text-sm text-ink-muted md:table-cell">
         <time dateTime={photo.createdAt} suppressHydrationWarning>
           {new Date(photo.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
@@ -810,7 +903,7 @@ function RenameName({ photo }: { photo: LibraryPhoto }) {
 function TrashButton({ photo, onMessage }: { photo: LibraryPhoto; onMessage: (m: Message) => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const used = photo.usedBy.length > 0 || photo.usedElsewhere;
+  const used = isAssigned(photo);
   const label = photoLabel(photo);
 
   async function remove() {

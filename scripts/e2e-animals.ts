@@ -49,10 +49,14 @@ async function main() {
   check("Owner adds an animal", created.ok, !created.ok ? created.message : "");
   const mareId = created.ok ? created.data.id : "";
   cleanup.push(mareId);
-  const { data: fresh } = await client.from("animals").select("is_published, slug").eq("id", mareId).single();
+  const { data: fresh } = await client
+    .from("animals")
+    .select("is_published, program_status, slug")
+    .eq("id", mareId)
+    .single();
   check(
-    "New animals start hidden, with a web address made from the name",
-    fresh?.is_published === false && fresh?.slug === "e2e-mare",
+    "New animals start on the website and Active, with a web address made from the name",
+    fresh?.is_published === true && fresh?.program_status === "active" && fresh?.slug === "e2e-mare",
   );
 
   const steer = await svc.createAnimal(

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { parseBasics, parseBreeding, parseDetails, parsePerformance, parseSale, parseStatus } from "./schemas";
+import {
+  parseAnimalEdit,
+  parseBasics,
+  parseBreeding,
+  parseDetails,
+  parsePerformance,
+  parseSale,
+  parseStatus,
+} from "./schemas";
 
 const fd = (entries: [string, string][]) => {
   const f = new FormData();
@@ -197,5 +205,47 @@ describe("parseDetails", () => {
       ok: false,
     });
     expect(parseDetails(fd([["facts", "not json"]]))).toMatchObject({ ok: false });
+  });
+});
+
+describe("parseAnimalEdit (one Save for the whole page)", () => {
+  const base: [string, string][] = [
+    ["species", "horse"],
+    ["category_id", "horse.mare"],
+    ["name", "Blue Star"],
+    ["sex", "female"],
+    ["is_published", "on"],
+    ["program_status", "active"],
+    ["sale_status", "none"],
+  ];
+
+  it("reads every section from one form", () => {
+    const r = parseAnimalEdit(fd([...base, ["facts", JSON.stringify([{ label: "Height", value: "15.1 hands" }])]]));
+    expect(r.ok && r.data.basics.name).toBe("Blue Star");
+    expect(r.ok && r.data.status).toMatchObject({ is_published: true, program_status: "active" });
+    expect(r.ok && r.data.sale).toBeNull();
+    expect(r.ok && r.data.details.facts).toEqual([{ label: "Height", value: "15.1 hands" }]);
+  });
+
+  it("skips Breeding and Performance unless the page showed them", () => {
+    const r = parseAnimalEdit(fd(base));
+    expect(r.ok && "breeding" in r.data).toBe(false);
+    expect(r.ok && "performance" in r.data).toBe(false);
+    const withBreeding = parseAnimalEdit(fd([...base, ["has_breeding", "1"]]));
+    expect(withBreeding.ok && withBreeding.data.breeding?.breeding_available).toBe(false);
+  });
+
+  it("reports problems from several sections together and saves nothing", () => {
+    const r = parseAnimalEdit(
+      fd([
+        ["species", "horse"],
+        ["category_id", "horse.mare"],
+        ["sex", "female"],
+        ["sale_status", "available"],
+        ["price_mode", "price"],
+        ["facts", JSON.stringify([{ label: "Height", value: "" }])],
+      ]),
+    );
+    expect(!r.ok && Object.keys(r.fieldErrors).sort()).toEqual(["facts", "name", "price"]);
   });
 });

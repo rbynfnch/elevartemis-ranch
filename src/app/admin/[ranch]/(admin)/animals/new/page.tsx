@@ -35,8 +35,8 @@ async function NewAnimal({ params }: { params: PageProps<"/admin/[ranch]/animals
       <header>
         <h1 className="font-display text-3xl">Add Animal</h1>
         <p className="mt-2 max-w-[62ch] text-ink-muted">
-          Start with the basics. Next you can add photos, pedigree, sale details and more. New animals stay hidden from
-          the website until you choose to show them.
+          Start with the basics. Next you can add photos, pedigree, sale details and more. New animals are shown on the
+          website right away. You can hide one anytime under &ldquo;On the website&rdquo;.
         </p>
       </header>
       <BasicsForm

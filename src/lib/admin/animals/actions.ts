@@ -8,7 +8,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin-context";
 import { currentRanchSlug } from "@/lib/auth/current-ranch";
 import * as service from "./service";
-import { parseBasics, parseBreeding, parseDetails, parsePerformance, parseSale, parseStatus } from "./schemas";
+import { parseAnimalEdit, parseBasics } from "./schemas";
 
 export type ActionState = { ok?: boolean; message?: string; fieldErrors?: Record<string, string> };
 
@@ -48,87 +48,52 @@ export async function createAnimalAction(_prev: ActionState, fd: FormData): Prom
   redirect(`/admin/animals/${result.data.id}?added=1`);
 }
 
-export async function updateBasicsAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
+/**
+ * The Save button at the end of the animal page. Every section is checked
+ * first; only then are they written, in order. If a database rule rejects one
+ * section the message says which ones were saved and which was not.
+ */
+export async function saveAnimalAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const c = await context();
   const id = idFrom(fd);
   if (!c || !id) return noAccess;
-  const parsed = parseBasics(fd);
-  if (!parsed.ok) return { message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-  const result = await service.updateBasics(c.db, id, parsed.data);
-  if (!result.ok) return { message: result.message };
-  refreshSite(c.slug);
-  return saved();
-}
+  const parsed = parseAnimalEdit(fd);
+  if (!parsed.ok)
+    return { message: "Check the highlighted fields. Nothing was saved yet.", fieldErrors: parsed.fieldErrors };
+  const d = parsed.data;
 
-export async function saveStatusAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const c = await context();
-  const id = idFrom(fd);
-  if (!c || !id) return noAccess;
-  const parsed = parseStatus(fd);
-  if (!parsed.ok) return { message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-  const result = await service.saveStatus(c.db, id, parsed.data);
-  if (!result.ok) return { message: result.message };
+  type Step = [label: string, run: () => Promise<service.Result<unknown>>];
+  const steps: Step[] = [
+    ["Basics", () => service.updateBasics(c.db, id, d.basics)],
+    ["On the website", () => service.saveStatus(c.db, id, d.status)],
+    ["For Sale", () => service.saveSale(c.db, c.ranchId, id, d.sale)],
+  ];
+  if (d.breeding) {
+    const breeding = d.breeding;
+    steps.push(["Breeding", () => service.saveBreeding(c.db, c.ranchId, id, breeding)]);
+  }
+  if (d.performance !== undefined) {
+    const performance = d.performance;
+    steps.push(["Performance", () => service.savePerformance(c.db, c.ranchId, id, performance)]);
+  }
+  steps.push(["Facts and stories", () => service.saveDetails(c.db, id, d.details)]);
+
+  const done: string[] = [];
+  for (const [label, run] of steps) {
+    const result = await run();
+    if (!result.ok) {
+      if (done.length) refreshSite(c.slug);
+      const earlier = done.length ? `${done.join(", ")} saved, but ` : "";
+      return { message: `${earlier}${label} could not be saved: ${result.message}`, fieldErrors: result.fieldErrors };
+    }
+    done.push(label);
+  }
   refreshSite(c.slug);
   return saved(
-    parsed.data.is_published
+    d.status.is_published
       ? "Saved. This animal is on your website."
       : "Saved. This animal is hidden from your website.",
   );
-}
-
-export async function saveSaleAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const c = await context();
-  const id = idFrom(fd);
-  if (!c || !id) return noAccess;
-  const parsed = parseSale(fd);
-  if (!parsed.ok) return { message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-  const result = await service.saveSale(c.db, c.ranchId, id, parsed.data);
-  if (!result.ok) return { message: result.message };
-  refreshSite(c.slug);
-  const status = parsed.data?.status;
-  return saved(
-    status === "sold"
-      ? "Saved. Marked as sold — it's off the For Sale page and keeps its portfolio."
-      : status
-        ? "Saved. It's on the For Sale page."
-        : "Saved. Not for sale.",
-  );
-}
-
-export async function saveBreedingAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const c = await context();
-  const id = idFrom(fd);
-  if (!c || !id) return noAccess;
-  const parsed = parseBreeding(fd);
-  if (!parsed.ok) return { message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-  const result = await service.saveBreeding(c.db, c.ranchId, id, parsed.data);
-  if (!result.ok) return { message: result.message };
-  refreshSite(c.slug);
-  return saved();
-}
-
-export async function savePerformanceAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const c = await context();
-  const id = idFrom(fd);
-  if (!c || !id) return noAccess;
-  const parsed = parsePerformance(fd);
-  if (!parsed.ok) return { message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-  const result = await service.savePerformance(c.db, c.ranchId, id, parsed.data);
-  if (!result.ok) return { message: result.message };
-  refreshSite(c.slug);
-  return saved();
-}
-
-export async function saveDetailsAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const c = await context();
-  const id = idFrom(fd);
-  if (!c || !id) return noAccess;
-  const parsed = parseDetails(fd);
-  if (!parsed.ok) return { message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-  const result = await service.saveDetails(c.db, id, parsed.data);
-  if (!result.ok) return { message: result.message };
-  refreshSite(c.slug);
-  return saved();
 }
 
 export async function keepCategoryAction(fd: FormData): Promise<void> {

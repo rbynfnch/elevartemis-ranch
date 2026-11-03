@@ -333,3 +333,22 @@ commit. Photo storage (upload/download) is verified manually (see README).
   and phone screenshots against a fake PostgREST server with fixture photos
   cropped from the mockup. Not verified: the no-slides/no-animals fallback,
   slider autoplay, a real database.
+
+### One Save on the animal page; new-animal defaults; Quick Facts labels
+
+- The animal edit page is one form (`AnimalEditForm`) with one Save bar at the
+  bottom. `saveAnimalAction` checks every section first (`parseAnimalEdit`),
+  then writes Basics, On the website, For Sale, Breeding, Performance and Facts
+  in order. A database rule that rejects one section reports which sections
+  saved and which did not (there is no cross-table transaction). Photos stay
+  immediate: they save as they're added, reordered or removed.
+- The form submits through a transition, so typed values stay on screen after
+  saving instead of resetting to the loaded values.
+- New animals start Active and shown on the website (they were hidden).
+  Existing animals are unchanged. The e2e check was updated to match.
+- Quick Facts labels: any label the owner types is remembered per ranch
+  (read from existing facts, most used first) and suggested on every animal,
+  after the platform's starter labels. There is no separate label list to
+  manage; add a label by using it once.
+- Not verified in a browser against a real signed-in session; covered by unit
+  tests, lint, typecheck and a production build. Run the e2e scripts locally.

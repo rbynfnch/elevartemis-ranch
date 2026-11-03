@@ -6,12 +6,13 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/admin-context";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getAnimal } from "@/lib/admin/animals/service";
-import { keepCategoryAction, updateBasicsAction } from "@/lib/admin/animals/actions";
-import { loadBreedSuggestions, loadRanchCategories } from "@/lib/admin/animals/categories";
+import { keepCategoryAction } from "@/lib/admin/animals/actions";
+import { loadBreedSuggestions, loadFactLabels, loadRanchCategories } from "@/lib/admin/animals/categories";
 import { isAtLeastYearsOld } from "@/lib/admin/dashboard";
 import { mediaUrl, pickVariant } from "@/lib/media/variants";
 import { speciesTerms } from "@/lib/domain/species";
-import { BasicsForm } from "@/components/admin/animals/basics-form";
+import { BasicsFields } from "@/components/admin/animals/basics-form";
+import { AnimalEditForm } from "@/components/admin/animals/edit-form";
 import { StatusForm } from "@/components/admin/animals/status-form";
 import { SaleForm } from "@/components/admin/animals/sale-form";
 import { BreedingForm } from "@/components/admin/animals/breeding-form";
@@ -56,6 +57,7 @@ async function EditAnimal({
     loadRanchCategories(db, ctx.ranch.id),
     loadBreedSuggestions(db, ctx.ranch.id),
   ]);
+  const factLabels = result.ok ? await loadFactLabels(db, ctx.ranch.id, result.data.animal.species) : [];
   if (!result.ok) notFound();
   const { animal, sale, breeding, performance, facts, sections, photos } = result.data;
   if (animal.record_scope !== "inventory") notFound();
@@ -100,9 +102,7 @@ async function EditAnimal({
           <FormMessage tone="info">This is sample content. Replace it with a real animal before launch.</FormMessage>
         ) : null}
         {q.added === "1" ? (
-          <FormMessage tone="success">
-            {animal.name} was added. Add photos next, then show it on the website when it&apos;s ready.
-          </FormMessage>
+          <FormMessage tone="success">{animal.name} was added and is on your website. Add photos next.</FormMessage>
         ) : null}
         {q.kept === "1" ? (
           <FormMessage tone="success">Got it. We won&apos;t suggest moving {animal.name} again.</FormMessage>
@@ -119,6 +119,9 @@ async function EditAnimal({
             </form>
           </div>
         ) : null}
+        <p className="max-w-[62ch] text-sm text-ink-muted">
+          Photos save as you add them. Everything below is saved together with the one Save button at the bottom.
+        </p>
         <nav aria-label="Sections" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {sectionsNav.map(([anchor, label]) => (
             <a
@@ -153,53 +156,48 @@ async function EditAnimal({
         />
       </Panel>
 
-      <Panel id="basics" title="Basics">
-        <BasicsForm
-          action={updateBasicsAction}
-          animal={animal}
-          categories={categories.filter((c) => c.species === animal.species)}
-          enabledSpecies={[animal.species]}
-          breedSuggestions={breeds}
-          submitLabel="Save"
-        />
-      </Panel>
-
-      <Panel id="website" title="On the website">
-        <StatusForm animal={animal} />
-      </Panel>
-
-      <Panel id="for-sale" title="For Sale">
-        <SaleForm animalId={animal.id} sale={sale} />
-      </Panel>
-
-      {animal.sex === "male" ? (
-        <Panel
-          id="breeding"
-          title="Breeding Services"
-          description="Optional. Only the details you fill in appear on his page."
-        >
-          <BreedingForm
-            animalId={animal.id}
-            species={animal.species}
-            available={animal.breeding_available}
-            row={breeding}
+      <AnimalEditForm animalId={animal.id}>
+        <Panel id="basics" title="Basics">
+          <BasicsFields
+            animal={animal}
+            categories={categories.filter((c) => c.species === animal.species)}
+            enabledSpecies={[animal.species]}
+            breedSuggestions={breeds}
           />
         </Panel>
-      ) : null}
 
-      {animal.species === "cattle" ? (
-        <Panel
-          id="performance"
-          title="Performance"
-          description="Weights and EPDs buyers compare. Everything is optional; only what you fill in is shown."
-        >
-          <PerformanceForm animalId={animal.id} performance={performance} />
+        <Panel id="website" title="On the website">
+          <StatusForm animal={animal} />
         </Panel>
-      ) : null}
 
-      <Panel id="details" title="Facts and stories">
-        <DetailsEditor animalId={animal.id} species={animal.species} facts={facts} sections={sections} />
-      </Panel>
+        <Panel id="for-sale" title="For Sale">
+          <SaleForm sale={sale} />
+        </Panel>
+
+        {animal.sex === "male" ? (
+          <Panel
+            id="breeding"
+            title="Breeding Services"
+            description="Optional. Only the details you fill in appear on his page."
+          >
+            <BreedingForm species={animal.species} available={animal.breeding_available} row={breeding} />
+          </Panel>
+        ) : null}
+
+        {animal.species === "cattle" ? (
+          <Panel
+            id="performance"
+            title="Performance"
+            description="Weights and EPDs buyers compare. Everything is optional; only what you fill in is shown."
+          >
+            <PerformanceForm performance={performance} />
+          </Panel>
+        ) : null}
+
+        <Panel id="details" title="Facts and stories">
+          <DetailsEditor labelSuggestions={factLabels} facts={facts} sections={sections} />
+        </Panel>
+      </AnimalEditForm>
 
       <Panel
         id="pedigree"

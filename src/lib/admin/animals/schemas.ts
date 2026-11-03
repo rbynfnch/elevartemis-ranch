@@ -304,3 +304,47 @@ export function parseDetails(fd: FormData): Parsed<DetailsInput> {
     return { ok: false, fieldErrors: { facts: "Something went wrong reading the form. Please try again." } };
   }
 }
+
+// ─── The whole animal page, saved at once ────────────────────────────────────
+export type AnimalEditInput = {
+  basics: BasicsInput;
+  status: StatusInput;
+  sale: SaleInput;
+  /** Present only when the page showed the Breeding section (marker field `has_breeding`). */
+  breeding?: BreedingInput;
+  /** Present only when the page showed the Performance section (marker field `has_performance`). */
+  performance?: PerformanceInput;
+  details: DetailsInput;
+};
+
+/**
+ * Reads every section of the animal page from one form. Everything is checked
+ * before anything is written, and all problems are reported together, so the
+ * owner fixes them in one pass instead of discovering them section by section.
+ */
+export function parseAnimalEdit(fd: FormData): Parsed<AnimalEditInput> {
+  const basics = parseBasics(fd);
+  const status = parseStatus(fd);
+  const sale = parseSale(fd);
+  const details = parseDetails(fd);
+  const breeding = fd.get("has_breeding") === "1" ? parseBreeding(fd) : undefined;
+  const performance = fd.get("has_performance") === "1" ? parsePerformance(fd) : undefined;
+
+  const errors: Record<string, string> = {};
+  for (const r of [basics, status, sale, details, breeding, performance]) {
+    if (r && !r.ok) Object.assign(errors, r.fieldErrors);
+  }
+  if (Object.keys(errors).length) return { ok: false, fieldErrors: errors };
+
+  return {
+    ok: true,
+    data: {
+      basics: (basics as { ok: true; data: BasicsInput }).data,
+      status: (status as { ok: true; data: StatusInput }).data,
+      sale: (sale as { ok: true; data: SaleInput }).data,
+      details: (details as { ok: true; data: DetailsInput }).data,
+      ...(breeding ? { breeding: (breeding as { ok: true; data: BreedingInput }).data } : {}),
+      ...(performance ? { performance: (performance as { ok: true; data: PerformanceInput }).data } : {}),
+    },
+  };
+}

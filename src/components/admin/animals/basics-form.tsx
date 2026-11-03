@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import type { ActionState } from "@/lib/admin/animals/actions";
 import { docToText } from "@/lib/admin/form-values";
+import { useFieldErrors } from "@/components/admin/animals/edit-form";
 import { Field, FormMessage, RadioGroup, Select, SubmitButton, TextArea, TextInput } from "@/components/admin/forms";
 
 export type CategoryOption = { id: string; species: "horse" | "cattle"; label: string; allowedSexes: string[] };
@@ -42,22 +43,52 @@ const MONTHS = [
   "December",
 ];
 
+/** Add Animal page: its own form and button. */
 export function BasicsForm({
   action,
-  animal,
   categories,
   enabledSpecies,
   breedSuggestions,
   submitLabel,
 }: {
   action: (state: ActionState, fd: FormData) => Promise<ActionState>;
-  animal?: AnimalLike;
   categories: CategoryOption[];
   enabledSpecies: ("horse" | "cattle")[];
   breedSuggestions: string[];
   submitLabel: string;
 }) {
   const [state, formAction] = useActionState(action, {});
+  return (
+    <form action={formAction} className="max-w-2xl space-y-6" noValidate>
+      <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
+      <BasicsFields
+        categories={categories}
+        enabledSpecies={enabledSpecies}
+        breedSuggestions={breedSuggestions}
+        errors={state.fieldErrors ?? {}}
+      />
+      <SubmitButton pendingText="Saving…" className="sm:w-auto">
+        {submitLabel}
+      </SubmitButton>
+    </form>
+  );
+}
+
+/** The basics as plain fields. On the edit page they sit inside the one big form and read its errors. */
+export function BasicsFields({
+  animal,
+  categories,
+  enabledSpecies,
+  breedSuggestions,
+  errors,
+}: {
+  animal?: AnimalLike;
+  categories: CategoryOption[];
+  enabledSpecies: ("horse" | "cattle")[];
+  breedSuggestions: string[];
+  errors?: Record<string, string>;
+}) {
+  const inherited = useFieldErrors();
   const [species, setSpecies] = useState<"horse" | "cattle">(animal?.species ?? enabledSpecies[0] ?? "horse");
   const [categoryId, setCategoryId] = useState(animal?.category_id ?? "");
   const [precision, setPrecision] = useState(animal?.birth_precision ?? "year");
@@ -66,14 +97,11 @@ export function BasicsForm({
   const sexes = category?.allowedSexes ?? ["male", "female", "unknown"];
   const [sex, setSex] = useState(animal?.sex ?? "");
   const [y, m, d] = (animal?.birth_date ?? "").split("-");
-  const err = state.fieldErrors ?? {};
+  const err = errors ?? inherited;
   const birthWord = species === "horse" ? "Foaling date" : "Calving date";
 
   return (
-    <form action={formAction} className="max-w-2xl space-y-6" noValidate>
-      <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
-      {animal ? <input type="hidden" name="id" value={animal.id} /> : null}
-
+    <div className="max-w-2xl space-y-6">
       {enabledSpecies.length > 1 && !animal ? (
         <RadioGroup
           name="species"
@@ -258,10 +286,6 @@ export function BasicsForm({
           hasHint
         />
       </Field>
-
-      <SubmitButton pendingText="Saving…" className="sm:w-auto">
-        {submitLabel}
-      </SubmitButton>
-    </form>
+    </div>
   );
 }

@@ -1,18 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { saveBreedingAction } from "@/lib/admin/animals/actions";
+import { useState } from "react";
+import { useFieldErrors } from "@/components/admin/animals/edit-form";
 import { centsToDollars, docToText } from "@/lib/admin/form-values";
-import {
-  Checkbox,
-  Field,
-  FormMessage,
-  RadioGroup,
-  Select,
-  SubmitButton,
-  TextArea,
-  TextInput,
-} from "@/components/admin/forms";
+import { Checkbox, Field, RadioGroup, Select, TextArea, TextInput } from "@/components/admin/forms";
 
 type Row = {
   status: "available" | "private_treaty" | "retired";
@@ -33,28 +24,25 @@ type Row = {
 } | null;
 
 export function BreedingForm({
-  animalId,
   species,
   available,
   row,
 }: {
-  animalId: string;
   species: "horse" | "cattle";
   available: boolean;
   row: Row;
 }) {
-  const [state, action] = useActionState(saveBreedingAction, {});
   const [on, setOn] = useState(available);
   const [guarantee, setGuarantee] = useState(
     row?.live_offspring_guarantee === true ? "yes" : row?.live_offspring_guarantee === false ? "no" : "",
   );
-  const err = state.fieldErrors ?? {};
+  const err = useFieldErrors();
   const horse = species === "horse";
 
   return (
-    <form action={action} className="max-w-2xl space-y-6" noValidate>
-      <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
-      <input type="hidden" name="id" value={animalId} />
+    <div className="max-w-2xl space-y-6">
+      {/* Tells the Save action this section was on the page. */}
+      <input type="hidden" name="has_breeding" value="1" />
       <Checkbox
         name="breeding_available"
         checked={on}
@@ -213,9 +201,6 @@ export function BreedingForm({
       ) : (
         <p className="text-sm text-ink-muted">Turning this off hides the section but keeps what you entered.</p>
       )}
-      <SubmitButton pendingText="Saving…" className="sm:w-auto">
-        Save
-      </SubmitButton>
-    </form>
+    </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { saveStatusAction } from "@/lib/admin/animals/actions";
-import { Checkbox, FormMessage, RadioGroup, Select, SubmitButton, TextInput } from "@/components/admin/forms";
+import { useState } from "react";
+import { useFieldErrors } from "@/components/admin/animals/edit-form";
+import { Checkbox, RadioGroup, Select, TextInput } from "@/components/admin/forms";
 
 export function StatusForm({
   animal,
@@ -18,15 +18,13 @@ export function StatusForm({
     deceased_precision: "year" | "month" | "day";
   };
 }) {
-  const [state, action] = useActionState(saveStatusAction, {});
-  const [program, setProgram] = useState(animal.program_status);
+  const err = useFieldErrors();
+  const [program, setProgram] = useState(animal.program_status || "active");
   const [y, m] = (animal.deceased_on ?? "").split("-");
   const referenceLabel = animal.species === "horse" ? "Previous stallion" : "Reference sire";
 
   return (
-    <form action={action} className="max-w-2xl space-y-6">
-      <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
-      <input type="hidden" name="id" value={animal.id} />
+    <div className="max-w-2xl space-y-6">
       <div>
         <Checkbox
           name="is_published"
@@ -102,14 +100,9 @@ export function StatusForm({
               placeholder="Year"
             />
           </div>
-          {state.fieldErrors?.deceased_on ? (
-            <p className="text-sm font-semibold text-[#8a2b1d]">{state.fieldErrors.deceased_on}</p>
-          ) : null}
+          {err.deceased_on ? <p className="text-sm font-semibold text-[#8a2b1d]">{err.deceased_on}</p> : null}
         </fieldset>
       ) : null}
-      <SubmitButton pendingText="Saving…" className="sm:w-auto">
-        Save
-      </SubmitButton>
-    </form>
+    </div>
   );
 }

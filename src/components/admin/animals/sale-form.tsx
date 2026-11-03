@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { saveSaleAction } from "@/lib/admin/animals/actions";
+import { useState } from "react";
+import { useFieldErrors } from "@/components/admin/animals/edit-form";
 import { centsToDollars, docToText } from "@/lib/admin/form-values";
-import { Checkbox, Field, FormMessage, RadioGroup, SubmitButton, TextArea, TextInput } from "@/components/admin/forms";
+import { Checkbox, Field, RadioGroup, TextArea, TextInput } from "@/components/admin/forms";
 
 type Sale = {
   status: "available" | "pending" | "sold";
@@ -15,16 +15,13 @@ type Sale = {
   show_on_sold_page: boolean;
 } | null;
 
-export function SaleForm({ animalId, sale }: { animalId: string; sale: Sale }) {
-  const [state, action] = useActionState(saveSaleAction, {});
+export function SaleForm({ sale }: { sale: Sale }) {
   const [status, setStatus] = useState<string>(sale?.status ?? "none");
   const [mode, setMode] = useState<string>(sale?.price_mode ?? "contact");
-  const err = state.fieldErrors ?? {};
+  const err = useFieldErrors();
 
   return (
-    <form action={action} className="max-w-2xl space-y-6" noValidate>
-      <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
-      <input type="hidden" name="id" value={animalId} />
+    <div className="max-w-2xl space-y-6">
       <RadioGroup
         name="sale_status"
         legend="Is this animal for sale?"
@@ -108,9 +105,6 @@ export function SaleForm({ animalId, sale }: { animalId: string; sale: Sale }) {
           )}
         </>
       ) : null}
-      <SubmitButton pendingText="Saving…" className="sm:w-auto">
-        Save
-      </SubmitButton>
-    </form>
+    </div>
   );
 }

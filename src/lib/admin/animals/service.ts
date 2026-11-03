@@ -152,7 +152,15 @@ export type AnimalDetail = Extract<Awaited<ReturnType<typeof getAnimal>>, { ok: 
 export async function createAnimal(db: Db, ranchId: string, input: BasicsInput): Promise<Result<{ id: string }>> {
   const { data, error } = await db
     .from("animals")
-    .insert({ ...input, description: input.description as Json, ranch_id: ranchId, is_published: false, slug: "" })
+    .insert({
+      ...input,
+      description: input.description as Json,
+      ranch_id: ranchId,
+      // New animals start Active and on the website; the owner can hide one at any time.
+      is_published: true,
+      program_status: "active",
+      slug: "",
+    })
     .select("id")
     .single();
   if (error) return dbFail(error);

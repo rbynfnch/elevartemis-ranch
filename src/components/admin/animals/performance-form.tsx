@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { savePerformanceAction } from "@/lib/admin/animals/actions";
+import { useState } from "react";
+import { useFieldErrors } from "@/components/admin/animals/edit-form";
 import { commonEpdTraits, type EpdEntry } from "@/lib/animals/epd";
-import { Field, FormMessage, SubmitButton, TextInput } from "@/components/admin/forms";
+import { Field, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
 
 type Performance = {
@@ -27,8 +27,7 @@ const weights: [keyof NonNullable<Performance>, string][] = [
   ["yearling_weight_adj_lb", "Yearling weight (adjusted 365-day)"],
 ];
 
-export function PerformanceForm({ animalId, performance }: { animalId: string; performance: Performance }) {
-  const [state, action] = useActionState(savePerformanceAction, {});
+export function PerformanceForm({ performance }: { performance: Performance }) {
   const initial = ((performance?.epds as EpdEntry[] | undefined) ?? []).map((e) => ({
     trait: e.trait,
     value: String(e.value),
@@ -36,12 +35,12 @@ export function PerformanceForm({ animalId, performance }: { animalId: string; p
     percentile: e.percentile === undefined ? "" : String(e.percentile),
   }));
   const [rows, setRows] = useState(initial.length ? initial : [{ trait: "", value: "", accuracy: "", percentile: "" }]);
-  const err = state.fieldErrors ?? {};
+  const err = useFieldErrors();
 
   return (
-    <form action={action} className="space-y-8" noValidate>
-      <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
-      <input type="hidden" name="id" value={animalId} />
+    <div className="space-y-8">
+      {/* Tells the Save action this section was on the page. */}
+      <input type="hidden" name="has_performance" value="1" />
       <fieldset>
         <legend className="text-sm font-semibold">Weights (pounds)</legend>
         <div className="mt-3 grid max-w-3xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -157,9 +156,6 @@ export function PerformanceForm({ animalId, performance }: { animalId: string; p
           </Field>
         </div>
       </fieldset>
-      <SubmitButton pendingText="Saving…" className="sm:w-auto">
-        Save
-      </SubmitButton>
-    </form>
+    </div>
   );
 }

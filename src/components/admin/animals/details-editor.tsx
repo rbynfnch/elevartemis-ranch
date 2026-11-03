@@ -1,15 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { saveDetailsAction } from "@/lib/admin/animals/actions";
+import { useState } from "react";
+import { useFieldErrors } from "@/components/admin/animals/edit-form";
 import { docToText } from "@/lib/admin/form-values";
-import { Field, FormMessage, SubmitButton, TextArea, TextInput } from "@/components/admin/forms";
+import { Field, TextArea, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
-
-const suggestions = {
-  horse: ["Height", "Discipline", "Performance record", "Earnings", "Offspring earnings", "Temperament", "Training"],
-  cattle: ["Ear tag", "Tattoo", "Polled or horned", "Frame score", "Disposition", "Calving ease"],
-};
 
 function move<T>(list: T[], i: number, delta: number): T[] {
   const j = i + delta;
@@ -21,32 +16,31 @@ function move<T>(list: T[], i: number, delta: number): T[] {
 
 /** Quick Facts (short label/value lines) and longer story sections, as the owner likes. */
 export function DetailsEditor({
-  animalId,
-  species,
+  labelSuggestions,
   facts: initialFacts,
   sections: initialSections,
 }: {
-  animalId: string;
-  species: "horse" | "cattle";
+  labelSuggestions: string[];
   facts: { label: string; value: string }[];
   sections: { heading: string; body: unknown }[];
 }) {
-  const [state, action] = useActionState(saveDetailsAction, {});
+  const err = useFieldErrors();
   const [facts, setFacts] = useState(initialFacts);
   const [sections, setSections] = useState(
     initialSections.map((s) => ({ heading: s.heading, body: docToText(s.body) })),
   );
 
   return (
-    <form action={action} className="max-w-3xl space-y-10">
-      <FormMessage tone={state.ok ? "success" : "error"}>{state.message}</FormMessage>
-      <input type="hidden" name="id" value={animalId} />
+    <div className="max-w-3xl space-y-10">
       <input type="hidden" name="facts" value={JSON.stringify(facts)} />
       <input type="hidden" name="sections" value={JSON.stringify(sections)} />
 
       <fieldset className="space-y-3">
         <legend className="font-semibold">Quick Facts</legend>
-        <p className="text-sm text-ink-muted">Short details shown beside the photos, like height or discipline.</p>
+        <p className="text-sm text-ink-muted">
+          Short details shown beside the photos, like height or discipline. Type a new label to add your own; labels you
+          have used before are suggested on every animal.
+        </p>
         {facts.map((f, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[12rem_1fr_auto]">
             <Field id={`fact-label-${i}`} label="Label">
@@ -94,7 +88,7 @@ export function DetailsEditor({
           </div>
         ))}
         <datalist id="fact-suggestions">
-          {suggestions[species].map((s) => (
+          {labelSuggestions.map((s) => (
             <option key={s} value={s} />
           ))}
         </datalist>
@@ -105,9 +99,7 @@ export function DetailsEditor({
         >
           Add a fact
         </button>
-        {state.fieldErrors?.facts ? (
-          <p className="text-sm font-semibold text-[#8a2b1d]">{state.fieldErrors.facts}</p>
-        ) : null}
+        {err.facts ? <p className="text-sm font-semibold text-[#8a2b1d]">{err.facts}</p> : null}
       </fieldset>
 
       <fieldset className="space-y-4">
@@ -164,14 +156,8 @@ export function DetailsEditor({
         >
           Add a section
         </button>
-        {state.fieldErrors?.sections ? (
-          <p className="text-sm font-semibold text-[#8a2b1d]">{state.fieldErrors.sections}</p>
-        ) : null}
+        {err.sections ? <p className="text-sm font-semibold text-[#8a2b1d]">{err.sections}</p> : null}
       </fieldset>
-
-      <SubmitButton pendingText="Saving…" className="sm:w-auto">
-        Save facts and stories
-      </SubmitButton>
-    </form>
+    </div>
   );
 }

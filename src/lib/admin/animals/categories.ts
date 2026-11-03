@@ -32,3 +32,22 @@ export async function loadBreedSuggestions(db: Db, ranchId: string): Promise<str
   const defaults = ["Quarter Horse", "Appaloosa", "Hereford"];
   return [...new Set([...(data ?? []).map((r) => r.breed!).filter(Boolean), ...defaults])].sort();
 }
+
+const defaultFactLabels = {
+  horse: ["Height", "Discipline", "Performance record", "Earnings", "Offspring earnings", "Temperament", "Training"],
+  cattle: ["Ear tag", "Tattoo", "Polled or horned", "Frame score", "Disposition", "Calving ease"],
+} as const;
+
+/**
+ * Quick Facts labels to suggest: every label this ranch has already used (most
+ * used first), then the platform's starter labels. Typing a new label adds it;
+ * from then on it is suggested on every animal.
+ */
+export async function loadFactLabels(db: Db, ranchId: string, species: "horse" | "cattle"): Promise<string[]> {
+  const { data } = await db.from("animal_facts").select("label").eq("ranch_id", ranchId).limit(2000);
+  const counts = new Map<string, number>();
+  for (const { label } of data ?? []) counts.set(label, (counts.get(label) ?? 0) + 1);
+  const used = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([label]) => label);
+  const seen = new Set(used.map((l) => l.toLowerCase()));
+  return [...used, ...defaultFactLabels[species].filter((l) => !seen.has(l.toLowerCase()))];
+}

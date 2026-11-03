@@ -16,7 +16,11 @@ export function ForgotForm() {
     setPending(true);
     setError("");
     const email = String(new FormData(event.currentTarget).get("email") ?? "").trim();
-    const { error: resetError } = await createBrowserSupabase().auth.resetPasswordForEmail(email);
+    const { error: resetError } = await createBrowserSupabase().auth.resetPasswordForEmail(email, {
+      // The recovery email template links to {{ .RedirectTo }}; without this it
+      // would use the Site URL and land on the public homepage.
+      redirectTo: `${window.location.origin}/admin/auth/confirm`,
+    });
     setPending(false);
     // Same message whether or not the account exists, so the form can't be
     // used to discover which emails have accounts.

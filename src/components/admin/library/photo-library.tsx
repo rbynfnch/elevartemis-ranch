@@ -206,15 +206,17 @@ export function PhotoLibrary({
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <h1 className="font-display text-3xl">Photo Library</h1>
-          <button
-            type="button"
-            className={buttonClasses("secondary", "py-2")}
-            aria-expanded={uploadOpen}
-            aria-controls="upload-panel"
-            onClick={() => setUploadOpen(!uploadOpen)}
-          >
-            {uploadOpen ? "Close upload" : "Upload Photos"}
-          </button>
+          {uploadOpen ? null : (
+            <button
+              type="button"
+              className={buttonClasses("secondary", "py-2")}
+              aria-expanded={false}
+              aria-controls="upload-panel"
+              onClick={() => setUploadOpen(true)}
+            >
+              Upload Photos
+            </button>
+          )}
         </div>
         <p className="max-w-[62ch] text-ink-muted">
           Every photo you&apos;ve uploaded, in one place. Add photos here once, then choose them for any animal.
@@ -234,10 +236,29 @@ export function PhotoLibrary({
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
           className={clsx(
-            "flex flex-col items-center justify-center gap-3 border-2 border-dashed px-6 py-10 text-center transition-colors",
+            "relative flex flex-col items-center justify-center gap-3 border-2 border-dashed px-6 py-10 text-center transition-colors",
             dragOver ? "border-primary bg-primary/5" : "border-rule bg-white",
           )}
         >
+          <button
+            type="button"
+            aria-label="Close upload"
+            title="Close"
+            onClick={() => setUploadOpen(false)}
+            className="absolute right-2 top-2 inline-flex size-10 items-center justify-center text-ink-muted hover:bg-surface hover:text-ink"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="size-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
           <p className="font-semibold">Drag photos here, or</p>
           <button
             type="button"

@@ -249,3 +249,28 @@ describe("parseAnimalEdit (one Save for the whole page)", () => {
     expect(!r.ok && Object.keys(r.fieldErrors).sort()).toEqual(["facts", "name", "price"]);
   });
 });
+
+describe("parseBasics breed", () => {
+  const base: [string, string][] = [
+    ["species", "cattle"],
+    ["category_id", "cattle.bull"],
+    ["name", "Copper"],
+    ["sex", "male"],
+  ];
+  it("takes the chosen breed", () => {
+    const r = parseBasics(fd([...base, ["breed", "Hereford"]]));
+    expect(r.ok && r.data.breed).toBe("Hereford");
+  });
+  it("takes a new breed typed under 'Add a new breed'", () => {
+    const r = parseBasics(fd([...base, ["breed", "__new__"], ["breed_new", "  Red Angus "]]));
+    expect(r.ok && r.data.breed).toBe("Red Angus");
+  });
+  it("asks for the name when 'Add a new breed' is chosen but left empty", () => {
+    const r = parseBasics(fd([...base, ["breed", "__new__"], ["breed_new", " "]]));
+    expect(!r.ok && r.fieldErrors.breed).toBeTruthy();
+  });
+  it("leaves the breed empty when none is chosen", () => {
+    const r = parseBasics(fd([...base, ["breed", ""]]));
+    expect(r.ok && r.data.breed).toBeNull();
+  });
+});

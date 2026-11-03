@@ -3,8 +3,11 @@
 import { useActionState, useState } from "react";
 import type { ActionState } from "@/lib/admin/animals/actions";
 import { docToText } from "@/lib/admin/form-values";
+import { NEW_BREED } from "@/lib/admin/animals/constants";
 import { useFieldErrors } from "@/components/admin/animals/edit-form";
 import { Field, FormMessage, RadioGroup, Select, SubmitButton, TextArea, TextInput } from "@/components/admin/forms";
+
+export type BreedOption = { species: "horse" | "cattle"; name: string };
 
 export type CategoryOption = { id: string; species: "horse" | "cattle"; label: string; allowedSexes: string[] };
 
@@ -48,13 +51,13 @@ export function BasicsForm({
   action,
   categories,
   enabledSpecies,
-  breedSuggestions,
+  breeds,
   submitLabel,
 }: {
   action: (state: ActionState, fd: FormData) => Promise<ActionState>;
   categories: CategoryOption[];
   enabledSpecies: ("horse" | "cattle")[];
-  breedSuggestions: string[];
+  breeds: BreedOption[];
   submitLabel: string;
 }) {
   const [state, formAction] = useActionState(action, {});
@@ -64,7 +67,7 @@ export function BasicsForm({
       <BasicsFields
         categories={categories}
         enabledSpecies={enabledSpecies}
-        breedSuggestions={breedSuggestions}
+        breeds={breeds}
         errors={state.fieldErrors ?? {}}
       />
       <SubmitButton pendingText="Saving…" className="sm:w-auto">
@@ -79,13 +82,13 @@ export function BasicsFields({
   animal,
   categories,
   enabledSpecies,
-  breedSuggestions,
+  breeds,
   errors,
 }: {
   animal?: AnimalLike;
   categories: CategoryOption[];
   enabledSpecies: ("horse" | "cattle")[];
-  breedSuggestions: string[];
+  breeds: BreedOption[];
   errors?: Record<string, string>;
 }) {
   const inherited = useFieldErrors();
@@ -96,6 +99,14 @@ export function BasicsFields({
   const category = speciesCategories.find((c) => c.id === categoryId);
   const sexes = category?.allowedSexes ?? ["male", "female", "unknown"];
   const [sex, setSex] = useState(animal?.sex ?? "");
+  const [breed, setBreed] = useState(animal?.breed ?? "");
+  // This ranch's breeds for the chosen species (plus the animal's own, in case it isn't listed yet).
+  const breedNames = [
+    ...new Set([
+      ...breeds.filter((b) => b.species === species).map((b) => b.name),
+      ...(animal?.breed && animal.species === species ? [animal.breed] : []),
+    ]),
+  ].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   const [y, m, d] = (animal?.birth_date ?? "").split("-");
   const err = errors ?? inherited;
   const birthWord = species === "horse" ? "Foaling date" : "Calving date";
@@ -112,6 +123,7 @@ export function BasicsFields({
             setSpecies(v as "horse" | "cattle");
             setCategoryId("");
             setSex("");
+            setBreed("");
           }}
           options={enabledSpecies.map((s) => ({ value: s, label: s === "horse" ? "Horse" : "Cattle" }))}
         />
@@ -223,14 +235,30 @@ export function BasicsFields({
       </fieldset>
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <Field id="breed" label="Breed">
-          <TextInput id="breed" name="breed" defaultValue={animal?.breed ?? ""} list="breed-suggestions" />
-          <datalist id="breed-suggestions">
-            {breedSuggestions.map((b) => (
-              <option key={b} value={b} />
-            ))}
-          </datalist>
-        </Field>
+        <div className="space-y-3">
+          <Field id="breed" label="Breed" error={err.breed}>
+            <Select
+              id="breed"
+              name="breed"
+              value={breed}
+              onChange={(e) => setBreed(e.target.value)}
+              invalid={!!err.breed}
+            >
+              <option value="">No breed chosen</option>
+              {breedNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+              <option value={NEW_BREED}>+ Add a new breed…</option>
+            </Select>
+          </Field>
+          {breed === NEW_BREED ? (
+            <Field id="breed_new" label="New breed name" hint="It's added to your breed list for next time.">
+              <TextInput id="breed_new" name="breed_new" maxLength={80} autoComplete="off" autoFocus hasHint />
+            </Field>
+          ) : null}
+        </div>
         <Field id="color" label="Color">
           <TextInput id="color" name="color" defaultValue={animal?.color ?? ""} />
         </Field>

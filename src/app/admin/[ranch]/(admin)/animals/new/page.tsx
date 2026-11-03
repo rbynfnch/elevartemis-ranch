@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth/admin-context";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAnimalAction } from "@/lib/admin/animals/actions";
-import { loadBreedSuggestions, loadRanchCategories } from "@/lib/admin/animals/categories";
+import { loadBreeds, loadRanchCategories } from "@/lib/admin/animals/categories";
 import { BasicsForm } from "@/components/admin/animals/basics-form";
 
 export const metadata: Metadata = { title: "Add Animal" };
@@ -21,10 +21,7 @@ async function NewAnimal({ params }: { params: PageProps<"/admin/[ranch]/animals
   const ctx = await requireAdmin((await params).ranch);
   if (!ctx) return null;
   const db = await createServerSupabase();
-  const [categories, breeds] = await Promise.all([
-    loadRanchCategories(db, ctx.ranch.id),
-    loadBreedSuggestions(db, ctx.ranch.id),
-  ]);
+  const [categories, breeds] = await Promise.all([loadRanchCategories(db, ctx.ranch.id), loadBreeds(db, ctx.ranch.id)]);
   return (
     <div className="space-y-8">
       <p className="text-sm">
@@ -43,7 +40,7 @@ async function NewAnimal({ params }: { params: PageProps<"/admin/[ranch]/animals
         action={createAnimalAction}
         categories={categories.filter((c) => ctx.ranch.enabledSpecies.includes(c.species))}
         enabledSpecies={ctx.ranch.enabledSpecies}
-        breedSuggestions={breeds}
+        breeds={breeds}
         submitLabel="Add Animal"
       />
     </div>

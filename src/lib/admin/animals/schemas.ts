@@ -8,6 +8,7 @@ import {
 } from "@/lib/admin/form-values";
 import { parseEpdRows, type EpdEntry } from "@/lib/animals/epd";
 import type { Database } from "@/lib/database.types";
+import { NEW_BREED } from "./constants";
 
 type Enums = Database["public"]["Enums"];
 export type Parsed<T> = { ok: true; data: T } | { ok: false; fieldErrors: Record<string, string> };
@@ -40,6 +41,11 @@ export function parseBasics(fd: FormData): Parsed<BasicsInput> {
   const errors: Record<string, string> = {};
   const species = oneOf(get(fd, "species"), ["horse", "cattle"] as const);
   const name = text(fd, "name");
+  // The Breed dropdown's "Add a new breed…" option sends the typed name in breed_new.
+  const addingBreed = get(fd, "breed") === NEW_BREED;
+  const breed = addingBreed ? text(fd, "breed_new") : text(fd, "breed");
+  if (addingBreed && !breed) errors.breed = "Type the new breed's name, or choose one from the list.";
+  else if (breed && breed.length > 80) errors.breed = "Use 80 characters or fewer.";
   const category = text(fd, "category_id");
   const sex = oneOf(get(fd, "sex"), ["male", "female", "gelding", "steer", "unknown"] as const);
   if (!species) errors.species = "Choose horse or cattle.";
@@ -64,7 +70,7 @@ export function parseBasics(fd: FormData): Parsed<BasicsInput> {
       name: name!,
       registered_name: text(fd, "registered_name"),
       sex: sex!,
-      breed: text(fd, "breed"),
+      breed,
       color: text(fd, "color"),
       registry: text(fd, "registry"),
       registration_number: text(fd, "registration_number"),

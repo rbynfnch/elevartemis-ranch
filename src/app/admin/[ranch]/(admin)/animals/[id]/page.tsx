@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/auth/admin-context";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getAnimal } from "@/lib/admin/animals/service";
 import { keepCategoryAction } from "@/lib/admin/animals/actions";
-import { loadBreedSuggestions, loadFactLabels, loadRanchCategories } from "@/lib/admin/animals/categories";
+import { loadBreeds, loadFactLabels, loadRanchCategories } from "@/lib/admin/animals/categories";
 import { isAtLeastYearsOld } from "@/lib/admin/dashboard";
 import { mediaUrl, pickVariant } from "@/lib/media/variants";
 import { speciesTerms } from "@/lib/domain/species";
@@ -55,7 +55,7 @@ async function EditAnimal({
   const [result, categories, breeds] = await Promise.all([
     getAnimal(db, ctx.ranch.id, id),
     loadRanchCategories(db, ctx.ranch.id),
-    loadBreedSuggestions(db, ctx.ranch.id),
+    loadBreeds(db, ctx.ranch.id),
   ]);
   const factLabels = result.ok ? await loadFactLabels(db, ctx.ranch.id, result.data.animal.species) : [];
   if (!result.ok) notFound();
@@ -162,7 +162,7 @@ async function EditAnimal({
             animal={animal}
             categories={categories.filter((c) => c.species === animal.species)}
             enabledSpecies={[animal.species]}
-            breedSuggestions={breeds}
+            breeds={breeds}
           />
         </Panel>
 

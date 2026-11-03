@@ -417,3 +417,22 @@ commit. Photo storage (upload/download) is verified manually (see README).
   Back from an animal returns to the same view. Selection is not kept.
 - The usage filter is All photos / Assigned / Unassigned. Assigned = on an
   animal, a homepage slide, an update post or the Gallery.
+
+### Breeds
+
+- `ranch_breeds` (migration `20260928000300`): each ranch's list of breeds per
+  species. `animals.breed` stays text, so public pages and pedigrees are
+  unchanged. The database keeps both in step: saving an animal with a new breed
+  adds it to the list, other capitalisations map to the list's spelling,
+  renaming (`rename_breed`) renames every animal using it atomically, and a
+  breed still in use can't be deleted (RA017). Any entry path (form, CSV
+  import, scripts) gets the same behaviour.
+- Animal form: Breed is a dropdown of the ranch's breeds for the animal's
+  species, with "+ Add a new breed…" revealing a name box. Nothing is added
+  until the animal is saved.
+- `/admin/breeds`: add, rename (double-click, like the Photo Library), remove
+  unused breeds, see how many animals use each, and one-click common breeds as
+  suggestions only (nothing is added for the ranch unless chosen).
+- Existing breeds are carried into each ranch's list by the migration.
+- Not verified against a real database or in a browser; the new pgTAP file
+  `10_ranch_breeds.test.sql` has not been run.

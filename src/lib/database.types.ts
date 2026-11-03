@@ -833,6 +833,7 @@ export type Database = {
           caption: string | null;
           created_at: string;
           created_by: string | null;
+          file_name: string | null;
           focal_x: number;
           focal_y: number;
           gallery_sort: number;
@@ -856,6 +857,7 @@ export type Database = {
           caption?: string | null;
           created_at?: string;
           created_by?: string | null;
+          file_name?: string | null;
           focal_x?: number;
           focal_y?: number;
           gallery_sort?: number;
@@ -879,6 +881,7 @@ export type Database = {
           caption?: string | null;
           created_at?: string;
           created_by?: string | null;
+          file_name?: string | null;
           focal_x?: number;
           focal_y?: number;
           gallery_sort?: number;

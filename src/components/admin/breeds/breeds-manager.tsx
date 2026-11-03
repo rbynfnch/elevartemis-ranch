@@ -3,8 +3,8 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { addBreedAction, deleteBreedAction, renameBreedAction } from "@/lib/admin/breeds/actions";
-import type { BreedItem } from "@/lib/admin/breeds/service";
+import { addBreedAction, removeBreedAction, renameBreedAction, restoreBreedAction } from "@/lib/admin/breeds/actions";
+import { breedSuggestions, type BreedItem } from "@/lib/admin/breeds/service";
 import { FormMessage, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
 
@@ -40,12 +40,12 @@ function Section({
   const router = useRouter();
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
-  const have = new Set(breeds.map((b) => b.name.toLowerCase()));
-  const starters = section.starters.filter((s) => !have.has(s.toLowerCase()));
+  const listed = breeds.filter((b) => !b.hidden);
+  const suggestions = breedSuggestions(breeds, section.starters);
 
-  async function add(raw: string) {
+  async function add(raw: string, restoreId: string | null = null) {
     setBusy(true);
-    const result = await addBreedAction(section.value, raw);
+    const result = restoreId ? await restoreBreedAction(restoreId) : await addBreedAction(section.value, raw);
     setBusy(false);
     if (!result.ok) {
       onMessage({ tone: "error", text: result.message });
@@ -67,13 +67,13 @@ function Section({
         {section.label}
       </h2>
 
-      {breeds.length === 0 ? (
+      {listed.length === 0 ? (
         <p className="text-ink-muted">
           No {section.label.toLowerCase()} breeds yet. Add one below, or pick from the suggestions.
         </p>
       ) : (
         <ul className="divide-y divide-rule border-y border-rule">
-          {breeds.map((b) => (
+          {listed.map((b) => (
             <li key={b.id} className="flex items-center gap-4 py-1">
               <div className="min-w-0 flex-1">
                 <BreedName breed={b} onMessage={onMessage} />
@@ -105,19 +105,21 @@ function Section({
         </button>
       </form>
 
-      {starters.length > 0 ? (
+      {suggestions.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-sm text-ink-muted">Common breeds. Click one to add it to your list.</p>
+          <p className="text-sm text-ink-muted">
+            Breeds you can add. Ones you removed earlier are here too. Click one to add it to your list.
+          </p>
           <ul className="flex flex-wrap gap-2">
-            {starters.map((s) => (
-              <li key={s}>
+            {suggestions.map((s) => (
+              <li key={s.name}>
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => void add(s)}
+                  onClick={() => void add(s.name, s.restoreId)}
                   className="inline-flex min-h-10 items-center gap-1.5 border border-rule bg-white px-3 text-sm hover:border-primary"
                 >
-                  <span aria-hidden="true">+</span> {s}
+                  <span aria-hidden="true">+</span> {s.name}
                 </button>
               </li>
             ))}
@@ -233,15 +235,15 @@ function DeleteBreed({ breed, onMessage }: { breed: BreedItem; onMessage: (m: Me
   const inUse = breed.animals > 0;
 
   async function remove() {
-    if (!window.confirm(`Remove ${breed.name} from your list?`)) return;
+    if (!window.confirm(`Remove ${breed.name} from your list? You can add it back from the suggestions below.`)) return;
     setBusy(true);
-    const result = await deleteBreedAction(breed.id);
+    const result = await removeBreedAction(breed.id);
     setBusy(false);
     if (!result.ok) {
       onMessage({ tone: "error", text: result.message });
       return;
     }
-    onMessage({ tone: "success", text: `${breed.name} removed.` });
+    onMessage({ tone: "success", text: `${breed.name} removed. It's in the suggestions if you want it back.` });
     router.refresh();
   }
 

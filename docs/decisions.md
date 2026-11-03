@@ -436,3 +436,10 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - Existing breeds are carried into each ranch's list by the migration.
 - Not verified against a real database or in a browser; the new pgTAP file
   `10_ranch_breeds.test.sql` has not been run.
+
+- Removing a breed hides it (`ranch_breeds.hidden`, migration `20260928000400`)
+  instead of deleting it. Hidden breeds leave the list and the animal form's
+  dropdown and appear first among the suggestions under the list, with the
+  common breeds, so one click adds them back. Saving an animal (form or CSV)
+  with a hidden breed's name restores it. Hiding is refused while animals use
+  the breed, like deleting.

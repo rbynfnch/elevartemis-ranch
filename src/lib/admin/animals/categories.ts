@@ -28,7 +28,12 @@ export async function loadRanchCategories(db: Db, ranchId: string): Promise<Cate
 
 /** This ranch's breed list, for the Breed dropdown on the animal form. */
 export async function loadBreeds(db: Db, ranchId: string): Promise<{ species: "horse" | "cattle"; name: string }[]> {
-  const { data } = await db.from("ranch_breeds").select("species, name").eq("ranch_id", ranchId).limit(2000);
+  const { data } = await db
+    .from("ranch_breeds")
+    .select("species, name")
+    .eq("ranch_id", ranchId)
+    .eq("hidden", false)
+    .limit(2000);
   return (data ?? []).sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 }
 

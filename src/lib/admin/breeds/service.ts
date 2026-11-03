@@ -10,7 +10,23 @@ import type { Db, Result } from "@/lib/admin/animals/service";
 const ok = <T>(data: T): Result<T> => ({ ok: true, data });
 const fail = (message: string): Result<never> => ({ ok: false, message });
 
-export type BreedItem = { id: string; species: Species; name: string; animals: number };
+export type BreedItem = { id: string; species: Species; name: string; animals: number; hidden: boolean };
+
+export type BreedSuggestion = {
+  name: string;
+  /** Set for a breed the owner removed earlier: add it back by id. */ restoreId: string | null;
+};
+
+/**
+ * What to offer under the list: breeds the owner removed (add back in one click),
+ * then common breeds not in the list. Breeds already listed are never suggested.
+ */
+export function breedSuggestions(breeds: BreedItem[], starters: string[]): BreedSuggestion[] {
+  const known = new Set(breeds.map((b) => b.name.toLowerCase()));
+  const removed = breeds.filter((b) => b.hidden).map((b) => ({ name: b.name, restoreId: b.id }));
+  const common = starters.filter((s) => !known.has(s.toLowerCase())).map((name) => ({ name, restoreId: null }));
+  return [...removed, ...common];
+}
 
 /** Common breeds to offer as one-click starters. Suggestions only: nothing is added unless the owner picks it. */
 export const starterBreeds: Record<Species, string[]> = {
@@ -28,7 +44,7 @@ export function cleanBreedName(raw: string): { ok: true; name: string } | { ok: 
 /** The ranch's breeds with how many animals use each. */
 export async function listBreeds(db: Db, ranchId: string): Promise<Result<BreedItem[]>> {
   const [breeds, animals] = await Promise.all([
-    db.from("ranch_breeds").select("id, species, name").eq("ranch_id", ranchId).limit(2000),
+    db.from("ranch_breeds").select("id, species, name, hidden").eq("ranch_id", ranchId).limit(2000),
     db.from("animals").select("species, breed").eq("ranch_id", ranchId).not("breed", "is", null).limit(20000),
   ]);
   if (breeds.error) return fail(dbErrorMessage(breeds.error));
@@ -54,6 +70,24 @@ export async function addBreed(
 ): Promise<Result<{ id: string; name: string }>> {
   const cleaned = cleanBreedName(rawName);
   if (!cleaned.ok) return fail(cleaned.message);
+
+  // A breed the owner removed earlier comes back instead of being created twice.
+  const { data: existing, error: lookupError } = await db
+    .from("ranch_breeds")
+    .select("id, name, hidden")
+    .eq("ranch_id", ranchId)
+    .eq("species", species)
+    .ilike(
+      "name",
+      cleaned.name.replace(/[%_\\]/g, (c) => `\\${c}`),
+    )
+    .maybeSingle();
+  if (lookupError) return fail(dbErrorMessage(lookupError));
+  if (existing) {
+    if (!existing.hidden) return fail("That breed is already in your list.");
+    return restoreBreed(db, existing.id);
+  }
+
   const { data, error } = await db
     .from("ranch_breeds")
     .insert({ ranch_id: ranchId, species, name: cleaned.name })
@@ -63,6 +97,14 @@ export async function addBreed(
     return error.code === "23505" ? fail("That breed is already in your list.") : fail(dbErrorMessage(error));
   }
   return ok(data);
+}
+
+/** Puts a removed breed back in the list. */
+export async function restoreBreed(db: Db, id: string): Promise<Result<{ id: string; name: string }>> {
+  const { data, error } = await db.from("ranch_breeds").update({ hidden: false }).eq("id", id).select("id, name");
+  if (error) return fail(dbErrorMessage(error));
+  if (!data?.length) return fail("That breed could not be found. Refresh the page and try again.");
+  return ok(data[0]);
 }
 
 /** Renames the breed and every animal that uses it. */
@@ -76,9 +118,17 @@ export async function renameBreed(db: Db, id: string, rawName: string): Promise<
   return ok({ name: cleaned.name });
 }
 
-/** Deletes a breed no animal uses (the database refuses otherwise, and says how many do). */
-export async function deleteBreed(db: Db, ranchId: string, id: string): Promise<Result> {
-  const { data, error } = await db.from("ranch_breeds").delete().eq("id", id).eq("ranch_id", ranchId).select("id");
+/**
+ * Takes a breed out of the list. It isn't deleted: it moves to the suggestions so it can be added back.
+ * The database refuses when animals still use it, and says how many do.
+ */
+export async function removeBreed(db: Db, ranchId: string, id: string): Promise<Result> {
+  const { data, error } = await db
+    .from("ranch_breeds")
+    .update({ hidden: true })
+    .eq("id", id)
+    .eq("ranch_id", ranchId)
+    .select("id");
   if (error) return fail(dbErrorMessage(error));
   if (!data?.length) return fail("That breed could not be found. Refresh the page and try again.");
   return ok(null);

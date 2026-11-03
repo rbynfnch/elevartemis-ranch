@@ -43,8 +43,14 @@ export async function renameBreedAction(id: string, name: string) {
   return result;
 }
 
-export async function deleteBreedAction(id: string) {
+export async function removeBreedAction(id: string) {
   const c = await context();
   if (!c || !uuid.safeParse(id).success) return noAccess;
-  return breeds.deleteBreed(c.db, c.ranchId, id);
+  return breeds.removeBreed(c.db, c.ranchId, id);
+}
+
+export async function restoreBreedAction(id: string) {
+  const c = await context();
+  if (!c || !uuid.safeParse(id).success) return noAccess;
+  return breeds.restoreBreed(c.db, id);
 }

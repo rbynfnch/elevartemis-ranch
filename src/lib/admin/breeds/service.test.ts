@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanBreedName, starterBreeds } from "./service";
+import { breedSuggestions, cleanBreedName, starterBreeds, type BreedItem } from "./service";
 
 describe("cleanBreedName", () => {
   it("trims and collapses spaces", () => {
@@ -18,5 +18,34 @@ describe("starterBreeds", () => {
       expect(list.length).toBeGreaterThan(3);
       expect(new Set(list.map((b) => b.toLowerCase())).size).toBe(list.length);
     }
+  });
+});
+
+describe("breedSuggestions", () => {
+  const breed = (name: string, hidden = false): BreedItem => ({
+    id: name,
+    species: "cattle",
+    name,
+    animals: 0,
+    hidden,
+  });
+
+  it("offers removed breeds first, then common ones that aren't known yet", () => {
+    const result = breedSuggestions(
+      [breed("Hereford"), breed("Copper Cross", true)],
+      ["Hereford", "Angus", "Charolais"],
+    );
+    expect(result).toEqual([
+      { name: "Copper Cross", restoreId: "Copper Cross" },
+      { name: "Angus", restoreId: null },
+      { name: "Charolais", restoreId: null },
+    ]);
+  });
+  it("never suggests a breed that is already listed, whatever its capitals", () => {
+    expect(breedSuggestions([breed("hereford")], ["Hereford"])).toEqual([]);
+  });
+  it("does not offer a common breed twice when it was removed", () => {
+    const result = breedSuggestions([breed("Angus", true)], ["Angus"]);
+    expect(result).toEqual([{ name: "Angus", restoreId: "Angus" }]);
   });
 });

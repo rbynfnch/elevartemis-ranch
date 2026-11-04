@@ -20,7 +20,7 @@ export function SiteFooter({ site, items }: { site: SiteSettings; items: NavItem
   const links = items.filter((i) => i.href !== "/");
 
   return (
-    <footer className="mt-24 bg-night text-on-night">
+    <footer className="bg-night text-on-night">
       <div className="mx-auto flex max-w-[88rem] flex-col gap-8 px-[var(--gutter)] py-10 lg:flex-row lg:items-center lg:justify-between">
         <Wordmark name={site.brand.wordmark} subtitle={site.brand.subtitle} mark={site.brand.mark} tone="light" caps />
 

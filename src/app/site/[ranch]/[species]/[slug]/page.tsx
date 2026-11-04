@@ -12,6 +12,9 @@ import { resolveListing } from "@/lib/site/listing-pages";
 import { ranchCategories } from "@/lib/site/navigation";
 import { ListingPageView } from "@/components/animals/listing-page";
 import { Crumbs } from "@/components/animals/listing";
+import { getOffspringFor, getPedigreeFor } from "@/lib/animals/get-relations";
+import { PedigreeTree } from "@/components/animals/pedigree-tree";
+import { Offspring } from "@/components/animals/offspring";
 import { PhotoGallery } from "@/components/animals/photo-gallery";
 import { PhotoPlaceholder } from "@/components/animals/photo-placeholder";
 import { ButtonLink } from "@/components/ui/button";
@@ -83,6 +86,10 @@ async function Portfolio({ params }: { params: Params }) {
   if (lookup.kind === "moved") permanentRedirect(`/${path}/${lookup.slug}`);
   if (lookup.kind === "missing") notFound();
   const a = lookup.animal;
+  const [pedigree, offspring] = await Promise.all([
+    getPedigreeFor(a.id, site.slug),
+    getOffspringFor(a.id, site.slug, a.species),
+  ]);
 
   const category = site.categories.find((c) => c.id === a.categoryId)?.label_singular ?? null;
   const facts = quickFacts({
@@ -233,6 +240,18 @@ async function Portfolio({ params }: { params: Params }) {
             <RichText doc={s.body} className="prose-ranch text-ink-muted" />
           </Block>
         ))}
+
+        {pedigree.ancestors.size > 0 ? (
+          <Block title="Pedigree" id="pedigree">
+            <PedigreeTree pedigree={pedigree} animalName={a.name} />
+          </Block>
+        ) : null}
+
+        {offspring.length > 0 ? (
+          <Block title={speciesTerms[a.species].offspringHeading} id="offspring">
+            <Offspring years={offspring} brandMark={site.brand.mark} />
+          </Block>
+        ) : null}
 
         {breeding?.hasDetails ? <BreedingBlock display={breeding} species={a.species} /> : null}
 

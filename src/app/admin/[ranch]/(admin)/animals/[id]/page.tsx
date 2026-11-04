@@ -19,6 +19,8 @@ import { BreedingForm } from "@/components/admin/animals/breeding-form";
 import { PerformanceForm } from "@/components/admin/animals/performance-form";
 import { DetailsEditor } from "@/components/admin/animals/details-editor";
 import { PhotoManager } from "@/components/admin/animals/photo-manager";
+import { PedigreeBuilder } from "@/components/admin/pedigree/pedigree-builder";
+import { loadPedigree } from "@/lib/admin/pedigree/service";
 import { MoveToDeletedButton } from "@/components/admin/animals/archive-controls";
 import { FormMessage, Panel } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
@@ -57,6 +59,7 @@ async function EditAnimal({
     loadRanchCategories(db, ctx.ranch.id),
     loadBreeds(db, ctx.ranch.id),
   ]);
+  const pedigreeNodes = result.ok ? await loadPedigree(db, id) : null;
   const factLabels = result.ok ? await loadFactLabels(db, ctx.ranch.id, result.data.animal.species) : [];
   if (!result.ok) notFound();
   const { animal, sale, breeding, performance, facts, sections, photos } = result.data;
@@ -214,9 +217,14 @@ async function EditAnimal({
       <Panel
         id="pedigree"
         title="Parents and pedigree"
-        description="Choosing the sire and dam, and building the pedigree, arrives in the next update."
+        description="Choose this animal's sire and dam, and their parents, back three generations. Horses you own link to their own pages; others show as plain text."
       >
-        <p className="text-sm text-ink-muted">Offspring will appear on parents&apos; pages automatically.</p>
+        <PedigreeBuilder
+          animalId={animal.id}
+          animalName={animal.name}
+          species={animal.species}
+          nodes={pedigreeNodes?.ok ? pedigreeNodes.data : []}
+        />
       </Panel>
 
       <section className="border-t border-rule pt-10">

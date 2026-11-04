@@ -535,3 +535,31 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - The cards view doesn't carry the passing date, so it is read from the animals
   themselves (the same published rows visitors may already read); no migration.
 - The "About" crumb is plain text until the About page exists.
+
+### Pedigree (Phase 6)
+
+- Owner: the animal page's "Parents and pedigree" section is a visual builder
+  (bracket on wide screens, stacked list on phones) over three generations. Each
+  empty place is "+ Add sire" / "+ Add dam"; a filled one has Change (switch or
+  remove). Choosing offers "From my records" (same species, the right sex: a dam
+  is female, a sire anything but female) or "Add one I don't own" (name,
+  registry, registration number, year, color, notes), which also lists records
+  with similar names so the same horse isn't entered twice. Changes save as they
+  are made (they edit other animals' records too), unlike the one Save button.
+- An ancestor the ranch doesn't own is a `pedigree_only` animal: never listed on
+  the site, never for sale; removing one from a pedigree keeps its record. The
+  database enforces parent rules (RA003/RA004/RA006/RA007) and its messages are
+  shown as written.
+- Visitors: a bracket (animal left, then parents, grandparents, great-grandparents,
+  only as many columns as there are generations) or, on phones, an indented list.
+  An ancestor with a public page is a link; any other is plain text with its
+  registration ("AQHA #2706274") and, if the owner wrote any, a "About …" note.
+  Unknown ancestors are left out. Sire and dam pages list offspring by year
+  (built from the foals' own records, with the other parent).
+- Migration `20260928000500`: get_pedigree also returns registry and registration
+  number (outside ancestors always; a ranch animal only when published), and
+  animals get optional `tagline` and up to four `highlights` (used by the profile
+  refresh, next). Before the migration is applied everything works; registration
+  numbers just don't show yet.
+- Not built yet: "Move to My animals" for an outside ancestor that the ranch later
+  acquires (the data model supports it); a pedigree print/share view.

@@ -1,0 +1,126 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import clsx from "clsx";
+import { RichText } from "@/lib/content/rich-text";
+import { richTextIsEmpty } from "@/lib/content/empty";
+import { bracketPlace, parentPaths, type Pedigree, type PedigreeNode } from "@/lib/animals/pedigree";
+
+/**
+ * A pedigree for visitors. On a wide screen it is a bracket (the animal on the
+ * left, parents, then grandparents); on a phone it is a stacked list with each
+ * generation indented. A horse the ranch has a page for is a link; anyone else
+ * is plain text. Ancestors nobody recorded are simply absent.
+ */
+export function PedigreeTree({ pedigree, animalName }: { pedigree: Pedigree; animalName: string }) {
+  const { ancestors, depth } = pedigree;
+  const rows = 2 ** depth;
+  const placed = [...ancestors.values()];
+
+  return (
+    <div>
+      {/* Wide screens: the bracket. */}
+      <div
+        className="hidden gap-x-6 lg:grid"
+        style={{
+          gridTemplateColumns: `repeat(${depth + 1}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${rows}, minmax(3.5rem, auto))`,
+        }}
+      >
+        <div className="relative flex items-center" style={{ gridColumn: 1, gridRow: `1 / span ${rows}` }}>
+          <Card strong>
+            <span className="font-display text-lg">{animalName}</span>
+          </Card>
+          <span aria-hidden="true" className="absolute -right-3 top-1/2 w-3 border-t border-ink-muted/50" />
+        </div>
+        {placed.map((n) => {
+          const place = bracketPlace(n.path, depth);
+          const isSire = n.path.endsWith("S");
+          const hasParents = parentPaths(n.path).some((p) => ancestors.has(p));
+          return (
+            <div
+              key={n.path}
+              className="relative flex items-center py-1"
+              style={{ gridColumn: place.column, gridRow: `${place.rowStart} / span ${place.rowSpan}` }}
+            >
+              {/* The line joining this ancestor to the animal it belongs to. */}
+              <span aria-hidden="true" className="absolute -left-3 top-1/2 w-3 border-t border-ink-muted/50" />
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  "absolute -left-3 border-l border-ink-muted/50",
+                  isSire ? "top-1/2 bottom-0" : "top-0 h-1/2",
+                )}
+              />
+              <Ancestor node={n} />
+              {hasParents ? (
+                <span aria-hidden="true" className="absolute -right-3 top-1/2 w-3 border-t border-ink-muted/50" />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Phones and tablets: a stacked list. */}
+      <ul className="space-y-3 lg:hidden">
+        <li>
+          <Card strong>
+            <span className="font-display text-lg">{animalName}</span>
+          </Card>
+          <Branch path="" pedigree={pedigree} />
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function Branch({ path, pedigree }: { path: string; pedigree: Pedigree }) {
+  const kids = parentPaths(path)
+    .map((p) => pedigree.ancestors.get(p))
+    .filter((n): n is PedigreeNode => Boolean(n));
+  if (kids.length === 0) return null;
+  return (
+    <ul className="ml-3 mt-3 space-y-3 border-l border-ink-muted/40 pl-4">
+      {kids.map((n) => (
+        <li key={n.path}>
+          <p className="mb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+            {n.path.endsWith("S") ? "Sire" : "Dam"}
+          </p>
+          <Ancestor node={n} />
+          <Branch path={n.path} pedigree={pedigree} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Card({ children, strong }: { children: ReactNode; strong?: boolean }) {
+  return <div className={clsx("w-full px-3 py-2 text-sm", strong ? "bg-primary/10" : "bg-surface")}>{children}</div>;
+}
+
+function Ancestor({ node }: { node: PedigreeNode }) {
+  const name = node.href ? (
+    <Link
+      href={node.href}
+      className="font-semibold text-primary underline decoration-accent decoration-2 underline-offset-4"
+    >
+      {node.name}
+    </Link>
+  ) : (
+    <span className="font-semibold">{node.name}</span>
+  );
+  const hasNotes = !richTextIsEmpty(node.notes);
+  return (
+    <Card>
+      {name}
+      {node.registration ? <span className="block text-xs text-ink-muted">{node.registration}</span> : null}
+      {hasNotes ? (
+        <details className="mt-1">
+          <summary className="cursor-pointer text-xs text-ink-muted underline decoration-rule underline-offset-2">
+            About {node.name}
+          </summary>
+          <RichText doc={node.notes} className="prose-ranch mt-1 text-sm text-ink-muted" />
+        </details>
+      ) : null}
+    </Card>
+  );
+}

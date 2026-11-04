@@ -325,7 +325,7 @@ function Preview({
                           <span
                             className={clsx(
                               "mr-2 inline-block px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-on-primary",
-                              r.action === "create" ? "bg-primary" : "bg-accent",
+                              r.action === "create" ? "bg-primary" : "bg-ink",
                             )}
                           >
                             {r.action === "create" ? "Add" : "Update"}

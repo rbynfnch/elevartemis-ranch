@@ -419,7 +419,7 @@ function SaleCard({ animal, brandMark }: { animal: ListingCard; brandMark?: stri
           </span>
         ) : null}
         {animal.featured ? (
-          <span className="absolute right-0 top-0 bg-accent px-4 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-on-primary">
+          <span className="absolute right-0 top-0 bg-primary px-4 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-on-primary">
             Featured
           </span>
         ) : null}

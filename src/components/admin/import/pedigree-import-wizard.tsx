@@ -287,7 +287,7 @@ function Preview({
                                 ? "bg-primary"
                                 : r.outcome === "already"
                                   ? "bg-ink-muted"
-                                  : "bg-accent",
+                                  : "bg-ink",
                             )}
                           >
                             {outcomeText[r.outcome]}

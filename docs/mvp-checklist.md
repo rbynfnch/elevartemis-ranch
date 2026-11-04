@@ -27,7 +27,7 @@ Where we are against "a rancher can get a finished, good-looking website without
 - [x] **Search engines**: an owner-editable meta title and description for every page, a share image, `sitemap.xml`, `robots.txt`, canonical addresses, and a clear "go live" step that turns indexing on and removes the "Preview site" banner
 - [ ] **Real content and no sample content**: ranch photos, About text, animals; delete the sample animals and bracketed placeholder text
 - [~] ⚠ **Custom domain**: steps are written down in `docs/launch-guide.md`; connecting each ranch's domain is still a manual step
-- [ ] **Phone and accessibility pass** on every public page and admin screen (tap sizes, text contrast, keyboard use, screen-reader labels), plus a speed check
+- [~] **Phone and accessibility pass**: an automated scan (axe, WCAG 2.1 AA) of the public pages at phone and desktop width is clean after fixing low-contrast ribbons and eyebrows; still to do: the admin screens, a keyboard and screen-reader walk-through, real phone testing, and a speed check
 - [~] **Privacy page** done (linked from the footer, worded from what the site actually collects); a terms page is not needed until the site takes orders linked from the footer (the Contact form collects names and emails)
 - [x] **People and access**: invite an editor or a second owner from the admin (Team screen)
 - [~] **Backups and recovery**: how to check and restore is in `docs/launch-guide.md`; ⚠ confirm the project's backups are on

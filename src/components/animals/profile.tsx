@@ -6,7 +6,7 @@ import { parseVideoUrl } from "@/lib/animals/video";
 export function SaleRibbon({ children }: { children: ReactNode }) {
   return (
     <span
-      className="absolute right-0 top-0 bg-accent py-2 pl-5 pr-7 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-on-primary"
+      className="absolute right-0 top-0 bg-primary py-2 pl-5 pr-7 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-on-primary"
       style={{ clipPath: "polygon(0 0, 100% 0, calc(100% - 0.75rem) 50%, 100% 100%, 0 100%)" }}
     >
       {children}

@@ -93,7 +93,7 @@ function ServiceCard({ animal: a, brandMark }: { animal: BreedingAnimal; brandMa
       </div>
       <div className="space-y-5 p-6 lg:p-8">
         <header className="space-y-1">
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-accent">{d.badge}</p>
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-primary">{d.badge}</p>
           <h2 className="font-display text-3xl">
             <Link
               href={a.href}

@@ -70,7 +70,7 @@ async function Page({ params, searchParams }: { params: Params; searchParams: Se
   return (
     <>
       <header className="mx-auto max-w-[88rem] px-[var(--gutter)] pb-8 pt-12 text-center sm:pt-16">
-        <p className="mx-auto flex max-w-xl items-center gap-5 text-[0.8125rem] font-semibold uppercase tracking-[0.3em] text-accent">
+        <p className="mx-auto flex max-w-xl items-center gap-5 text-[0.8125rem] font-semibold uppercase tracking-[0.3em] text-primary">
           <Line />
           Contact
           <Line />

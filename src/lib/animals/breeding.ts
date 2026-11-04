@@ -151,3 +151,9 @@ export function breedingDisplay(
     hasDetails: facts.length > 0 || sections.length > 0 || contract !== null,
   };
 }
+
+/** The wording for the breeding page and menu, from which species the ranch offers breedings for. */
+export function breedingLabel(species: Species[]): string {
+  if (species.length === 1) return species[0] === "horse" ? "Stallion Services" : "Breeding";
+  return "Breeding Services";
+}

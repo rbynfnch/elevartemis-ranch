@@ -10,6 +10,11 @@ describe("banner keys", () => {
       "for-sale",
       "sold-horses",
       "sold-cattle",
+      "retired-cattle",
+      "reference-horses",
+      "in-memory",
+      "on-the-ranch",
+      "breeding",
       "contact",
       categoryBannerKey("cattle.bull"),
     ])

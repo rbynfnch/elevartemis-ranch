@@ -84,6 +84,22 @@ describe("buildNavigation", () => {
     expect(full.map((i) => i.label)).toEqual(["Home", "About", "Gallery", "Happening on the Ranch", "FAQ", "Contact"]);
   });
 
+  it("adds a breeding item only when an animal is offered, worded for the species", () => {
+    const nav = (counts: { horse: number; cattle: number }, species: ("horse" | "cattle")[] = ["horse", "cattle"]) =>
+      buildNavigation({
+        ...base,
+        enabledSpecies: species,
+        navCounts: { horse: {}, cattle: {} },
+        breedingCounts: counts,
+      }).map((i) => i.label);
+    expect(nav({ horse: 0, cattle: 0 })).not.toContain("Breeding Services");
+    expect(nav({ horse: 1, cattle: 0 })).toContain("Stallion Services");
+    expect(nav({ horse: 0, cattle: 2 })).toContain("Breeding");
+    expect(nav({ horse: 1, cattle: 1 })).toContain("Breeding Services");
+    // A species the ranch doesn't have never counts.
+    expect(nav({ horse: 3, cattle: 0 }, ["cattle"])).not.toContain("Stallion Services");
+  });
+
   it("adds In Memory under About only when there are deceased animals", () => {
     const without = buildNavigation({ ...base, navCounts: { horse: { stallion: 1 }, cattle: {} } });
     expect(without.find((i) => i.label === "About")?.children).toBeUndefined();

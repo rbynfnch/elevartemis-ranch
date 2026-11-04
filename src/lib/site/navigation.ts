@@ -1,4 +1,5 @@
 import { speciesTerms, type Species } from "@/lib/domain/species";
+import { breedingLabel } from "@/lib/animals/breeding";
 import type { CategoryRow, SiteSettings, SpeciesSettings } from "./get-site";
 
 export type NavLink = { label: string; href: string };
@@ -7,6 +8,7 @@ export type NavItem = NavLink & { heading?: string; children?: NavLink[] };
 
 type NavInput = Pick<SiteSettings, "enabledSpecies" | "navCounts" | "categories" | "contentCounts"> & {
   blogLabel?: string | null;
+  breedingCounts?: SiteSettings["breedingCounts"];
   speciesSettings?: SiteSettings["speciesSettings"];
 };
 
@@ -52,6 +54,10 @@ export function buildNavigation(site: NavInput): NavItem[] {
     (species) => (site.speciesSettings?.[species]?.showForSale ?? true) && (site.navCounts[species]?.for_sale ?? 0) > 0,
   );
   if (anyForSale) items.push({ label: "For Sale", href: "/for-sale" });
+
+  // Breeding services, when any animal of an enabled species is offered.
+  const offered = site.enabledSpecies.filter((s) => (site.breedingCounts?.[s] ?? 0) > 0);
+  if (offered.length > 0) items.push({ label: breedingLabel(offered), href: "/breeding" });
 
   if (site.contentCounts.gallery > 0) items.push({ label: "Gallery", href: "/gallery" });
   if (site.contentCounts.posts > 0)

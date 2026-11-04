@@ -50,6 +50,8 @@ export type SiteSettings = {
   contentCounts: { posts: number; faqs: number; gallery: number };
   /** What the ranch calls its blog; null means the default. */
   blogLabel: string | null;
+  /** How many animals are offered for breeding, per species. */
+  breedingCounts: Record<Species, number>;
 };
 
 export type SpeciesSettings = {
@@ -131,6 +133,10 @@ export async function getSiteSettings(slug: string): Promise<SiteSettings | null
   const labelRow = await db.from("ranch_profile").select("blog_label").eq("ranch_id", ranch.id).maybeSingle();
   const blogLabel = labelRow.error ? null : (labelRow.data?.blog_label ?? null);
 
+  const breedingRows = await db.from("public_breeding_services").select("species").eq("ranch_id", ranch.id).limit(200);
+  const breedingCounts: SiteSettings["breedingCounts"] = { horse: 0, cattle: 0 };
+  for (const r of breedingRows.data ?? []) if (r.species) breedingCounts[r.species] += 1;
+
   const navCounts: SiteSettings["navCounts"] = { horse: {}, cattle: {} };
   for (const row of counts ?? []) navCounts[row.species][row.bucket] = row.total;
 
@@ -187,5 +193,6 @@ export async function getSiteSettings(slug: string): Promise<SiteSettings | null
     ),
     contentCounts: { posts: posts.count ?? 0, faqs: faqs.count ?? 0, gallery: gallery.count ?? 0 },
     blogLabel,
+    breedingCounts,
   };
 }

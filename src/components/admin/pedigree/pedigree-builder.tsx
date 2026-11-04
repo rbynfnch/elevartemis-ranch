@@ -1,5 +1,6 @@
 "use client";
 
+import { allBreedPedigreeUrl } from "@/lib/animals/external-pedigree";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import clsx from "clsx";
 import {
@@ -97,8 +98,24 @@ export function PedigreeBuilder({
     );
   };
 
+  const lookup = species === "horse" ? allBreedPedigreeUrl(animalName) : null;
   return (
     <div className="space-y-6">
+      {lookup ? (
+        <p className="text-sm text-ink-muted">
+          Need the pedigree?{" "}
+          <a
+            href={lookup}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary underline decoration-accent decoration-2 underline-offset-4"
+          >
+            Look up {animalName} on AllBreedPedigree
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          , then enter the names here. For a whole chart at once, use the pedigree import.
+        </p>
+      ) : null}
       {message ? <FormMessage tone={message.tone}>{message.text}</FormMessage> : null}
 
       {/* Wide screens: the bracket. */}

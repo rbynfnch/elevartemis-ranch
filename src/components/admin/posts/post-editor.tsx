@@ -10,6 +10,7 @@ import { metaHint, slugify } from "@/lib/admin/posts/fields";
 import { Field, FormMessage, TextArea, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { collectPhotoIds } from "@/lib/content/photos";
 import { PhotoPick } from "@/components/admin/banners/photo-pick";
 import { PhotoChooser } from "@/components/admin/banners/photo-chooser";
 
@@ -146,6 +147,11 @@ export function PostEditor({
             allowPhotos
             allowHtml
           />
+          <p className="text-sm text-ink-muted" aria-live="polite">
+            {collectPhotoIds(f.body).length === 0
+              ? "No photos placed in the story yet. Use the Photo button in the toolbar."
+              : `${collectPhotoIds(f.body).length} ${collectPhotoIds(f.body).length === 1 ? "photo" : "photos"} placed in the story. Save or publish to put ${collectPhotoIds(f.body).length === 1 ? "it" : "them"} on the website.`}
+          </p>
         </div>
       </div>
 

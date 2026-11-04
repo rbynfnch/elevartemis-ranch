@@ -602,3 +602,10 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - The public pedigree loads up to 5 generations and starts at 3; a "Show 3 / 4 / 5 generations" toggle appears only when more are recorded. Outer generations use compact cards. A card shows "color · height · year", the breed only when it differs from the animal's, and the registration number.
 - Saving Basics still works before the height migration is applied (it retries without the height column).
 - The "Find on Pedigree Online" import is deliberately not started; it waits on their reply about API access.
+
+## Seven-generation pedigrees
+
+- Generations are counted the way breeders do: the animal is generation 1, its parents 2, and so on, so 7 generations is six levels of ancestors (up to 126 ancestors). The toggle on the public page now reads 4 / 5 / 6 / 7 and starts at 4 (what was "3" before).
+- `get_pedigree` allows up to six levels (migration `20260928000800`); the public page requests all of them.
+- Deeper generations use compact cards and tighter rows. Phones nest less deeply.
+- The admin pedigree builder still edits three levels by hand. Filling in generations 5-7 by hand would mean up to 126 entries, so that is left to the Pedigree Online import and the CSV import (to be designed).

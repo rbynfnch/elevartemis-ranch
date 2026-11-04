@@ -32,6 +32,7 @@ export function PedigreeTree({
   const { ancestors, depth } = pedigree;
   const rows = 2 ** depth;
   const placed = [...ancestors.values()];
+  // Counted the way breeders do: the animal is generation 1, its parents generation 2, and so on.
   const options = Array.from({ length: Math.max(0, full.depth - 2) }, (_, i) => i + 3);
 
   return (
@@ -52,7 +53,7 @@ export function PedigreeTree({
                   : "border-rule bg-white text-ink hover:border-primary",
               )}
             >
-              {n}
+              {n + 1}
             </button>
           ))}
           <span className="text-ink-muted">generations</span>
@@ -60,11 +61,11 @@ export function PedigreeTree({
       ) : null}
       {/* Wide screens: the bracket. */}
       <div
-        className="hidden gap-x-6 lg:grid"
+        className="hidden gap-x-4 lg:grid"
         data-generations={depth}
         style={{
           gridTemplateColumns: `repeat(${depth + 1}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${rows}, minmax(${depth > 3 ? "2.25rem" : "3.5rem"}, auto))`,
+          gridTemplateRows: `repeat(${rows}, minmax(${depth > 4 ? "1.75rem" : depth > 3 ? "2.25rem" : "3.5rem"}, auto))`,
         }}
       >
         <div className="relative flex items-center" style={{ gridColumn: 1, gridRow: `1 / span ${rows}` }}>
@@ -120,7 +121,7 @@ function Branch({ path, pedigree, breed }: { path: string; pedigree: Pedigree; b
     .filter((n): n is PedigreeNode => Boolean(n));
   if (kids.length === 0) return null;
   return (
-    <ul className="ml-3 mt-3 space-y-3 border-l border-ink-muted/40 pl-4">
+    <ul className={clsx("mt-3 space-y-3 border-l border-ink-muted/40", path.length >= 3 ? "ml-1 pl-2" : "ml-3 pl-4")}>
       {kids.map((n) => (
         <li key={n.path}>
           <p className="mb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-ink-muted">

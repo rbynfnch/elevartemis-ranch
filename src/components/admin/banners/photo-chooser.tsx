@@ -41,7 +41,7 @@ export function PhotoChooser({
       <dialog
         ref={dialog}
         aria-labelledby="chooser-title"
-        className="m-auto flex h-[min(46rem,calc(100dvh-2rem))] w-[min(60rem,calc(100vw-2rem))] flex-col border border-rule bg-paper p-0 text-ink backdrop:bg-night/60 open:flex"
+        className="m-auto h-[min(46rem,calc(100dvh-2rem))] w-[min(60rem,calc(100vw-2rem))] flex-col border border-rule bg-paper p-0 text-ink backdrop:bg-night/60 open:flex"
       >
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule px-5 py-4">
           <h2 id="chooser-title" className="font-display text-xl">

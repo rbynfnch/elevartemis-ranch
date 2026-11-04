@@ -188,7 +188,12 @@ async function EditAnimal({
           title="Headline and highlights"
           description="What the top of this animal's page says besides its name. All optional."
         >
-          <ProfileFields tagline={animal.tagline} highlights={animal.highlights} videoUrl={videoUrl} />
+          <ProfileFields
+            // Both are empty (not missing) until the database update that adds them has been applied.
+            tagline={animal.tagline ?? null}
+            highlights={animal.highlights ?? []}
+            videoUrl={videoUrl}
+          />
         </Panel>
 
         <Panel id="website" title="On the website">

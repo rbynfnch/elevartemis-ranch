@@ -52,7 +52,7 @@ export function ProfileFields({
               <TextInput
                 id={`highlight-${i}`}
                 name="highlight"
-                defaultValue={highlights[i] ?? ""}
+                defaultValue={highlights?.[i] ?? ""}
                 maxLength={HIGHLIGHT_MAX}
                 autoComplete="off"
                 placeholder={["Ranch Proven", "Trail Ready", "Quiet Minded", "Good Foot & Bone"][i]}

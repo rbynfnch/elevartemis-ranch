@@ -163,7 +163,7 @@ export function VideoView({ node, updateAttributes, deleteNode, selected }: Reac
         </>
       }
     >
-      <div className="flex aspect-video items-center justify-center bg-night text-center text-white">
+      <div className="flex aspect-video max-w-md items-center justify-center bg-night text-center text-white">
         <div>
           <p className="text-3xl" aria-hidden="true">
             ▶

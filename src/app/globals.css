@@ -120,6 +120,14 @@
     line-height: 1.75;
   }
   .prose-ranch > * + * { margin-top: 1em; }
+  .prose-ranch h2 { font-family: var(--ff-display); font-size: 1.75rem; line-height: 1.2; margin-top: 1.8em; }
+  .prose-ranch h3 { font-family: var(--ff-display); font-size: 1.4rem; line-height: 1.25; margin-top: 1.5em; }
+  .prose-ranch h4 { font-family: var(--ff-display); font-size: 1.15rem; font-weight: 600; margin-top: 1.3em; }
+  .prose-ranch > ul, .prose-ranch li > ul { list-style: disc; padding-left: 1.5rem; }
+  .prose-ranch > ol, .prose-ranch li > ol { list-style: decimal; padding-left: 1.5rem; }
+  .prose-ranch a { color: var(--c-primary); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--c-accent); }
+  /* Big blocks start below a photo that text wraps around */
+  .prose-ranch [data-clear], .prose-ranch hr { clear: both; }
 
   /* The blog editor's writing surface, close to how the story looks on the site */
   .blog-editor { min-height: 28rem; font-family: var(--ff-serif); font-size: 1.125rem; line-height: 1.75; max-width: 46rem; margin-inline: auto; }

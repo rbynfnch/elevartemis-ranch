@@ -91,11 +91,21 @@ async function simple(postId: string, run: Simple) {
   return r;
 }
 
-export const archivePostAction = (postId: string) => simple(postId, blog.archivePost);
-export const unarchivePostAction = (postId: string) => simple(postId, blog.unarchivePost);
-export const trashPostAction = (postId: string) => simple(postId, blog.trashPost);
-export const restorePostAction = (postId: string) => simple(postId, blog.restorePost);
-export const deletePostForeverAction = (postId: string) => simple(postId, blog.deletePostForever);
+export async function archivePostAction(postId: string) {
+  return simple(postId, blog.archivePost);
+}
+export async function unarchivePostAction(postId: string) {
+  return simple(postId, blog.unarchivePost);
+}
+export async function trashPostAction(postId: string) {
+  return simple(postId, blog.trashPost);
+}
+export async function restorePostAction(postId: string) {
+  return simple(postId, blog.restorePost);
+}
+export async function deletePostForeverAction(postId: string) {
+  return simple(postId, blog.deletePostForever);
+}
 
 export async function unpublishAction(postId: string) {
   const c = await context();

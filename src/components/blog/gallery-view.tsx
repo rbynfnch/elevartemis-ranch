@@ -33,7 +33,7 @@ export function GalleryView({
   const current = photos[index];
 
   return (
-    <div className="my-10">
+    <div data-clear className="my-10">
       {layout === "slideshow" ? (
         <div
           role="group"

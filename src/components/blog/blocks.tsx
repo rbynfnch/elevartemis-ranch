@@ -108,7 +108,7 @@ export function VideoBlock({ attrs }: { attrs: Attrs }) {
   if (!provider || !id) return null;
   const caption = s(attrs.caption).trim();
   return (
-    <figure className="my-10">
+    <figure data-clear className="my-10">
       <div className="relative aspect-video w-full overflow-hidden bg-night">
         <iframe
           src={embedSrc(provider, id)}
@@ -141,6 +141,7 @@ export function CtaBlock({ attrs, photos }: { attrs: Attrs; photos?: TextPhotos 
   );
   return (
     <aside
+      data-clear
       className={clsx(
         "my-12 grid items-center gap-6 border border-rule bg-surface p-6 sm:p-8",
         photo && "md:grid-cols-[minmax(0,14rem)_1fr]",

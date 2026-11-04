@@ -22,3 +22,13 @@
 - **Revisions:** every manual save, publish and update stores a revision; restoring one makes it the current draft.
 - **Links that must not break:** changing a published post's web address records the old one and the old address redirects permanently.
 - **Images are never altered:** cropping, zoom and focal point are stored beside the photo and applied when it is displayed. The original and the generated sizes are untouched.
+
+## What was built and how it was checked
+
+**Built:** block editor (text styles, bold/italic/underline, links to pages/posts/animals, alignment, lists, quotes, pull quote, callout, small text, divider, photo with shape/zoom/focal point/link/wrap, gallery, video, button, HTML view); dashboard with status tabs, search, filters, paging, quick actions, trash; autosave with retry, offline/leave warnings and conflict protection; publish, schedule (ranch time zone), update-live-post-with-working-copy, unpublish, archive, duplicate, trash/restore; version history with restore; post details, featured image, categories (with suggested set) and tags, related stories, animals; search/sharing panel with live search preview; public post page with canonical, Open Graph, Twitter card, article structured data, permanent redirects from old addresses, related stories, tags, paging; owner-only preview at phone/tablet/desktop widths; sitemap last-modified.
+
+**Checked:** `npm run check` (lint, types, 340 unit tests including content sanitizer, scheduling/time zones, snapshots, SEO helpers, publish checks); pgTAP file `supabase/tests/database/20_blog_editor.test.sql` (written, to be run with `supabase test db`); in a real browser against a fake database: every block type renders on the public page (desktop and phone, no sideways scroll), metadata and structured data present, editor typing/styles/divider/video/button/HTML view work.
+
+**Not checked here (needs the real Supabase and a signed-in session):** saving/publishing round trips, the migration itself, pgTAP, preview permissions, image upload from the chooser, drag-and-drop. Please try: write → autosave → Publish → edit → Update; schedule a post; restore a version; rename a published post's address and open the old link.
+
+**Known limits:** text blocks move with the ↑ ↓ buttons (photo/gallery/video/button blocks can also be dragged); the two-person simultaneous edit case is detected and refused rather than merged; the video block shows a placeholder while editing (it plays on the site); revisions keep the latest 50.

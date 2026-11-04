@@ -174,7 +174,7 @@ export function EditorSurface({
 
   return (
     <div className="border border-rule bg-white focus-within:border-primary">
-      <div role="toolbar" aria-label="Formatting" className="sticky top-0 z-20 flex flex-wrap items-center border-b border-rule bg-surface">
+      <div role="toolbar" aria-label="Formatting" className="sticky top-[3.75rem] z-20 flex flex-wrap items-center border-b border-rule bg-surface">
         <label className="sr-only" htmlFor="blog-style">
           Text style
         </label>

@@ -13,6 +13,15 @@ export type ListingCard = AnimalCardData & {
   categoryId: string | null;
   groupsByBirthYear: boolean;
   displayOrder: number;
+  // What the for-sale page filters, searches and shows. Absent until the database has them.
+  sex: string | null;
+  color: string | null;
+  height: string | null;
+  tagline: string | null;
+  registry: string | null;
+  registrationNumber: string | null;
+  priceCents: number | null;
+  featured: boolean;
 };
 
 /** The price line for a for-sale card, as the owner chose to show it. Null when there is nothing to say. */
@@ -55,5 +64,13 @@ export function cardFromRow(a: CardRow): ListingCard {
     categoryId: a.category_id,
     groupsByBirthYear: Boolean(a.groups_by_birth_year),
     displayOrder: a.display_order ?? 0,
+    sex: a.sex ?? null,
+    color: a.color ?? null,
+    height: a.height ?? null,
+    tagline: a.tagline ?? null,
+    registry: a.registry ?? null,
+    registrationNumber: a.registration_number ?? null,
+    priceCents: a.price_mode === "price" ? (a.price_cents ?? null) : null,
+    featured: Boolean(a.is_featured),
   };
 }

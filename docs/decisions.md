@@ -632,3 +632,11 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Import never moves an animal out of In memory
 
 - When a sheet updates an animal whose status is In memory, a `status` other than in memory and `published = no` are ignored, each with a warning in the preview. Everything else on the row still updates. Changing a memorial animal's status or hiding it is done on its own page. (The "In Memory" submenu under About appears only while at least one published animal is In memory.)
+
+## For Sale page redesign
+
+- `/for-sale`, `/horses/for-sale` and `/cattle/for-sale` are one page: a hero (one of the ranch's own homepage photographs, the title "Horses & Cattle from <ranch name>" and the ranch's own tagline: no invented copy), a tab for each species with animals for sale (the address picks which opens first), a Contact us link, a "Refine results" column, a sort menu and cards.
+- Filters (search by name, registration or keyword; breed; sex; age/year; color; price range) offer only values the animals actually have, so a filter with nothing to choose from is not shown. They apply as you choose, so there is no Apply button; "Clear all" resets them. An animal with no listed price is left out when a price range is set. On a phone the filters sit behind a "Refine results" button.
+- Sort: ranch order (featured first), youngest, oldest, price either way, name. There is no "Newest" because the database doesn't record when an animal was listed.
+- Cards show photo, name, breed · category · year · height, the animal's headline, the price (as the owner chose to show it) and View details. A "Featured" ribbon follows the owner's Featured setting. No "New" ribbon yet (no listed-on date).
+- Migration `20260928000900` adds tagline, height, registry and registration number to `public_animal_cards`; until it is applied those cards just omit the headline and height.

@@ -1634,6 +1634,7 @@ export type Database = {
           deceased_precision: Database["public"]["Enums"]["birth_precision"] | null;
           display_order: number | null;
           groups_by_birth_year: boolean | null;
+          height: string | null;
           id: string | null;
           is_featured: boolean | null;
           name: string | null;
@@ -1656,10 +1657,13 @@ export type Database = {
           program_status: Database["public"]["Enums"]["program_status"] | null;
           ranch_id: string | null;
           registered_name: string | null;
+          registration_number: string | null;
+          registry: string | null;
           sale_status: Database["public"]["Enums"]["sale_status"] | null;
           sex: Database["public"]["Enums"]["animal_sex"] | null;
           slug: string | null;
           species: Database["public"]["Enums"]["species"] | null;
+          tagline: string | null;
           updated_at: string | null;
         };
         Relationships: [

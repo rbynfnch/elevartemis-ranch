@@ -2,6 +2,7 @@ import { getListing } from "@/lib/animals/listings";
 import type { SiteSettings } from "@/lib/site/get-site";
 import { speciesTerms, type Species } from "@/lib/domain/species";
 import type { ListingPage } from "@/lib/site/listing-pages";
+import { ForSalePageView } from "@/components/animals/for-sale-page";
 import { AnimalGrid, EmptyListing, ListingHeader, YearGroups } from "@/components/animals/listing";
 
 /** One listing page: a category, For Sale, Sold, Retired or Previous Stallions. */
@@ -14,6 +15,9 @@ export async function ListingPageView({
   species: Species;
   page: Extract<ListingPage, { type: "listing" }>;
 }) {
+  // For Sale has its own page: both species as tabs, with search and filters.
+  if (page.kind === "for_sale") return <ForSalePageView site={site} initialSpecies={species} />;
+
   const terms = speciesTerms[species];
   const settings = site.speciesSettings?.[species];
   const animals = await getListing(site.ranchId, site.slug, {

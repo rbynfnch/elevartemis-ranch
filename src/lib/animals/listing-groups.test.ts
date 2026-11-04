@@ -10,6 +10,14 @@ const card = (name: string, categoryId: string, birthYear: number | null): Listi
   species: "cattle",
   categoryId,
   groupsByBirthYear: true,
+  sex: null,
+  color: null,
+  height: null,
+  tagline: null,
+  registry: null,
+  registrationNumber: null,
+  priceCents: null,
+  featured: false,
   displayOrder: 0,
 });
 

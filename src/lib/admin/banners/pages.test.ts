@@ -3,7 +3,16 @@ import { categoryBannerKey, isBannerKey, tidyBanner } from "./pages";
 
 describe("banner keys", () => {
   it("accepts the main pages and category pages only", () => {
-    for (const k of ["about", "horses", "cattle", "for-sale", "contact", categoryBannerKey("cattle.bull")])
+    for (const k of [
+      "about",
+      "horses",
+      "cattle",
+      "for-sale",
+      "sold-horses",
+      "sold-cattle",
+      "contact",
+      categoryBannerKey("cattle.bull"),
+    ])
       expect(isBannerKey(k)).toBe(true);
     for (const k of ["checkout", "category:goat.x", "category:cattle.", "ABOUT"]) expect(isBannerKey(k)).toBe(false);
   });

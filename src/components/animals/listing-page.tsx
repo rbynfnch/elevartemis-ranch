@@ -4,6 +4,7 @@ import { speciesTerms, type Species } from "@/lib/domain/species";
 import type { ListingPage } from "@/lib/site/listing-pages";
 import { PageHero } from "@/components/site/page-hero";
 import { getPageBanner } from "@/lib/site/get-banner";
+import { getPageHero } from "@/lib/site/page-hero";
 import { ForSalePageView } from "@/components/animals/for-sale-page";
 import { AnimalGrid, EmptyListing, ListingHeader, YearGroups } from "@/components/animals/listing";
 
@@ -28,6 +29,24 @@ export async function ListingPageView({
     categoryId: page.categoryId,
   });
   const byYear = Boolean(page.category?.groups_by_birth_year) && animals.some((a) => a.birthYear);
+
+  // Sold Horses / Sold Cattle have a full banner (photo, headline, subheadline) like the other main pages.
+  if (page.kind === "sold") {
+    const hero = await getPageHero(site, `sold-${terms.path}`, { title: page.title });
+    return (
+      <>
+        <PageHero
+          eyebrow={settings?.navLabel ?? terms.plural}
+          title={hero.title}
+          subtitle={hero.subtitle}
+          photo={hero.photo}
+        />
+        <div className="mx-auto max-w-[88rem] space-y-12 px-[var(--gutter)] py-10 lg:py-14">
+          {animals.length === 0 ? <EmptyListing /> : <AnimalGrid animals={animals} brandMark={site.brand.mark} />}
+        </div>
+      </>
+    );
+  }
 
   // A category page gets a picture across the top, if the owner chose one.
   const banner =

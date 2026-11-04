@@ -675,3 +675,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 
 - `/about` is built from the owner's own content in `pages.sections` (key `about`): an introduction (heading, text, photo, optional brand mark), up to three highlights, the story (heading, text, photo, optional button to a page on the site or an https address), up to four values under a heading, and a photograph across the bottom. Highlights and values can each carry one of eight simple outline icons. Nothing is ranch wording in the code: a part left empty is not shown, and with nothing filled in the page shows the ranch profile's intro, or "More about <ranch> is coming soon."
 - The banner at the top is the About banner from Page Banners. The owner edits the rest under **About Page** in the admin. Text is plain paragraphs for now; richer formatting comes with the editor planned later.
+
+## Sold Horses and Sold Cattle banners
+
+- The Sold Horses and Sold Cattle pages have a full banner (photo, headline, subheadline) set under Page Banners, like For Sale (migration `20260928001300` allows the keys `sold-horses` and `sold-cattle`). Their title is the default headline. Retired, Previous Stallions and In Memory pages don't have banners yet.

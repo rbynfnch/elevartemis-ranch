@@ -4,6 +4,8 @@ export const bannerPages = [
   { key: "horses", label: "Horses", note: "Headline, subheadline and photo." },
   { key: "cattle", label: "Cattle", note: "Headline, subheadline and photo." },
   { key: "for-sale", label: "For Sale", note: "Headline, subheadline and photo." },
+  { key: "sold-horses", label: "Sold Horses", note: "Headline, subheadline and photo." },
+  { key: "sold-cattle", label: "Sold Cattle", note: "Headline, subheadline and photo." },
   { key: "contact", label: "Contact", note: "Headline, subheadline and photo." },
 ] as const;
 

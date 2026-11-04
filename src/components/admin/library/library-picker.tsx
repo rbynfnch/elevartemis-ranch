@@ -7,6 +7,7 @@ import { attachLibraryPhotosAction, listLibraryAction } from "@/lib/admin/librar
 import type { LibraryPhoto } from "@/lib/admin/library/service";
 import { FormMessage, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
+import { UploadButton, usePhotoUpload } from "./use-photo-upload";
 
 /**
  * "Choose from library": pick photos that are already uploaded and add them to
@@ -67,6 +68,14 @@ export function LibraryPicker({
     setPicked((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
   }
 
+  // Photos uploaded from here appear straight away and are already ticked, ready to add.
+  const uploader = usePhotoUpload(async (ids) => {
+    const fresh = await listLibraryAction();
+    if (!fresh.ok) return setError(fresh.message);
+    setPhotos(fresh.data);
+    setPicked((current) => [...new Set([...current, ...ids.filter((id) => !alreadyOnAnimal.includes(id))])]);
+  });
+
   const q = query.trim().toLowerCase();
   const available = (photos ?? []).filter(
     (p) => !alreadyOnAnimal.includes(p.id) && (!q || (p.fileName ?? "untitled").toLowerCase().includes(q)),
@@ -101,13 +110,26 @@ export function LibraryPicker({
             <h3 id="library-picker-title" className="font-display text-2xl">
               Choose from your Photo Library
             </h3>
-            <button type="button" className={buttonClasses("quiet")} onClick={() => dialog.current?.close()}>
-              Close
-            </button>
+            <div className="flex items-center gap-3">
+              <UploadButton busy={uploader.busy} status={uploader.status} upload={uploader.upload} />
+              <button type="button" className={buttonClasses("quiet")} onClick={() => dialog.current?.close()}>
+                Close
+              </button>
+            </div>
           </div>
 
           <div ref={list} className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-5">
             <FormMessage tone="error">{error}</FormMessage>
+            {uploader.problems.map((m) => (
+              <FormMessage key={m} tone="error">
+                {m}
+              </FormMessage>
+            ))}
+            {uploader.busy ? (
+              <p role="status" className="text-ink-muted">
+                {uploader.status || "Uploading…"}
+              </p>
+            ) : null}
             <div>
               <label htmlFor="picker-search" className="text-sm font-semibold">
                 Find a photo
@@ -128,7 +150,7 @@ export function LibraryPicker({
               <p className="text-ink-muted">
                 {photos?.length
                   ? "No other photos to add. Everything in your library is already on this animal, or nothing matches the search."
-                  : "Your library is empty. Upload photos here or on the Photo Library page."}
+                  : "Your library is empty. Use Upload photos to add some."}
               </p>
             ) : (
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

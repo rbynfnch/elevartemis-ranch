@@ -5,6 +5,7 @@ import { listLibraryAction } from "@/lib/admin/library/actions";
 import type { LibraryPhoto } from "@/lib/admin/library/service";
 import { FormMessage, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
+import { UploadButton, usePhotoUpload } from "@/components/admin/library/use-photo-upload";
 
 /** "Choose from the Photo Library": one photo, picked by clicking it. */
 export function PhotoChooser({
@@ -47,6 +48,20 @@ export function PhotoChooser({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requests]);
 
+  const uploader = usePhotoUpload(async (ids) => {
+    // Show the new photos at once; a single new photo is simply the one chosen.
+    const fresh = await listLibraryAction();
+    if (!fresh.ok) return setError(fresh.message);
+    setPhotos(fresh.data);
+    if (ids.length === 1) {
+      const p = fresh.data.find((x) => x.id === ids[0]);
+      if (p) {
+        onChoose({ id: p.id, thumb: p.thumb });
+        dialog.current?.close();
+      }
+    }
+  });
+
   const shown = (photos ?? []).filter(
     (p) => !query.trim() || (p.fileName ?? "").toLowerCase().includes(query.trim().toLowerCase()),
   );
@@ -81,16 +96,33 @@ export function PhotoChooser({
               onChange={(e) => setQuery(e.target.value)}
               className="min-h-11 w-56"
             />
+            <UploadButton busy={uploader.busy} status={uploader.status} upload={uploader.upload} />
             <button type="button" className={buttonClasses("quiet", "py-2")} onClick={() => dialog.current?.close()}>
               Close
             </button>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto p-5"
+          onDragOver={(e) => e.dataTransfer.types.includes("Files") && e.preventDefault()}
+          onDrop={(e) => {
+            if (!e.dataTransfer.files.length) return;
+            e.preventDefault();
+            void uploader.upload(Array.from(e.dataTransfer.files));
+          }}
+        >
           <FormMessage>{error}</FormMessage>
+          {uploader.problems.map((m) => (
+            <FormMessage key={m}>{m}</FormMessage>
+          ))}
+          {uploader.busy ? (
+            <p role="status" className="text-ink-muted">
+              {uploader.status || "Uploading…"}
+            </p>
+          ) : null}
           {!photos && !error ? <p className="text-ink-muted">Loading your photos…</p> : null}
           {photos && photos.length === 0 ? (
-            <p className="text-ink-muted">Your Photo Library is empty. Upload photos there first.</p>
+            <p className="text-ink-muted">Your Photo Library is empty. Use Upload photos to add your first one.</p>
           ) : null}
           {photos && photos.length > 0 && shown.length === 0 ? (
             <p className="text-ink-muted">No photos match that name.</p>

@@ -738,3 +738,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 
 - The text editor can place photos from the Photo Library anywhere in a story (a **Photo** button in the toolbar). A photo is stored as an `image` node that names the photo by id, so the website looks the photo up (responsive sizes, only photos of this ranch) and a pasted web address can never put anything else on the page. Each photo can have a caption, a description for people who can't see it, and a wider layout. This was chosen over shortcodes because it is visible while writing, can be dragged, and cannot be mistyped. Currently on for blog posts.
 - An **HTML view** (`</>` button) shows the story as simple code and applies edits through the same editor rules: only paragraphs, headings, lists, quotes, bold, italic, links and photos survive; scripts, styles and embedded pages are dropped. So the code view cannot be used to break the page or the site's safety.
+
+## Upload from the photo pickers
+
+- Both photo pickers (the one for blog posts, banners, About, Homepage and the like, and "Choose from library" on an animal) have an **Upload photos** button and accept photos dragged in. Files go to the Photo Library one at a time with progress, problems are listed in plain words without stopping the other photos. In the single-photo picker one uploaded photo is chosen straight away; in the animal picker the new photos appear already ticked.

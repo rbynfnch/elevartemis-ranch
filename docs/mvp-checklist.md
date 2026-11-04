@@ -22,6 +22,7 @@ Where we are against "a rancher can get a finished, good-looking website without
 - [ ] ⚠ **Email notifications** for the Contact form: a Resend account, a verified sending domain, `RESEND_API_KEY` and `INQUIRY_FROM_ADDRESS` in Vercel (never in chat)
 - [ ] **Brand setup for a new ranch**: wordmark, brand mark, colors and fonts are set only by us, with no screen or documented steps; add a logo image option
 - [ ] **Blog** ("Happening on the Ranch" / "Experiences", the ranch chooses the name): posts admin, public list and post pages, linked animals, banner
+- [ ] **Breeding Services page** ("Stallion Services" for horses, "Breeding" for cattle): the owner's data and the public view already exist; needs the public page, a Services banner, a menu item that appears only when an animal is offered, and an inquiry button that opens Contact with the animal chosen
 - [ ] **A proper text editor** (bold, links, lists, photos in text), needed first by the blog
 - [ ] **Search engines**: an owner-editable meta title and description for every page, a share image, `sitemap.xml`, `robots.txt`, canonical addresses, and a clear "go live" step that turns indexing on and removes the "Preview site" banner
 - [ ] **Real content and no sample content**: ranch photos, About text, animals; delete the sample animals and bracketed placeholder text
@@ -36,7 +37,6 @@ Where we are against "a rancher can get a finished, good-looking website without
 
 - [ ] Gallery page and its admin screen
 - [ ] FAQs page and its admin screen
-- [ ] Breeding / Stallion Services page (the data and view exist)
 - [ ] A screen to choose which categories and pages a ranch offers (today only a database change)
 - [ ] Owner guide: short help text in the admin, a first-login checklist, a short video
 - [ ] A second ranch set up from scratch with the provisioning steps, to prove the template really is reusable

@@ -2,6 +2,7 @@
 
 ## What changes in the MVP
 
+- **Breeding Services page is in the MVP.** For ranches that offer breedings. Animals offered for breeding already carry their fee, season, service types (fresh, cooled, frozen, live cover), shipping, mare requirements, guarantee and contract link in the admin; the public page lists them as an action funnel: who is offered, what it costs, what is needed, one button to inquire with the animal filled in. It appears in the menu only when at least one animal is offered.
 - **Blog is in the MVP.** Public name is the owner's choice per ranch ("Happening on the Ranch", "Experiences", "Ranch Life"). The database already has `posts`, `post_categories`, `post_media` and `post_animals`; what is missing is the admin editor, the public list and post pages, and the search-engine markup.
 - **Search-engine basics are in the MVP** because the blog depends on them: a meta title and description for every page (owner-editable, with sensible defaults and length hints), a social share image, `sitemap.xml`, `robots.txt`, canonical addresses and the go-live switch.
 

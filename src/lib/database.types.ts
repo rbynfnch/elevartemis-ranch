@@ -300,6 +300,7 @@ export type Database = {
           deceased_precision: Database["public"]["Enums"]["birth_precision"];
           description: Json | null;
           display_order: number;
+          height: string | null;
           highlights: string[];
           id: string;
           is_demo: boolean;
@@ -339,6 +340,7 @@ export type Database = {
           deceased_precision?: Database["public"]["Enums"]["birth_precision"];
           description?: Json | null;
           display_order?: number;
+          height?: string | null;
           highlights?: string[];
           id?: string;
           is_demo?: boolean;
@@ -378,6 +380,7 @@ export type Database = {
           deceased_precision?: Database["public"]["Enums"]["birth_precision"];
           description?: Json | null;
           display_order?: number;
+          height?: string | null;
           highlights?: string[];
           id?: string;
           is_demo?: boolean;
@@ -1736,6 +1739,7 @@ export type Database = {
           breed: string;
           color: string;
           generation: number;
+          height: string;
           is_linkable: boolean;
           name: string;
           notes: Json;

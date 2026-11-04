@@ -68,6 +68,9 @@ describe("saleDisplay", () => {
   it("shows the price the owner chose to show", () => {
     expect(saleDisplay(sale)).toMatchObject({ badge: "For Sale", price: "$8,500" });
     expect(saleDisplay({ ...sale, price_mode: "contact" })?.price).toBe("Contact for price");
+    expect(saleDisplay({ ...sale, price_basis: "per_head" })?.price).toBe("$8,500 per head");
+    expect(saleDisplay({ ...sale, price_basis: "total" })?.price).toBe("$8,500 total");
+    expect(saleDisplay({ ...sale, price_basis: "each" })?.price).toBe("$8,500");
     expect(saleDisplay({ ...sale, price_mode: "hidden" })?.price).toBeNull();
   });
   it("labels a pending sale and never shows a price once sold", () => {

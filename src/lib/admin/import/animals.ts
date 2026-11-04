@@ -37,6 +37,9 @@ export const importColumns = [
   "breed",
   "color",
   "height",
+  "ear_tag",
+  "weight_lb",
+  "head_count",
   "registered_name",
   "registry",
   "registration_number",
@@ -56,6 +59,7 @@ export const importColumns = [
   "featured",
   "for_sale",
   "price",
+  "price_basis",
   "quick_facts",
   "photos",
 ] as const;
@@ -75,6 +79,9 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     breed: "Quarter Horse",
     color: "Bay",
     height: "15.1hh",
+    ear_tag: "",
+    weight_lb: "",
+    head_count: "",
     registered_name: "Example Registered Name",
     registry: "AQHA",
     registration_number: "1234567",
@@ -94,6 +101,7 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     featured: "no",
     for_sale: "available",
     price: "8500",
+    price_basis: "",
     quick_facts: "Height: 15.1 hands; Discipline: Barrel racing",
     photos: "example-mare-front.jpg; example-mare-side.jpg",
   },
@@ -106,6 +114,9 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     breed: "Hereford",
     color: "",
     height: "",
+    ear_tag: "118",
+    weight_lb: "1450",
+    head_count: "",
     registered_name: "",
     registry: "",
     registration_number: "",
@@ -125,7 +136,8 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     featured: "",
     for_sale: "",
     price: "",
-    quick_facts: "Ear tag: 118",
+    price_basis: "",
+    quick_facts: "Disposition: Gentle",
     photos: "",
   },
 ];
@@ -164,6 +176,16 @@ const aliases: Record<string, ImportColumn> = {
   sale: "for_sale",
   sale_status: "for_sale",
   price_usd: "price",
+  price_per: "price_basis",
+  price_type: "price_basis",
+  tag: "ear_tag",
+  eartag: "ear_tag",
+  tag_number: "ear_tag",
+  weight: "weight_lb",
+  weight_lbs: "weight_lb",
+  head: "head_count",
+  heads: "head_count",
+  head_in_lot: "head_count",
   facts: "quick_facts",
   quickfacts: "quick_facts",
   photo: "photos",
@@ -241,6 +263,20 @@ const statusWords: Record<string, "active" | "retired" | "reference" | "deceased
   memorial: "deceased",
 };
 export const parseStatus = (raw: string) => statusWords[raw.trim().toLowerCase()] ?? null;
+
+const basisWords: Record<string, "each" | "per_head" | "total"> = {
+  each: "each",
+  "per animal": "each",
+  animal: "each",
+  "per head": "per_head",
+  head: "per_head",
+  "a head": "per_head",
+  total: "total",
+  "whole lot": "total",
+  lot: "total",
+  "per lot": "total",
+};
+export const parsePriceBasis = (raw: string) => basisWords[raw.trim().toLowerCase()] ?? null;
 
 const saleWords: Record<string, "none" | "available" | "pending" | "sold"> = {
   none: "none",
@@ -386,6 +422,10 @@ export type PlannedAnimal = {
     breed?: string;
     color?: string;
     height?: string;
+    ear_tag?: string;
+    weight_lb?: number;
+    head_count?: number;
+    price_basis?: "each" | "per_head" | "total";
     tagline?: string;
     highlights?: string[];
     video_url?: string;
@@ -420,8 +460,21 @@ export type ImportPlan = {
 
 const lower = (s: string) => s.trim().toLowerCase();
 
+/** Wording ranches use for categories we already have: "Breeding Bull" is a Bull, so the Bulls page is right. */
+const categoryAliases: Record<string, string> = {
+  "breeding bull": "bull",
+  "herd bull": "bull",
+  "breeding cow": "cow",
+  "brood cow": "cow",
+  "replacement heifer": "heifer",
+  "bred heifer": "heifer",
+  lot: "lot",
+  "sale lot": "lot",
+  lots: "lot",
+};
+
 function findCategory(ctx: ImportContext, raw: string, species: Species | null) {
-  const key = lower(raw);
+  const key = categoryAliases[lower(raw)] ?? lower(raw);
   const matches = ctx.categories.filter(
     (c) => (!species || c.species === species) && [c.id, c.key, c.label, c.labelPlural].some((n) => lower(n) === key),
   );
@@ -555,6 +608,7 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
       ["breed", 80, "breed"],
       ["color", 80, "color"],
       ["height", 12, "height"],
+      ["ear_tag", 30, "ear_tag"],
       ["tagline", TAGLINE_MAX, "tagline"],
       ["registered_name", 160, "registered_name"],
       ["registry", 80, "registry"],
@@ -568,6 +622,26 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
     if (fields.breed && species && !breeds.has(`${species}:${lower(fields.breed)}`)) {
       // The first spelling seen wins; the database matches the rest to it.
       breeds.set(`${species}:${lower(fields.breed)}`, { species, name: fields.breed });
+    }
+    const weightCell = cell("weight_lb");
+    if (weightCell) {
+      const w = Number(weightCell.replace(/[,\s]|lbs?\.?$/gi, ""));
+      if (!Number.isInteger(w) || w < 1 || w > 5000)
+        fail("weight_lb", `“${weightCell}” isn't a weight. Use pounds, like 1650.`);
+      else fields.weight_lb = w;
+    }
+    const headCell = cell("head_count");
+    if (headCell) {
+      const n = Number(headCell.replace(/\s*head$/i, ""));
+      if (!Number.isInteger(n) || n < 1 || n > 9999)
+        fail("head_count", `“${headCell}” isn't a number of head. Use a number like 12.`);
+      else if (n >= 2) fields.head_count = n;
+    }
+    const basisCell = cell("price_basis");
+    if (basisCell) {
+      const basis = parsePriceBasis(basisCell);
+      if (!basis) fail("price_basis", `“${basisCell}” isn't each, per head or total.`);
+      else fields.price_basis = basis;
     }
     const highlightsCell = cell("highlights");
     if (highlightsCell) {
@@ -625,6 +699,11 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
         if (status === "none" && priceCell) fail("price", "an animal that isn't for sale can't have a price.");
         else fields.sale = { status, priceCents: status === "sold" ? null : cents };
       }
+    }
+
+    if (fields.price_basis && !fields.sale) {
+      warnings.push("price_basis: it only applies together with for_sale, so it was left out.");
+      delete fields.price_basis;
     }
 
     // ── Quick Facts ─────────────────────────────────────────────────────────

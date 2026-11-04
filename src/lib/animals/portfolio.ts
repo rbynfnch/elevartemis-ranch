@@ -5,7 +5,7 @@
 import type { Species } from "@/lib/domain/species";
 import { compactFacts, isBlank, richTextIsEmpty } from "@/lib/content/empty";
 import { epdLabel, type EpdEntry } from "@/lib/animals/epd";
-import { formatMoney } from "@/lib/animals/breeding";
+import { priceWithBasis } from "@/lib/animals/breeding";
 
 const MONTHS = [
   "January",
@@ -43,6 +43,10 @@ export type PortfolioFactsInput = {
   color: string | null;
   /** The animal's own height, when recorded; otherwise a "Height" Quick Fact is used. */
   height?: string | null;
+  earTag?: string | null;
+  weightLb?: number | null;
+  /** Animals in a sale lot. */
+  headCount?: number | null;
   sex: string;
   birthDate: string | null;
   birthPrecision: Precision;
@@ -73,6 +77,7 @@ export type SaleInput = {
   status: "available" | "pending" | "sold";
   price_mode: "price" | "contact" | "hidden";
   price_cents: number | null;
+  price_basis?: string | null;
   currency: string;
   available_on: string | null;
   location_text: string | null;
@@ -92,7 +97,7 @@ export function saleDisplay(sale: SaleInput): SaleDisplay | null {
   if (sale.status === "sold") return { badge: "Sold", price: null, details: [], description: null };
   const price =
     sale.price_mode === "price" && sale.price_cents != null
-      ? formatMoney(sale.price_cents, sale.currency)
+      ? priceWithBasis(sale.price_cents, sale.currency, sale.price_basis)
       : sale.price_mode === "contact"
         ? "Contact for price"
         : null;
@@ -233,6 +238,9 @@ export function profileFacts(input: ProfileFactsInput): {
     { label: "Sex", value: sexWords[input.sex] },
     { label: "Height", value: input.height?.trim() || take("height") },
     { label: "Color", value: take("color") ?? input.color },
+    { label: "Ear tag", value: input.earTag?.trim() || take("ear tag") },
+    { label: "Weight", value: input.weightLb ? `${input.weightLb.toLocaleString("en-US")} lbs` : take("weight") },
+    { label: "Head count", value: input.headCount ? String(input.headCount) : take("head count") },
     { label: "Registration", value: registration },
   ]);
 

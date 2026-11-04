@@ -31,6 +31,9 @@ export type AnimalPage = {
   breed: string | null;
   color: string | null;
   height: string | null;
+  earTag: string | null;
+  weightLb: number | null;
+  headCount: number | null;
   registry: string | null;
   registrationNumber: string | null;
   birthDate: string | null;
@@ -142,6 +145,9 @@ export async function getAnimalPage(
       breed: a.breed,
       color: a.color,
       height: a.height ?? null,
+      earTag: a.ear_tag ?? null,
+      weightLb: a.weight_lb ?? null,
+      headCount: a.head_count ?? null,
       registry: a.registry,
       registrationNumber: a.registration_number,
       birthDate: a.birth_date,

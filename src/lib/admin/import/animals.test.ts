@@ -136,6 +136,53 @@ describe("planImport", () => {
     // Saying it is In memory again is fine.
     expect(plan("name,species,status\nOld Friend,horse,in memory").results[0].planned?.fields.status).toBe("deceased");
   });
+  it("reads ear tag, weight, head count and what a price means", () => {
+    const r = plan(
+      'name,species,category,ear_tag,weight_lb,head_count,for_sale,price,price_basis\nLot A,cattle,Bull,118,"1,650 lbs",12 head,available,1650,per head',
+    );
+    expect(r.results[0].errors).toEqual([]);
+    expect(r.results[0].planned?.fields).toMatchObject({
+      ear_tag: "118",
+      weight_lb: 1650,
+      head_count: 12,
+      price_basis: "per_head",
+    });
+    expect(
+      plan("name,species,category,head_count\nOne,cattle,Bull,1").results[0].planned?.fields.head_count,
+    ).toBeUndefined();
+    expect(plan("name,species,category,weight_lb\nBig,cattle,Bull,heavy").results[0].errors).toHaveLength(1);
+    const orphan = plan("name,species,category,price_basis\nX,cattle,Bull,per head").results[0];
+    expect(orphan.planned?.fields.price_basis).toBeUndefined();
+    expect(orphan.planned?.warnings).toHaveLength(1);
+  });
+  it("accepts a ranch's own wording for categories it already has", () => {
+    const withLot = {
+      ...ctx,
+      categories: [
+        ...ctx.categories,
+        {
+          id: "cattle.lot",
+          species: "cattle",
+          label: "Sale Lot",
+          labelPlural: "Sale Lots",
+          key: "lot",
+          allowedSexes: ["male", "female", "steer", "unknown"],
+        },
+        {
+          id: "cattle.heifer",
+          species: "cattle",
+          label: "Heifer",
+          labelPlural: "Heifers",
+          key: "heifer",
+          allowedSexes: ["female"],
+        },
+      ],
+    } as never;
+    const run = (cat: string) => planImport(parseCsv(`name,species,category\nA,cattle,${cat}\n`), withLot).results[0];
+    expect(run("Breeding Bull").planned?.fields.category_id).toBe("cattle.bull");
+    expect(run("Replacement Heifer").planned?.fields.category_id).toBe("cattle.heifer");
+    expect(run("Sale Lot").planned?.fields.category_id).toBe("cattle.lot");
+  });
   it("updates an existing animal by id or by unique name, and leaves blank cells alone", () => {
     const byName = plan("name,category,breed,color\nblue star,Mare,Appaloosa,\n").results[0].planned!;
     expect(byName).toMatchObject({ action: "update", existingId: "a-1" });
@@ -206,6 +253,9 @@ describe("the downloadable template", () => {
       "breed",
       "color",
       "height",
+      "ear_tag",
+      "weight_lb",
+      "head_count",
       "registered_name",
       "registry",
       "registration_number",
@@ -225,6 +275,7 @@ describe("the downloadable template", () => {
       "featured",
       "for_sale",
       "price",
+      "price_basis",
       "quick_facts",
       "photos",
     ]);

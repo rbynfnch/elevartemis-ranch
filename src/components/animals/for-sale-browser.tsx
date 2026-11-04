@@ -393,6 +393,9 @@ function SaleCard({ animal, brandMark }: { animal: ListingCard; brandMark?: stri
     animal.categoryLabel,
     animal.birthYear ? String(animal.birthYear) : null,
     animal.height,
+    animal.headCount ? `${animal.headCount} head` : null,
+    animal.weightLb ? `${animal.weightLb.toLocaleString("en-US")} lbs` : null,
+    animal.earTag ? `Tag ${animal.earTag}` : null,
   ].filter((f): f is string => Boolean(f && f.trim()));
   return (
     <article className="group relative flex h-full flex-col border border-rule bg-white">

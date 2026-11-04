@@ -644,3 +644,10 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Pedigree names match registered names too
 
 - In the animals sheet and the pedigree import, a sire, dam or ancestor named like an animal's registered name (for example "Rosie" for "Hereford Cow #408", registered as Rosie) links to that animal, the same as a match on its name. A pedigree can also be for an animal named by its registered name.
+
+## Cattle: Sale Lot category, ear tag, weight, head count, price basis
+
+- Cattle keep the categories Bull, Cow, Heifer, Steer, Calf and Yearling, and gain **Sale Lot** (migration `20260928001000`). The pages stay "Bulls", "Cows"… The wording "Breeding Bull", "Breeding Cow" and "Replacement Heifer" is not a category: in a sheet it is read as Bull, Cow and Heifer, and the owner's wording goes in the headline and highlights. A ranch whose category list is narrowed in its species settings must add Sale Lot to it to use it (no list set means all categories).
+- A sale lot is an animal with a **head count** (two or more; a head count of 1 is just an animal and is stored as none). Its price has a **price basis**: for this animal (default), per head, or total for the lot. Cards and the animal page say "$1,650 per head" accordingly.
+- **Ear tag** and **weight** (whole pounds) are real fields on cattle: shown in the attribute strip and on cards, searchable (ear tag) on the For Sale page, and in the CSV (`ear_tag`, `weight_lb`, `head_count`, `price_basis`). Existing "Ear tag" and "Weight" Quick Facts still show until the new fields are filled. A lot's weight range or age stays a Quick Fact.
+- Saving works before the migration is applied: the new columns are left out instead of failing.

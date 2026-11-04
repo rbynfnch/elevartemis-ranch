@@ -18,6 +18,9 @@ const card = (name: string, categoryId: string, birthYear: number | null): Listi
   registrationNumber: null,
   priceCents: null,
   featured: false,
+  earTag: null,
+  weightLb: null,
+  headCount: null,
   displayOrder: 0,
 });
 

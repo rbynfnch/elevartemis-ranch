@@ -18,6 +18,9 @@ const card = (name: string, over: Partial<ListingCard> = {}): ListingCard => ({
   registrationNumber: null,
   priceCents: null,
   featured: false,
+  earTag: null,
+  weightLb: null,
+  headCount: null,
   breed: null,
   birthYear: null,
   ...over,
@@ -67,6 +70,7 @@ describe("applyFilters", () => {
     expect(names({ q: "2706274" })).toEqual(["Dusty Blue"]);
     expect(names({ q: "aqha 27-06274" })).toEqual(["Dusty Blue"]);
     expect(names({ q: "cow sense" })).toEqual(["High Country"]);
+    expect(applyFilters([card("Bull", { earTag: "241" })], { ...noFilters, q: "241" })).toHaveLength(1);
     expect(names({ q: "nothing like this" })).toEqual([]);
   });
   it("filters by breed (any spelling), sex, year and color", () => {

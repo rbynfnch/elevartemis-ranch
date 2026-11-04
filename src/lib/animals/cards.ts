@@ -2,7 +2,7 @@ import type { Database } from "@/lib/database.types";
 import type { Species } from "@/lib/domain/species";
 import { speciesTerms } from "@/lib/domain/species";
 import { mediaUrl, pickVariant } from "@/lib/media/variants";
-import { formatMoney } from "@/lib/animals/breeding";
+import { priceWithBasis } from "@/lib/animals/breeding";
 import type { AnimalCardData } from "@/components/animals/animal-card";
 
 type CardRow = Database["public"]["Views"]["public_animal_cards"]["Row"];
@@ -22,14 +22,19 @@ export type ListingCard = AnimalCardData & {
   registrationNumber: string | null;
   priceCents: number | null;
   featured: boolean;
+  earTag: string | null;
+  weightLb: number | null;
+  /** Animals in a sale lot; null for a single animal. */
+  headCount: number | null;
 };
 
 /** The price line for a for-sale card, as the owner chose to show it. Null when there is nothing to say. */
 export function priceLine(
-  row: Pick<CardRow, "sale_status" | "price_mode" | "price_cents" | "currency">,
+  row: Pick<CardRow, "sale_status" | "price_mode" | "price_cents" | "currency"> & { price_basis?: string | null },
 ): string | null {
   if (row.sale_status !== "available" && row.sale_status !== "pending") return null;
-  if (row.price_mode === "price" && row.price_cents != null) return formatMoney(row.price_cents, row.currency ?? "USD");
+  if (row.price_mode === "price" && row.price_cents != null)
+    return priceWithBasis(row.price_cents, row.currency, row.price_basis);
   if (row.price_mode === "contact") return "Contact for price";
   return null;
 }
@@ -72,5 +77,8 @@ export function cardFromRow(a: CardRow): ListingCard {
     registrationNumber: a.registration_number ?? null,
     priceCents: a.price_mode === "price" ? (a.price_cents ?? null) : null,
     featured: Boolean(a.is_featured),
+    earTag: a.ear_tag ?? null,
+    weightLb: a.weight_lb ?? null,
+    headCount: a.head_count ?? null,
   };
 }

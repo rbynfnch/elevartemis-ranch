@@ -33,6 +33,9 @@ export type BasicsInput = {
   breed: string | null;
   color: string | null;
   height?: string | null;
+  ear_tag?: string | null;
+  weight_lb?: number | null;
+  head_count?: number | null;
   registry: string | null;
   registration_number: string | null;
   birth_date: string | null;
@@ -56,6 +59,16 @@ export function parseBasics(fd: FormData): Parsed<BasicsInput> {
   else if (name.length > 120) errors.name = "Use 120 characters or fewer.";
   const height = text(fd, "height");
   if (height && height.length > 12) errors.height = "Use 12 characters or fewer, like 15.3hh.";
+  const earTag = text(fd, "ear_tag");
+  if (earTag && earTag.length > 30) errors.ear_tag = "Use 30 characters or fewer.";
+  const weightText = text(fd, "weight_lb");
+  const weight = weightText ? Number(weightText.replace(/,/g, "")) : null;
+  if (weight !== null && !(Number.isInteger(weight) && weight >= 1 && weight <= 5000))
+    errors.weight_lb = "Enter the weight in pounds, like 1650.";
+  const headText = text(fd, "head_count");
+  const heads = headText ? Number(headText) : null;
+  if (heads !== null && !(Number.isInteger(heads) && heads >= 1 && heads <= 9999))
+    errors.head_count = "Enter how many head are in the lot, like 12.";
   if (!category) errors.category_id = "Choose a category.";
   if (!sex) errors.sex = "Choose the sex.";
   const birth = parsePartialDate({
@@ -78,6 +91,10 @@ export function parseBasics(fd: FormData): Parsed<BasicsInput> {
       breed,
       color: text(fd, "color"),
       height: text(fd, "height"),
+      ear_tag: earTag,
+      weight_lb: weight,
+      // One animal is just an animal: only a lot of two or more is a head count.
+      head_count: heads !== null && heads >= 2 ? heads : null,
       registry: text(fd, "registry"),
       registration_number: text(fd, "registration_number"),
       birth_date: b.date,
@@ -126,6 +143,7 @@ export type SaleInput = {
   status: Enums["sale_status"];
   price_mode: Enums["price_mode"];
   price_cents: number | null;
+  price_basis?: "each" | "per_head" | "total";
   available_on: string | null;
   location_text: string | null;
   sales_description: ReturnType<typeof textToDoc>;
@@ -149,6 +167,7 @@ export function parseSale(fd: FormData): Parsed<SaleInput> {
       status,
       price_mode: priceMode,
       price_cents: price,
+      price_basis: oneOf(get(fd, "price_basis"), ["each", "per_head", "total"] as const) ?? "each",
       available_on: availableOn,
       location_text: text(fd, "location_text"),
       sales_description: textToDoc(text(fd, "sales_description")),

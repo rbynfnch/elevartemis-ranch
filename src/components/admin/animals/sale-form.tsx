@@ -9,6 +9,7 @@ type Sale = {
   status: "available" | "pending" | "sold";
   price_mode: "price" | "contact" | "hidden";
   price_cents: number | null;
+  price_basis?: string | null;
   available_on: string | null;
   location_text: string | null;
   sales_description: unknown;
@@ -51,16 +52,30 @@ export function SaleForm({ sale }: { sale: Sale }) {
                 ]}
               />
               {mode === "price" ? (
-                <Field id="price" label="Price (US dollars)" error={err.price}>
-                  <TextInput
-                    id="price"
-                    name="price"
-                    inputMode="decimal"
-                    defaultValue={centsToDollars(sale?.price_cents)}
-                    className="max-w-48"
-                    invalid={!!err.price}
-                  />
-                </Field>
+                <div className="flex flex-wrap items-start gap-4">
+                  <Field id="price" label="Price (US dollars)" error={err.price}>
+                    <TextInput
+                      id="price"
+                      name="price"
+                      inputMode="decimal"
+                      defaultValue={centsToDollars(sale?.price_cents)}
+                      className="max-w-48"
+                      invalid={!!err.price}
+                    />
+                  </Field>
+                  <Field id="price_basis" label="The price is" hint="For a sale lot, choose per head or the total.">
+                    <select
+                      id="price_basis"
+                      name="price_basis"
+                      defaultValue={sale?.price_basis ?? "each"}
+                      className="min-h-11 border border-rule bg-white px-3 text-base"
+                    >
+                      <option value="each">For this animal</option>
+                      <option value="per_head">Per head</option>
+                      <option value="total">For the whole lot</option>
+                    </select>
+                  </Field>
+                </div>
               ) : null}
               <div className="grid gap-6 sm:grid-cols-2">
                 <Field id="available_on" label="Available from (optional)" error={err.available_on}>

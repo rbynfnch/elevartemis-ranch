@@ -21,6 +21,9 @@ type AnimalLike = {
   breed: string | null;
   color: string | null;
   height?: string | null;
+  ear_tag?: string | null;
+  weight_lb?: number | null;
+  head_count?: number | null;
   registry: string | null;
   registration_number: string | null;
   birth_date: string | null;
@@ -268,6 +271,31 @@ export function BasicsFields({
             <TextInput id="height" name="height" maxLength={12} defaultValue={animal?.height ?? ""} hasHint />
           </Field>
         </div>
+        {species === "cattle" ? (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field id="ear_tag" label="Ear tag" hint="Optional." error={err.ear_tag}>
+              <TextInput id="ear_tag" name="ear_tag" maxLength={30} defaultValue={animal?.ear_tag ?? ""} hasHint />
+            </Field>
+            <Field id="weight_lb" label="Weight (lbs)" hint="Optional." error={err.weight_lb}>
+              <TextInput
+                id="weight_lb"
+                name="weight_lb"
+                inputMode="numeric"
+                defaultValue={animal?.weight_lb ?? ""}
+                hasHint
+              />
+            </Field>
+            <Field id="head_count" label="Head in this lot" hint="Only for a sale lot." error={err.head_count}>
+              <TextInput
+                id="head_count"
+                name="head_count"
+                inputMode="numeric"
+                defaultValue={animal?.head_count ?? ""}
+                hasHint
+              />
+            </Field>
+          </div>
+        ) : null}
       </div>
 
       <details

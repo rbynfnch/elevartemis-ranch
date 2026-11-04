@@ -85,6 +85,7 @@ function matchesSearch(card: ListingCard, q: string): boolean {
     card.tagline,
     card.registry,
     card.registrationNumber,
+    card.earTag,
     card.birthYear ? String(card.birthYear) : null,
   ]
     .filter(Boolean)

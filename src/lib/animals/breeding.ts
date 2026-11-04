@@ -69,6 +69,16 @@ export function formatMoney(cents: number, currency = "USD"): string {
   }).format(cents / 100);
 }
 
+/** What a price means: nothing extra for one animal, "per head" for a lot sold by the head, "total" for the whole lot. */
+export function priceWithBasis(
+  cents: number,
+  currency: string | null | undefined,
+  basis: string | null | undefined,
+): string {
+  const money = formatMoney(cents, currency ?? "USD");
+  return basis === "per_head" ? `${money} per head` : basis === "total" ? `${money} total` : money;
+}
+
 function clean(text: string | null | undefined): string | null {
   const t = text?.trim();
   return t ? t : null;

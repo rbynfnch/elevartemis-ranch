@@ -301,6 +301,9 @@ export type Database = {
           description: Json | null;
           display_order: number;
           height: string | null;
+          ear_tag: string | null;
+          weight_lb: number | null;
+          head_count: number | null;
           highlights: string[];
           id: string;
           is_demo: boolean;
@@ -341,6 +344,9 @@ export type Database = {
           description?: Json | null;
           display_order?: number;
           height?: string | null;
+          ear_tag?: string | null;
+          weight_lb?: number | null;
+          head_count?: number | null;
           highlights?: string[];
           id?: string;
           is_demo?: boolean;
@@ -381,6 +387,9 @@ export type Database = {
           description?: Json | null;
           display_order?: number;
           height?: string | null;
+          ear_tag?: string | null;
+          weight_lb?: number | null;
+          head_count?: number | null;
           highlights?: string[];
           id?: string;
           is_demo?: boolean;
@@ -1514,6 +1523,7 @@ export type Database = {
           currency: string;
           location_text: string | null;
           price_cents: number | null;
+          price_basis: string;
           price_mode: Database["public"]["Enums"]["price_mode"];
           ranch_id: string;
           sales_description: Json | null;
@@ -1529,6 +1539,7 @@ export type Database = {
           currency?: string;
           location_text?: string | null;
           price_cents?: number | null;
+          price_basis?: string;
           price_mode?: Database["public"]["Enums"]["price_mode"];
           ranch_id: string;
           sales_description?: Json | null;
@@ -1544,6 +1555,7 @@ export type Database = {
           currency?: string;
           location_text?: string | null;
           price_cents?: number | null;
+          price_basis?: string;
           price_mode?: Database["public"]["Enums"]["price_mode"];
           ranch_id?: string;
           sales_description?: Json | null;
@@ -1633,7 +1645,9 @@ export type Database = {
           deceased_on: string | null;
           deceased_precision: Database["public"]["Enums"]["birth_precision"] | null;
           display_order: number | null;
+          ear_tag: string | null;
           groups_by_birth_year: boolean | null;
+          head_count: number | null;
           height: string | null;
           id: string | null;
           is_featured: boolean | null;
@@ -1652,6 +1666,7 @@ export type Database = {
           photo_id: string | null;
           photo_variants: Json | null;
           photo_width: number | null;
+          price_basis: string | null;
           price_cents: number | null;
           price_mode: Database["public"]["Enums"]["price_mode"] | null;
           program_status: Database["public"]["Enums"]["program_status"] | null;
@@ -1665,6 +1680,7 @@ export type Database = {
           species: Database["public"]["Enums"]["species"] | null;
           tagline: string | null;
           updated_at: string | null;
+          weight_lb: number | null;
         };
         Relationships: [
           {

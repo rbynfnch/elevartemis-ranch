@@ -162,17 +162,34 @@ export async function getAnimal(db: Db, ranchId: string, id: string) {
 export type AnimalDetail = Extract<Awaited<ReturnType<typeof getAnimal>>, { ok: true }>["data"];
 
 // ─── Create and edit ─────────────────────────────────────────────────────────
-/** True when the database doesn't have the animals.height column yet (its migration isn't applied). */
-const noHeightColumn = (error: { message?: string } | null) => Boolean(error?.message?.includes("height"));
+/** The optional columns added after launch. Until their migrations are applied, saving leaves them out rather than failing. */
+const NEWER_COLUMNS = ["height", "ear_tag", "weight_lb", "head_count"] as const;
+const noNewerColumn = (error: { message?: string } | null) =>
+  Boolean(error?.message && NEWER_COLUMNS.some((c) => error.message!.includes(c)));
+const withoutNewer = <T extends Record<string, unknown>>(input: T) => {
+  const rest: Record<string, unknown> = { ...input };
+  for (const c of NEWER_COLUMNS) delete rest[c];
+  return rest as Omit<T, (typeof NEWER_COLUMNS)[number]>;
+};
+
+/** Just the newer optional columns of an input (those the form or sheet actually sent). */
+const newerOf = (input: BasicsInput) => ({
+  ...(input.height !== undefined ? { height: input.height } : {}),
+  ...(input.ear_tag !== undefined ? { ear_tag: input.ear_tag } : {}),
+  ...(input.weight_lb !== undefined ? { weight_lb: input.weight_lb } : {}),
+  ...(input.head_count !== undefined ? { head_count: input.head_count } : {}),
+});
 
 export async function createAnimal(db: Db, ranchId: string, input: BasicsInput): Promise<Result<{ id: string }>> {
-  const { height, ...rest } = input;
-  const insert = (withHeight: boolean) =>
+  const base = withoutNewer(input);
+  // A new animal only needs the columns that have something in them.
+  const newer = Object.fromEntries(Object.entries(newerOf(input)).filter(([, v]) => v !== null));
+  const insert = (withNewer: boolean) =>
     db
       .from("animals")
       .insert({
-        ...rest,
-        ...(withHeight && height ? { height } : {}),
+        ...base,
+        ...(withNewer ? newer : {}),
         description: input.description as Json,
         ranch_id: ranchId,
         // New animals start Active and on the website; the owner can hide one at any time.
@@ -183,22 +200,22 @@ export async function createAnimal(db: Db, ranchId: string, input: BasicsInput):
       .select("id")
       .single();
   let { data, error } = await insert(true);
-  if (error && noHeightColumn(error)) ({ data, error } = await insert(false));
+  if (error && noNewerColumn(error)) ({ data, error } = await insert(false));
   if (error || !data) return dbFail(error!);
   return ok({ id: data.id });
 }
 
 export async function updateBasics(db: Db, id: string, input: BasicsInput): Promise<Result> {
-  const { height, ...rest } = input;
-  const update = (withHeight: boolean) =>
+  const base = withoutNewer(input);
+  const update = (withNewer: boolean) =>
     db
       .from("animals")
-      .update({ ...rest, ...(withHeight && height !== undefined ? { height } : {}), description: input.description as Json })
+      .update({ ...base, ...(withNewer ? newerOf(input) : {}), description: input.description as Json })
       .eq("id", id)
       .select("id");
   const first = await update(true);
-  // Until the height migration is applied, save everything else rather than failing.
-  if (first.error && noHeightColumn(first.error)) return changed(await update(false));
+  // Until their migrations are applied, save everything else rather than failing.
+  if (first.error && noNewerColumn(first.error)) return changed(await update(false));
   return changed(first);
 }
 
@@ -235,12 +252,14 @@ export async function saveSale(db: Db, ranchId: string, id: string, input: SaleI
     const { error } = await db.from("sale_listings").delete().eq("animal_id", id);
     return error ? dbFail(error) : ok(null);
   }
-  const { error } = await db
-    .from("sale_listings")
-    .upsert(
-      { ...input, sales_description: input.sales_description as Json, animal_id: id, ranch_id: ranchId },
-      { onConflict: "animal_id" },
-    );
+  const row = { ...input, sales_description: input.sales_description as Json, animal_id: id, ranch_id: ranchId };
+  let { error } = await db.from("sale_listings").upsert(row, { onConflict: "animal_id" });
+  // Before the price-basis migration is applied, save the sale without it.
+  if (error?.message?.includes("price_basis")) {
+    const { price_basis: _unused, ...withoutBasis } = row;
+    void _unused;
+    ({ error } = await db.from("sale_listings").upsert(withoutBasis, { onConflict: "animal_id" }));
+  }
   return error ? dbFail(error) : ok(null);
 }
 

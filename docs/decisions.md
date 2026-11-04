@@ -660,3 +660,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 
 - The admin animal page has ← and → buttons (and the left and right arrow keys when nothing is being typed into) that move to the previous and next animal in the Animals list the owner came from. The list's species tab, filter and search are carried in the address (`?from=…`), so going down "No photo" works. An animal that has just left a filtered list (it now has a photo) still has neighbours: the list is the filter plus the current animal, in the list's order.
 - Unsaved edits in the form are not kept when moving to another animal; save first. (Photos are saved immediately, so adding photos and moving on is safe.)
+
+## Unsaved-changes prompt on the animal page
+
+- The edit form compares what it holds with what was last saved or loaded. When they differ it shows "You have unsaved changes" next to Save, and asks before the Previous and Next arrows, the arrow keys, any other link inside the site, or closing or reloading the tab would lose them. A successful Save becomes the new starting point. Photos and pedigree choices save immediately and are not part of this.

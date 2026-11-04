@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Neighbors } from "@/lib/admin/animals/neighbors";
+import { confirmLeave } from "@/lib/admin/unsaved-changes";
 
 const arrow =
   "inline-flex min-h-11 min-w-11 items-center justify-center gap-2 border border-rule bg-white px-3 text-ink no-underline hover:border-primary hover:bg-surface";
@@ -35,7 +36,7 @@ export function AnimalStepper({
       const href = e.key === "ArrowLeft" ? prevHref : nextHref;
       if (href) {
         e.preventDefault();
-        router.push(href);
+        if (confirmLeave()) router.push(href);
       }
     }
     window.addEventListener("keydown", onKey);

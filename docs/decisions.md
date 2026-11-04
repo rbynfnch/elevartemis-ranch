@@ -640,3 +640,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - Sort: ranch order (featured first), youngest, oldest, price either way, name. There is no "Newest" because the database doesn't record when an animal was listed.
 - Cards show photo, name, breed · category · year · height, the animal's headline, the price (as the owner chose to show it) and View details. A "Featured" ribbon follows the owner's Featured setting. No "New" ribbon yet (no listed-on date).
 - Migration `20260928000900` adds tagline, height, registry and registration number to `public_animal_cards`; until it is applied those cards just omit the headline and height.
+
+## Pedigree names match registered names too
+
+- In the animals sheet and the pedigree import, a sire, dam or ancestor named like an animal's registered name (for example "Rosie" for "Hereford Cow #408", registered as Rosie) links to that animal, the same as a match on its name. A pedigree can also be for an animal named by its registered name.

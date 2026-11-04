@@ -25,6 +25,7 @@ const fail = (message: string): Result<never> => ({ ok: false, message });
 type Row = {
   id: string;
   name: string;
+  registered_name: string | null;
   species: "horse" | "cattle";
   sex: string;
   record_scope: string;
@@ -41,7 +42,7 @@ type Row = {
 /** Everything the ranch has recorded: its own animals and the ancestors kept for pedigrees. */
 async function loadKnown(db: Db, ranchId: string): Promise<Result<KnownAnimal[]>> {
   const base =
-    "id, name, species, sex, record_scope, registry, registration_number, birth_year, color, breed, sire_id, dam_id";
+    "id, name, registered_name, species, sex, record_scope, registry, registration_number, birth_year, color, breed, sire_id, dam_id";
   const query = (columns: string) =>
     db.from("animals").select(columns).eq("ranch_id", ranchId).is("archived_at", null).limit(5000);
   let { data, error } = await query(`${base}, height`);
@@ -52,6 +53,7 @@ async function loadKnown(db: Db, ranchId: string): Promise<Result<KnownAnimal[]>
     ((data ?? []) as unknown as Row[]).map((a) => ({
       id: a.id,
       name: a.name,
+      registeredName: a.registered_name,
       species: a.species,
       sex: a.sex,
       scope: a.record_scope === "inventory" ? ("inventory" as const) : ("pedigree_only" as const),
@@ -200,6 +202,7 @@ export async function commitPedigreeImport(
 export type SheetPedigree = {
   line: number;
   name: string;
+  registeredName?: string | null;
   species: "horse" | "cattle";
   sex: string;
   places: { path: string; name: string }[];
@@ -229,6 +232,7 @@ export async function planSheetPedigrees(
       known.push({
         id: `pending-${i}`,
         name: s.name,
+        registeredName: s.registeredName ?? null,
         species: s.species,
         sex: s.sex,
         scope: "inventory",

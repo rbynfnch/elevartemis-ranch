@@ -199,6 +199,7 @@ function pedigreeSubjects(plan: ImportPlan, pending: boolean, only?: Set<number>
     out.push({
       line: p.line,
       name: p.name,
+      registeredName: p.fields.registered_name ?? null,
       species: p.species,
       sex: p.fields.sex ?? "unknown",
       places: p.fields.pedigree,

@@ -86,6 +86,15 @@ describe("planPedigreeImport", () => {
     expect(p.rows[0].outcome).toBe("yours");
   });
 
+  it("recognises an animal by its registered name too", () => {
+    const cow = animal({ id: "cow", name: "Hereford Cow #408", registeredName: "Rosie", sex: "female" });
+    const p = plan("Triple Blue Rose,D,Rosie", [rose, cow]);
+    expect(p.links).toEqual([{ child: { id: "rose" }, role: "dam", parent: { id: "cow" } }]);
+    expect(p.rows[0].outcome).toBe("yours");
+    // And a pedigree can be for an animal named by its registered name.
+    expect(plan("Rosie,S,Someone", [cow]).rows[0].errors).toEqual([]);
+  });
+
   it("reuses a recorded ancestor and fills only its blanks", () => {
     const old = animal({ id: "old", name: "Old Sire", scope: "pedigree_only", color: "Bay" });
     const p = plan("Triple Blue Rose,S,Old Sire,AQHA,55,1999,Black,15.2hh", [rose, old]);

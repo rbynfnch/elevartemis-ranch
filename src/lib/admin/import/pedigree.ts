@@ -138,6 +138,8 @@ const regName = (r: string | null | undefined) => (r ?? "").toLowerCase().replac
 
 type Identity = {
   name: string;
+  /** The registered name, when the animal has one: a pedigree may use either name. */
+  registeredName?: string | null;
   registry: string | null;
   registrationNumber: string | null;
   birthYear: number | null;
@@ -155,7 +157,10 @@ function sameRegistration(a: Identity, b: Identity): boolean {
 
 /** Same name, and nothing that says they are different animals. */
 function compatible(a: Identity, b: Identity): boolean {
-  if (normaliseName(a.name) !== normaliseName(b.name)) return false;
+  // "Rosie" on a pedigree is the animal the ranch calls "Hereford Cow #408" if that is her registered name.
+  const mine = normaliseName(a.name);
+  const theirs = [b.name, b.registeredName].filter((n): n is string => Boolean(n)).map(normaliseName);
+  if (!theirs.includes(mine)) return false;
   const na = regNumber(a.registrationNumber);
   const nb = regNumber(b.registrationNumber);
   if (na && nb && !sameRegistration(a, b)) return false;
@@ -169,6 +174,7 @@ export type KnownAnimal = {
   name: string;
   species: "horse" | "cattle";
   sex: string;
+  registeredName?: string | null;
   /** "inventory" is one of the ranch's own animals; "pedigree_only" was recorded just for a pedigree. */
   scope: "inventory" | "pedigree_only";
   registry: string | null;
@@ -333,7 +339,7 @@ export function planPedigreeImport(csv: Csv, known: KnownAnimal[]): PedigreePlan
       const species = lower(row.species ?? "");
       const matches = owned.filter(
         (a) =>
-          normaliseName(a.name) === normaliseName(row.animal!) &&
+          [a.name, a.registeredName ?? ""].map(normaliseName).includes(normaliseName(row.animal!)) &&
           (!species || a.species === species || `${a.species}s` === species),
       );
       if (matches.length === 0) result.errors.push(`“${row.animal}” isn't one of your animals. Check the spelling.`);

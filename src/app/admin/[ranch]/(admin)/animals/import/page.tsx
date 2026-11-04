@@ -33,6 +33,16 @@ async function Import({ params }: { params: PageProps<"/admin/[ranch]/animals/im
         </p>
       </header>
       <ImportWizard />
+      <p className="text-sm text-ink-muted">
+        Filling in pedigrees instead?{" "}
+        <Link
+          href="/admin/animals/import/pedigree"
+          className="text-primary underline decoration-accent underline-offset-4"
+        >
+          Import pedigrees from a spreadsheet
+        </Link>
+        .
+      </p>
     </div>
   );
 }

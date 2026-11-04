@@ -123,7 +123,7 @@ const aliases: Record<string, ImportColumn> = {
   pictures: "photos",
 };
 
-function normaliseHeader(raw: string): string {
+export function normaliseHeader(raw: string): string {
   return raw
     .trim()
     .toLowerCase()

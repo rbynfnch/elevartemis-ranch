@@ -609,3 +609,11 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - `get_pedigree` allows up to six levels (migration `20260928000800`); the public page requests all of them.
 - Deeper generations use compact cards and tighter rows. Phones nest less deeply.
 - The admin pedigree builder still edits three levels by hand. Filling in generations 5-7 by hand would mean up to 126 entries, so that is left to the Pedigree Online import and the CSV import (to be designed).
+
+## Pedigree import: one row per ancestor
+
+- `/admin/animals/import/pedigree` fills in whole pedigrees from a CSV with one row per ancestor: `animal` (whose pedigree; blank repeats the row above), `position` (S, D, SS, SD… up to six letters; "sire's dam" also works), `name`, and optional `registry`, `registration_number`, `birth_year`, `color`, `height`, `breed`, `species`, `animal_id`.
+- Who is who: an ancestor named like one of the ranch's own animals is linked to it (never edited); otherwise an ancestor already recorded for pedigrees is reused (blanks filled only); otherwise a new pedigree-only ancestor is made once, however many times it appears (linebreeding), within a pedigree or across several. A matching registration number settles it; the same name with a different registration number or birth year is a different animal. Two possible matches are reported, never guessed.
+- Places already filled on an animal are kept and reported; a row gives the same animal two different parents across pedigrees is rejected; parents must precede their own parents in the pedigree (any row order is fine). "Unknown" or a blank name leaves a place empty.
+- Rows with problems are skipped and explained; the rest import. The preview shows every row's outcome before anything is saved. Limit: 500 rows per file.
+- The planner (`src/lib/admin/import/pedigree.ts`) is pure and tested; `pedigree-service.ts` does the database work. It works before the height migration is applied.

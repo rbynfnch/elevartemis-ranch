@@ -283,11 +283,7 @@ function Preview({
                           <span
                             className={clsx(
                               "mr-2 inline-block px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-on-primary",
-                              r.outcome === "new"
-                                ? "bg-primary"
-                                : r.outcome === "already"
-                                  ? "bg-ink-muted"
-                                  : "bg-ink",
+                              r.outcome === "new" ? "bg-primary" : r.outcome === "already" ? "bg-ink-muted" : "bg-ink",
                             )}
                           >
                             {outcomeText[r.outcome]}

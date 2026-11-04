@@ -143,6 +143,8 @@ export function PostEditor({
             value={f.body}
             onChange={(body) => set("body", body)}
             minHeight="20rem"
+            allowPhotos
+            allowHtml
           />
         </div>
       </div>

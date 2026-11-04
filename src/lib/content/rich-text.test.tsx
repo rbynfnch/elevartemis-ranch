@@ -44,3 +44,28 @@ describe("RichText", () => {
     expect(html).not.toContain("<script>");
   });
 });
+
+describe("RichText photos", () => {
+  const id = "00000000-0000-4000-8000-000000000001";
+  const doc = {
+    type: "doc",
+    content: [
+      { type: "paragraph", content: [{ type: "text", text: "Before" }] },
+      { type: "image", attrs: { mediaId: id, caption: "Branding day", layout: "wide" } },
+    ],
+  };
+  const photos = { [id]: { src: "https://x/a.webp", srcSet: "", alt: "A calf", focalX: 0.5, focalY: 0.5 } };
+  it("shows a photo it was given, with its caption", () => {
+    const html = renderToStaticMarkup(<RichText doc={doc} photos={photos} />);
+    expect(html).toContain("<figure");
+    expect(html).toContain('src="https://x/a.webp"');
+    expect(html).toContain("<figcaption");
+    expect(html).toContain("Branding day");
+    expect(html).toContain('alt="A calf"');
+  });
+  it("skips a photo it wasn't given or that isn't a real id", () => {
+    expect(renderToStaticMarkup(<RichText doc={doc} />)).not.toContain("<figure");
+    const bad = { type: "doc", content: [{ type: "image", attrs: { mediaId: "../x" } }] };
+    expect(renderToStaticMarkup(<RichText doc={bad} photos={photos} />)).toBe("<div></div>");
+  });
+});

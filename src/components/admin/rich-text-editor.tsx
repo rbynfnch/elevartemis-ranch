@@ -1,10 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useEditor, EditorContent, type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import clsx from "clsx";
 import { richTextIsEmpty } from "@/lib/content/empty";
 import { safeHref } from "@/lib/content/rich-text";
+import { PhotoNode } from "./photo-node";
+import { PhotoChooser } from "@/components/admin/banners/photo-chooser";
+
+/** Puts each block on its own line so the code is easy to read. */
+function prettyHtml(html: string): string {
+  return html.replace(/(<\/(?:p|h2|h3|ul|ol|li|blockquote|figure)>)/g, "$1\n").trim();
+}
 
 function ToolButton({
   label,
@@ -51,6 +59,8 @@ export function RichTextEditor({
   onChange,
   minHeight = "12rem",
   hint,
+  allowPhotos = false,
+  allowHtml = false,
 }: {
   id: string;
   label: string;
@@ -59,7 +69,12 @@ export function RichTextEditor({
   onChange: (doc: JSONContent | null) => void;
   minHeight?: string;
   hint?: string;
+  /** Lets photos from the Photo Library be placed inside the text. */
+  allowPhotos?: boolean;
+  /** Adds an HTML view for people who like to see and edit the code. */
+  allowHtml?: boolean;
 }) {
+  const [htmlText, setHtmlText] = useState<string | null>(null);
   const editor = useEditor({
     immediatelyRender: false, // the page is first built on the server
     extensions: [
@@ -73,6 +88,7 @@ export function RichTextEditor({
         underline: false,
         link: { openOnClick: false, autolink: true, protocols: ["https", "http", "mailto", "tel"] },
       }),
+      ...(allowPhotos || allowHtml ? [PhotoNode] : []),
     ],
     content: richTextIsEmpty(value) ? "" : (value as JSONContent),
     editorProps: {
@@ -164,6 +180,26 @@ export function RichTextEditor({
         <ToolButton label="Link" active={editor.isActive("link")} onClick={setLink}>
           Link
         </ToolButton>
+        {allowPhotos ? (
+          <PhotoChooser
+            label="Photo"
+            onChoose={(p) =>
+              editor
+                .chain()
+                .focus()
+                .insertContent({
+                  type: "image",
+                  attrs: { mediaId: p.id, thumb: p.thumb, caption: "", alt: "", layout: "normal" },
+                })
+                .run()
+            }
+            trigger={(open) => (
+              <ToolButton label="Add a photo from your Photo Library" onClick={open}>
+                Photo
+              </ToolButton>
+            )}
+          />
+        ) : null}
         <span className="mx-1 hidden w-px self-stretch bg-rule sm:block" aria-hidden="true" />
         <ToolButton label="Undo" disabled={!editor.can().undo()} onClick={() => chain().undo().run()}>
           ↶
@@ -171,8 +207,116 @@ export function RichTextEditor({
         <ToolButton label="Redo" disabled={!editor.can().redo()} onClick={() => chain().redo().run()}>
           ↷
         </ToolButton>
+        {allowHtml ? (
+          <ToolButton
+            label={htmlText === null ? "Edit as HTML code" : "Back to the writing view"}
+            active={htmlText !== null}
+            onClick={() => {
+              if (htmlText === null) setHtmlText(prettyHtml(editor.getHTML()));
+              else setHtmlText(null);
+            }}
+          >
+            {"</>"}
+          </ToolButton>
+        ) : null}
       </div>
-      <EditorContent editor={editor} className="px-4 py-3" />
+      {allowPhotos && editor.isActive("image") ? (
+        <div
+          role="toolbar"
+          aria-label="Photo options"
+          className="flex flex-wrap items-center gap-2 border-b border-rule bg-accent/10 px-3 py-2 text-sm"
+        >
+          <span className="font-semibold">Photo</span>
+          <button
+            type="button"
+            className="min-h-11 border border-rule bg-white px-3"
+            onClick={() => {
+              const now = (editor.getAttributes("image").caption as string) ?? "";
+              const typed = window.prompt("A caption for this photo (leave empty for none)", now);
+              if (typed !== null)
+                chain()
+                  .updateAttributes("image", { caption: typed.trim().slice(0, 200) })
+                  .run();
+            }}
+          >
+            Caption
+          </button>
+          <button
+            type="button"
+            className="min-h-11 border border-rule bg-white px-3"
+            onClick={() => {
+              const now = (editor.getAttributes("image").alt as string) ?? "";
+              const typed = window.prompt("Describe the photo for people who can't see it (optional)", now);
+              if (typed !== null)
+                chain()
+                  .updateAttributes("image", { alt: typed.trim().slice(0, 200) })
+                  .run();
+            }}
+          >
+            Describe
+          </button>
+          <button
+            type="button"
+            className="min-h-11 border border-rule bg-white px-3"
+            onClick={() =>
+              chain()
+                .updateAttributes("image", {
+                  layout: editor.getAttributes("image").layout === "wide" ? "normal" : "wide",
+                })
+                .run()
+            }
+          >
+            {editor.getAttributes("image").layout === "wide" ? "Make it narrower" : "Make it wider"}
+          </button>
+          <button
+            type="button"
+            className="min-h-11 border border-rule bg-white px-3"
+            onClick={() => chain().deleteSelection().run()}
+          >
+            Remove photo
+          </button>
+        </div>
+      ) : null}
+      {htmlText !== null ? (
+        <div className="space-y-2 px-4 py-3">
+          <label htmlFor={`${id}-html`} className="block text-sm font-semibold">
+            HTML code
+          </label>
+          <textarea
+            id={`${id}-html`}
+            value={htmlText}
+            onChange={(e) => setHtmlText(e.target.value)}
+            spellCheck={false}
+            className="block w-full border border-rule bg-white p-3 font-mono text-sm"
+            style={{ minHeight }}
+          />
+          <p className="text-sm text-ink-muted">
+            Only simple formatting is kept: paragraphs, headings, lists, quotes, bold, italic, links and photos.
+            Anything else (scripts, styles, embedded pages) is removed when you apply.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="min-h-11 bg-primary px-4 font-semibold text-on-primary"
+              onClick={() => {
+                editor.commands.setContent(htmlText, { emitUpdate: true });
+                setHtmlText(null);
+              }}
+            >
+              Apply and go back
+            </button>
+            <button
+              type="button"
+              className="min-h-11 border border-rule bg-white px-4"
+              onClick={() => setHtmlText(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <EditorContent editor={editor} className="px-4 py-3" />
+      )}
       {hint ? <p className="border-t border-rule px-4 py-2 text-sm text-ink-muted">{hint}</p> : null}
     </div>
   );

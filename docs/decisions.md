@@ -733,3 +733,8 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Stories on animal pages
 
 - An animal tagged in published posts (the "Animals in this story" field) shows "Stories featuring <name>" at the bottom of its page: up to six cards, newest first, with a link to all stories. Nothing shows when there are none. It applies to every animal, horses and cattle.
+
+## Photos inside stories, and an HTML view
+
+- The text editor can place photos from the Photo Library anywhere in a story (a **Photo** button in the toolbar). A photo is stored as an `image` node that names the photo by id, so the website looks the photo up (responsive sizes, only photos of this ranch) and a pasted web address can never put anything else on the page. Each photo can have a caption, a description for people who can't see it, and a wider layout. This was chosen over shortcodes because it is visible while writing, can be dragged, and cannot be mistyped. Currently on for blog posts.
+- An **HTML view** (`</>` button) shows the story as simple code and applies edits through the same editor rules: only paragraphs, headings, lists, quotes, bold, italic, links and photos survive; scripts, styles and embedded pages are dropped. So the code view cannot be used to break the page or the site's safety.

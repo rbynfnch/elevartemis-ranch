@@ -97,7 +97,7 @@ async function Page({ params }: { params: Params }) {
         />
       ) : null}
 
-      <RichText doc={post.body} className="prose-ranch mx-auto mt-10 max-w-[44rem]" />
+      <RichText doc={post.body} photos={post.bodyPhotos} className="prose-ranch mx-auto mt-10 max-w-[44rem]" />
 
       {post.photos.length > 0 ? (
         <ul className="mx-auto mt-12 grid max-w-[72rem] gap-4 sm:grid-cols-2">

@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/tags";
 import { createPublicClient } from "@/lib/supabase/public";
 import { cardFromRow, type ListingCard } from "@/lib/animals/cards";
+import { collectPhotoIds } from "@/lib/content/photos";
 import { photoFromMedia, type PageBanner } from "./get-banner";
 
 export type PostCard = {
@@ -20,6 +21,8 @@ export type PostPage = PostCard & {
   metaDescription: string | null;
   focusPhrase: string | null;
   photos: NonNullable<PageBanner["photo"]>[];
+  /** The photos placed inside the story text, by id. */
+  bodyPhotos: Record<string, PageBanner["photo"]>;
   animals: ListingCard[];
   previous: { title: string; slug: string } | null;
   next: { title: string; slug: string } | null;
@@ -138,8 +141,9 @@ export async function getPost(ranchId: string, slug: string, postSlug: string): 
       .maybeSingle(),
   ]);
 
-  const mediaIds = [post.featured_media_id, ...(media.data ?? []).map((m) => m.media_id)].filter((id): id is string =>
-    Boolean(id),
+  const inText = collectPhotoIds(post.body);
+  const mediaIds = [post.featured_media_id, ...(media.data ?? []).map((m) => m.media_id), ...inText].filter(
+    (id): id is string => Boolean(id),
   );
   const photos = await photosFor(db, ranchId, mediaIds);
   const animalIds = (mentioned.data ?? []).map((a) => a.animal_id);
@@ -162,6 +166,7 @@ export async function getPost(ranchId: string, slug: string, postSlug: string): 
     photos: (media.data ?? [])
       .map((m) => photos.get(m.media_id))
       .filter((p): p is NonNullable<PageBanner["photo"]> => Boolean(p)),
+    bodyPhotos: Object.fromEntries(inText.map((id) => [id, photos.get(id) ?? null])),
     animals: (cards ?? []).map(cardFromRow),
     previous: older.data ? { title: older.data.title, slug: older.data.slug } : null,
     next: newer.data ? { title: newer.data.title, slug: newer.data.slug } : null,

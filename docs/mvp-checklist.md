@@ -35,8 +35,8 @@ Where we are against "a rancher can get a finished, good-looking website without
 
 ## Should have (soon after launch)
 
-- [ ] Gallery page and its admin screen
-- [ ] FAQs page and its admin screen
+- [x] Gallery page and its admin screen
+- [x] FAQs page and its admin screen
 - [ ] A screen to choose which categories and pages a ranch offers (today only a database change)
 - [ ] Owner guide: short help text in the admin, a first-login checklist, a short video
 - [ ] A second ranch set up from scratch with the provisioning steps, to prove the template really is reusable

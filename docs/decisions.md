@@ -718,3 +718,9 @@ commit. Photo storage (upload/download) is verified manually (see README).
 
 - **Search Engines** (admin): for the home page and every other page, a search title, search description (with length guidance), a focus phrase (checked against the title and description) and a picture for sharing. Blank means "use the page's own wording".
 - **Launch** (admin): a checklist of what makes a ranch ready (a tagline, an animal on the site and no sample animals are required; photos, homepage slide, About page, phone, message email, home search text and a first post are recommended) and a **Go live** button, available to the ranch's owner once the required items are done. Going live sets the ranch's status to live and turns indexing on (it uses the server's service client because owners cannot write those settings directly, and never un-suspends a paused ranch). Until then the site shows "Preview site" and `robots.txt` keeps search engines out.
+
+## FAQ and Gallery
+
+- **FAQs** (admin): questions with rich-text answers, optional groups, reorder, show or hide; public `/faq` as grouped accordions with FAQPage structured data (answers as plain text). The menu item appears when at least one question is shown.
+- **Gallery** (admin): choose photos from the library and order them; public `/gallery` is a grid with a larger viewer (arrows, keys, Close). The menu item appears when the gallery has photos. Both have banners under Page Banners (migration `20260928001700`).
+- The admin "being built" placeholder route is gone: every item in the admin menu is now a real screen.

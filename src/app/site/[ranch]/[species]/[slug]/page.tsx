@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { getSiteSettings } from "@/lib/site/get-site";
@@ -19,6 +20,8 @@ import { ranchCategories } from "@/lib/site/navigation";
 import { ListingPageView } from "@/components/animals/listing-page";
 import { Crumbs } from "@/components/animals/listing";
 import { getOffspringFor, getPedigreeFor } from "@/lib/animals/get-relations";
+import { getPostsForAnimal } from "@/lib/site/get-posts";
+import { PostCardView } from "@/components/site/post-card";
 import { PedigreeTree } from "@/components/animals/pedigree-tree";
 import { MobileActionBar } from "@/components/animals/mobile-action-bar";
 import { JsonLd } from "@/components/site/json-ld";
@@ -96,9 +99,10 @@ async function Portfolio({ params }: { params: Params }) {
   if (lookup.kind === "moved") permanentRedirect(`/${path}/${lookup.slug}`);
   if (lookup.kind === "missing") notFound();
   const a = lookup.animal;
-  const [pedigree, offspring] = await Promise.all([
+  const [pedigree, offspring, stories] = await Promise.all([
     getPedigreeFor(a.id, site.slug),
     getOffspringFor(a.id, site.slug, a.species),
+    getPostsForAnimal(site.ranchId, site.slug, a.id),
   ]);
 
   const category = site.categories.find((c) => c.id === a.categoryId)?.label_singular ?? null;
@@ -328,6 +332,29 @@ async function Portfolio({ params }: { params: Params }) {
         {breeding?.hasDetails ? <BreedingBlock display={breeding} species={a.species} /> : null}
 
         {performance ? <PerformanceBlock display={performance} /> : null}
+
+        {stories.length > 0 ? (
+          <section aria-labelledby="stories" id="stories" className="space-y-6 border-t border-rule pt-8">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 id="stories" className="font-display text-2xl">
+                Stories featuring {a.name}
+              </h2>
+              <Link
+                href="/on-the-ranch"
+                className="text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-primary no-underline decoration-accent decoration-2 underline-offset-8 hover:underline"
+              >
+                All {site.blogLabel ?? "Happening on the Ranch"}
+              </Link>
+            </div>
+            <ul className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+              {stories.map((p) => (
+                <li key={p.id}>
+                  <PostCardView post={p} brandMark={site.brand.mark} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </article>
   );

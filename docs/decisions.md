@@ -729,3 +729,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 
 - **Team** (admin, owners only): list who can sign in with their roles, invite someone by email (an editor edits content; an owner also manages the team and takes the site live), change a role, remove someone. A ranch always keeps at least one owner and nobody removes or demotes themselves. Email addresses live in the sign-in system, so this uses the service client; every call is limited to the one ranch and reached only through owner-checked actions.
 - **Brand** (admin, owners edit): the name shown in the header, a subtitle, a short mark, one of four ready-made color looks (High Plains, Big Sky, Prairie Gold, Red Rock) and one of the two font pairs. Owners never enter raw colors; each look is tested to meet WCAG AA contrast. A ranch whose look was set up by us shows as custom until the owner chooses a ready-made one. Saving uses the service client after confirming the owner (branding is not directly writable by owners).
+
+## Stories on animal pages
+
+- An animal tagged in published posts (the "Animals in this story" field) shows "Stories featuring <name>" at the bottom of its page: up to six cards, newest first, with a link to all stories. Nothing shows when there are none. It applies to every animal, horses and cattle.

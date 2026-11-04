@@ -167,3 +167,48 @@ export async function getPost(ranchId: string, slug: string, postSlug: string): 
     next: newer.data ? { title: newer.data.title, slug: newer.data.slug } : null,
   };
 }
+
+/** Published posts that mention an animal, newest first (for "Stories featuring…" on its page). */
+export async function getPostsForAnimal(ranchId: string, slug: string, animalId: string): Promise<PostCard[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(cacheTags.ranch(slug), cacheTags.posts(slug));
+  const db = createPublicClient();
+  const { data: links, error } = await db.from("post_animals").select("post_id").eq("animal_id", animalId).limit(50);
+  // Before the blog has any posts, or on an older database, there is simply nothing to show.
+  if (error || !links?.length) return [];
+  const { data: posts } = await db
+    .from("posts")
+    .select("id, title, slug, excerpt, published_at, category_id, featured_media_id")
+    .eq("ranch_id", ranchId)
+    .eq("status", "published")
+    .is("archived_at", null)
+    .in(
+      "id",
+      links.map((l) => l.post_id),
+    )
+    .order("published_at", { ascending: false })
+    .limit(6);
+  if (!posts?.length) return [];
+  const [cats, photos] = await Promise.all([
+    db.from("post_categories").select("id, name, slug").eq("ranch_id", ranchId),
+    photosFor(
+      db,
+      ranchId,
+      posts.map((p) => p.featured_media_id).filter((id): id is string => Boolean(id)),
+    ),
+  ]);
+  const category = new Map((cats.data ?? []).map((c) => [c.id, c]));
+  return posts.map((p) => {
+    const c = p.category_id ? category.get(p.category_id) : null;
+    return {
+      id: p.id,
+      title: p.title,
+      slug: p.slug,
+      excerpt: p.excerpt,
+      publishedAt: p.published_at ?? "",
+      category: c ? { name: c.name, slug: c.slug } : null,
+      photo: p.featured_media_id ? (photos.get(p.featured_media_id) ?? null) : null,
+    };
+  });
+}

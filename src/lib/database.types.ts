@@ -843,6 +843,56 @@ export type Database = {
           },
         ];
       };
+      inquiries: {
+        Row: {
+          animal_id: string | null;
+          animal_name: string | null;
+          created_at: string;
+          email: string;
+          emailed_at: string | null;
+          id: string;
+          message: string;
+          name: string;
+          ranch_id: string;
+          status: string;
+          topic: string | null;
+        };
+        Insert: {
+          animal_id?: string | null;
+          animal_name?: string | null;
+          created_at?: string;
+          email: string;
+          emailed_at?: string | null;
+          id?: string;
+          message: string;
+          name: string;
+          ranch_id: string;
+          status?: string;
+          topic?: string | null;
+        };
+        Update: {
+          animal_id?: string | null;
+          animal_name?: string | null;
+          created_at?: string;
+          email?: string;
+          emailed_at?: string | null;
+          id?: string;
+          message?: string;
+          name?: string;
+          ranch_id?: string;
+          status?: string;
+          topic?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inquiries_ranch_id_fkey";
+            columns: ["ranch_id"];
+            isOneToOne: false;
+            referencedRelation: "ranches";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       media: {
         Row: {
           alt_text: string | null;

@@ -18,6 +18,16 @@ import { parseVideoUrl } from "@/lib/animals/video";
 
 export const MAX_ROWS = 500;
 
+/** Where the pedigree columns point: sire, dam and the four grandparents (deeper pedigrees have their own import). */
+export const pedigreePlaces = [
+  { column: "sire", path: "S" },
+  { column: "dam", path: "D" },
+  { column: "sire_sire", path: "SS" },
+  { column: "sire_dam", path: "SD" },
+  { column: "dam_sire", path: "DS" },
+  { column: "dam_dam", path: "DD" },
+] as const;
+
 export const importColumns = [
   "id",
   "name",
@@ -30,6 +40,12 @@ export const importColumns = [
   "registered_name",
   "registry",
   "registration_number",
+  "sire",
+  "dam",
+  "sire_sire",
+  "sire_dam",
+  "dam_sire",
+  "dam_dam",
   "birth_date",
   "tagline",
   "description",
@@ -62,6 +78,12 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     registered_name: "Example Registered Name",
     registry: "AQHA",
     registration_number: "1234567",
+    sire: "Example Sire",
+    dam: "Example Dam",
+    sire_sire: "Example Grandsire",
+    sire_dam: "",
+    dam_sire: "",
+    dam_dam: "Example Granddam",
     birth_date: "2021-04-12",
     tagline: "A short line under the name",
     description: "A sentence or two about this horse.",
@@ -87,6 +109,12 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     registered_name: "",
     registry: "",
     registration_number: "",
+    sire: "",
+    dam: "",
+    sire_sire: "",
+    sire_dam: "",
+    dam_sire: "",
+    dam_dam: "",
     birth_date: "2022",
     tagline: "",
     description: "",
@@ -114,6 +142,12 @@ const aliases: Record<string, ImportColumn> = {
   reg_number: "registration_number",
   registration: "registration_number",
   registration_no: "registration_number",
+  father: "sire",
+  mother: "dam",
+  paternal_grandsire: "sire_sire",
+  paternal_granddam: "sire_dam",
+  maternal_grandsire: "dam_sire",
+  maternal_granddam: "dam_dam",
   dob: "birth_date",
   birthdate: "birth_date",
   birth: "birth_date",
@@ -365,6 +399,8 @@ export type PlannedAnimal = {
     sale?: { status: "none" | "available" | "pending" | "sold"; priceCents: number | null };
     facts?: { label: string; value: string }[];
     photoIds?: string[];
+    /** Sire, dam and grandparents by name, as the sheet gave them. */
+    pedigree?: { path: string; name: string }[];
   };
   warnings: string[];
 };
@@ -597,6 +633,16 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
       if ("error" in parsed) fail("quick_facts", parsed.error);
       else if (parsed.facts.length) fields.facts = parsed.facts;
     }
+
+    // ── Pedigree: names only; who is who is settled when the pedigree is filled in ──
+    const places: { path: string; name: string }[] = [];
+    for (const { column, path } of pedigreePlaces) {
+      const v = cell(column);
+      if (!v) continue;
+      if (v.length > 120) fail(column, "use 120 characters or fewer.");
+      else places.push({ path, name: v });
+    }
+    if (places.length) fields.pedigree = places;
 
     // ── Photos ──────────────────────────────────────────────────────────────
     const photosCell = cell("photos");

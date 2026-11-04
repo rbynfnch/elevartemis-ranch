@@ -191,9 +191,84 @@ export async function commitPedigreeImport(
 ): Promise<Result<PedigreeImportResult>> {
   const planned = await planFrom(db, ranchId, csvText);
   if (!planned.ok) return planned;
-  const plan = planned.data;
-  if (plan.fileErrors.length) return fail(plan.fileErrors[0]);
+  if (planned.data.fileErrors.length) return fail(planned.data.fileErrors[0]);
+  return applyPedigreePlan(db, ranchId, planned.data);
+}
 
+// ─── Pedigrees given as columns on the animals sheet (sire, dam, grandparents) ──
+/** One animal from the animals sheet and the places it names. `line` is its row in that sheet. */
+export type SheetPedigree = {
+  line: number;
+  name: string;
+  species: "horse" | "cattle";
+  sex: string;
+  places: { path: string; name: string }[];
+  /** True when the animal doesn't exist yet (a preview before the import). */
+  pending: boolean;
+};
+
+export type SheetPedigreeSummary = {
+  rows: PedigreeRowResult[];
+  newAncestors: number;
+  yours: number;
+  recorded: number;
+  withProblems: number;
+};
+
+/** Plans those pedigrees. Rows are reported against the animals sheet's own line numbers. */
+export async function planSheetPedigrees(
+  db: Db,
+  ranchId: string,
+  subjects: SheetPedigree[],
+): Promise<Result<{ plan: PedigreePlan; summary: SheetPedigreeSummary }>> {
+  const loaded = await loadKnown(db, ranchId);
+  if (!loaded.ok) return loaded;
+  const known = [...loaded.data];
+  subjects.forEach((s, i) => {
+    if (s.pending)
+      known.push({
+        id: `pending-${i}`,
+        name: s.name,
+        species: s.species,
+        sex: s.sex,
+        scope: "inventory",
+        registry: null,
+        registrationNumber: null,
+        birthYear: null,
+        color: null,
+        height: null,
+        breed: null,
+        sireId: null,
+        damId: null,
+      });
+  });
+  const lines: number[] = [];
+  const rows: string[][] = [];
+  for (const s of subjects)
+    for (const p of s.places) {
+      rows.push([s.name, s.species, p.path, p.name]);
+      lines.push(s.line);
+    }
+  const plan = planPedigreeImport({ header: ["animal", "species", "position", "name"], rows }, known);
+  plan.rows.forEach((r) => (r.line = lines[r.line - 2] ?? r.line));
+  const count = (o: PedigreeRowResult["outcome"]) => plan.rows.filter((r) => r.outcome === o).length;
+  return ok({
+    plan,
+    summary: {
+      rows: plan.rows,
+      newAncestors: plan.newAncestors.length,
+      yours: count("yours"),
+      recorded: count("recorded"),
+      withProblems: plan.rows.filter((r) => r.errors.length > 0).length,
+    },
+  });
+}
+
+export async function applyPedigreePlan(
+  db: Db,
+  ranchId: string,
+  plan: PedigreePlan,
+): Promise<Result<PedigreeImportResult>> {
   const problems: string[] = [];
   const names = new Map(plan.newAncestors.map((a) => [a.key, a.name]));
 

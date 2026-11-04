@@ -21,6 +21,10 @@ const columnHelp: [string, string][] = [
   ["sex", "male, female, gelding or steer. Worked out from the category when it can be."],
   ["breed", "Added to your breed list if it's new."],
   ["color, registered_name, registry, registration_number", "Plain text."],
+  [
+    "sire, dam, sire_sire, sire_dam, dam_sire, dam_dam",
+    "Names only: the sire, dam and the four grandparents. A name that is one of your animals is linked to it; anyone else is recorded just for the pedigree, once. For deeper pedigrees (up to seven generations) use the pedigree import.",
+  ],
   ["height", "Like 15.3hh. Shown under the name on the animal's page."],
   ["tagline", "One short line under the name, up to 160 characters."],
   ["highlights", "Up to 4 short phrases (30 characters each), separated by ;  like Barrel racer; Gentle with kids."],
@@ -264,6 +268,23 @@ function Preview({
               <strong>Breeds you removed earlier, coming back:</strong> {preview.restoredBreeds.join(", ")}
             </p>
           ) : null}
+          {preview.pedigree ? (
+            <p className="text-sm">
+              <strong>Pedigrees:</strong> {preview.pedigree.newAncestors} new ancestors, {preview.pedigree.yours} of
+              your animals linked, {preview.pedigree.recorded} already recorded
+              {preview.pedigree.withProblems ? (
+                <span className="text-[#8a2b1d]"> and {preview.pedigree.withProblems} with problems (skipped)</span>
+              ) : null}
+              .
+              {preview.pedigree.rows
+                .filter((r) => r.errors.length || r.warnings.length)
+                .map((r) => (
+                  <span key={`${r.line}-${r.position}`} className="mt-1 block text-[#7a5a14]">
+                    Row {r.line}, {r.subject} ({r.label.toLowerCase()}): {[...r.errors, ...r.warnings].join(" ")}
+                  </span>
+                ))}
+            </p>
+          ) : null}
           {preview.missingPhotos.length ? (
             <p className="text-sm text-[#7a5a14]">
               <strong>Photos not in your Photo Library:</strong> {preview.missingPhotos.join(", ")}. The animals import
@@ -356,6 +377,19 @@ function Done({ result, onAgain }: { result: ImportResult; onAgain: () => void }
         {result.created} added, {result.updated} updated
         {result.failed ? `, ${result.failed} could not be saved` : ""}.
       </FormMessage>
+      {result.pedigree ? (
+        <FormMessage tone={result.pedigree.problems.length ? "error" : "success"}>
+          Pedigrees: {result.pedigree.created} ancestors added, {result.pedigree.linked} sire and dam links made
+          {result.pedigree.problems.length ? `, ${result.pedigree.problems.length} problems` : ""}.
+        </FormMessage>
+      ) : null}
+      {result.pedigree?.problems.length ? (
+        <ul className="space-y-1 text-sm text-[#8a2b1d]">
+          {result.pedigree.problems.map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+        </ul>
+      ) : null}
       {problems.length ? (
         <ul className="space-y-2 text-sm">
           {problems.map((o) => (

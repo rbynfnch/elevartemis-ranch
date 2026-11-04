@@ -114,6 +114,16 @@ describe("planImport", () => {
     );
     expect(bad.results[0].errors).toHaveLength(3);
   });
+  it("reads sire, dam and grandparent names into pedigree places", () => {
+    const r = plan("name,species,category,sire,dam,sire_sire,dam_dam\nStar,horse,Mare,Big Red,Gal,Old Red,Old Gal");
+    expect(r.results[0].errors).toEqual([]);
+    expect(r.results[0].planned?.fields.pedigree).toEqual([
+      { path: "S", name: "Big Red" },
+      { path: "D", name: "Gal" },
+      { path: "SS", name: "Old Red" },
+      { path: "DD", name: "Old Gal" },
+    ]);
+  });
   it("updates an existing animal by id or by unique name, and leaves blank cells alone", () => {
     const byName = plan("name,category,breed,color\nblue star,Mare,Appaloosa,\n").results[0].planned!;
     expect(byName).toMatchObject({ action: "update", existingId: "a-1" });
@@ -187,6 +197,12 @@ describe("the downloadable template", () => {
       "registered_name",
       "registry",
       "registration_number",
+      "sire",
+      "dam",
+      "sire_sire",
+      "sire_dam",
+      "dam_sire",
+      "dam_dam",
       "birth_date",
       "tagline",
       "description",

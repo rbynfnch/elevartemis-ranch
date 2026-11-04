@@ -12,6 +12,13 @@ import type { Db, Result } from "@/lib/admin/animals/service";
 import { attachExistingPhotos } from "@/lib/admin/library/service";
 import { loadRanchCategories } from "@/lib/admin/animals/categories";
 import { parseCsv, toCsv } from "./csv";
+import {
+  applyPedigreePlan,
+  planSheetPedigrees,
+  type PedigreeImportResult,
+  type SheetPedigree,
+  type SheetPedigreeSummary,
+} from "./pedigree-service";
 import { importColumns, planImport, type ImportContext, type ImportPlan, type PlannedAnimal } from "./animals";
 
 const ok = <T>(data: T): Result<T> => ({ ok: true, data });
@@ -76,6 +83,8 @@ export type ImportPreview = {
   newBreeds: string[];
   restoredBreeds: string[];
   missingPhotos: string[];
+  /** What the sire, dam and grandparent columns will do; null when the sheet has none. */
+  pedigree: SheetPedigreeSummary | null;
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -137,6 +146,13 @@ export async function previewImport(
     }
   }
 
+  const subjects = pedigreeSubjects(plan, true);
+  let pedigree: SheetPedigreeSummary | null = null;
+  if (subjects.length) {
+    const planned = await planSheetPedigrees(db, ranchId, subjects);
+    if (planned.ok) pedigree = planned.data.summary;
+  }
+
   const rows: PreviewRow[] = plan.results.map((r) => ({
     line: r.line,
     name: r.name,
@@ -156,12 +172,38 @@ export async function previewImport(
     newBreeds,
     restoredBreeds,
     missingPhotos: plan.missingPhotos,
+    pedigree,
   });
 }
 
 // ─── Saving ──────────────────────────────────────────────────────────────────
 export type RowOutcome = { line: number; name: string; outcome: "created" | "updated" | "failed"; message?: string };
-export type ImportResult = { outcomes: RowOutcome[]; created: number; updated: number; failed: number };
+export type ImportResult = {
+  outcomes: RowOutcome[];
+  created: number;
+  updated: number;
+  failed: number;
+  /** What the pedigree columns did, when the sheet had any. */
+  pedigree: PedigreeImportResult | null;
+};
+
+/** The animals in a plan that name a sire, dam or grandparents. `pending` marks ones the import hasn't made yet. */
+function pedigreeSubjects(plan: ImportPlan, pending: boolean, only?: Set<number>): SheetPedigree[] {
+  const out: SheetPedigree[] = [];
+  for (const r of plan.results) {
+    const p = r.planned;
+    if (!p?.fields.pedigree?.length || (only && !only.has(p.line))) continue;
+    out.push({
+      line: p.line,
+      name: p.name,
+      species: p.species,
+      sex: p.fields.sex ?? "unknown",
+      places: p.fields.pedigree,
+      pending: pending && p.action === "create",
+    });
+  }
+  return out;
+}
 
 type Doc = NonNullable<ReturnType<typeof textToDoc>>;
 
@@ -319,7 +361,29 @@ export async function commitImport(
   for (const r of planned.data.results) {
     if (r.planned) outcomes.push(await applyRow(db, ranchId, r.planned));
   }
+
+  // Sire, dam and grandparents come last, once every animal in the sheet exists to be linked to.
+  let pedigree: PedigreeImportResult | null = null;
+  const saved = new Set(outcomes.filter((o) => o.outcome !== "failed").map((o) => o.line));
+  const subjects = pedigreeSubjects(planned.data, false, saved);
+  if (subjects.length) {
+    const pedigreePlan = await planSheetPedigrees(db, ranchId, subjects);
+    if (pedigreePlan.ok) {
+      const applied = await applyPedigreePlan(db, ranchId, pedigreePlan.data.plan);
+      pedigree = applied.ok
+        ? {
+            ...applied.data,
+            problems: [
+              ...pedigreePlan.data.summary.rows.flatMap((r) => r.errors.map((e) => `Row ${r.line}, ${r.name}: ${e}`)),
+              ...applied.data.problems,
+            ],
+          }
+        : { created: 0, linked: 0, filled: 0, problems: [applied.message] };
+    } else pedigree = { created: 0, linked: 0, filled: 0, problems: [pedigreePlan.message] };
+  }
+
   return ok({
+    pedigree,
     outcomes,
     created: outcomes.filter((o) => o.outcome === "created").length,
     updated: outcomes.filter((o) => o.outcome === "updated").length,
@@ -333,7 +397,7 @@ const birthText = (date: string | null, precision: string) =>
 
 /** Every animal as a spreadsheet in the same columns the importer reads, so an edited export can be uploaded back. */
 export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<string>> {
-  const [rows, categories, sales, facts, media, videos] = await Promise.all([
+  const [rows, categories, sales, facts, media, videos, family] = await Promise.all([
     db
       .from("animals")
       .select("*")
@@ -352,9 +416,11 @@ export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<
       .eq("ranch_id", ranchId)
       .order("sort_order"),
     db.from("animal_videos").select("animal_id, url, sort_order").eq("ranch_id", ranchId).order("sort_order"),
+    // Everyone recorded (the ranch's animals and outside ancestors) so sires and dams can be named.
+    db.from("animals").select("id, name, sire_id, dam_id").eq("ranch_id", ranchId).is("archived_at", null).limit(5000),
   ]);
   // (A missing videos table on an older database just means no video links in the export.)
-  for (const r of [rows, categories, sales, facts, media]) if (r.error) return fail(dbErrorMessage(r.error));
+  for (const r of [rows, categories, sales, facts, media, family]) if (r.error) return fail(dbErrorMessage(r.error));
 
   const categoryLabel = new Map((categories.data ?? []).map((c) => [c.id, c.label_singular]));
   const saleOf = new Map((sales.data ?? []).map((s) => [s.animal_id, s]));
@@ -369,7 +435,21 @@ export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<
     if (media_?.file_name) photosOf.set(m.animal_id, [...(photosOf.get(m.animal_id) ?? []), media_.file_name]);
   }
 
+  const person = new Map((family.data ?? []).map((p) => [p.id, p]));
+  const nameOf = (id: string | null | undefined) => (id ? (person.get(id)?.name ?? "") : "");
+  const parentsOf = (id: string | null) => (id ? person.get(id) : undefined);
+
   const lines = (rows.data ?? []).map((a) => {
+    const sire = parentsOf(a.sire_id);
+    const dam = parentsOf(a.dam_id);
+    const ped = {
+      sire: nameOf(a.sire_id),
+      dam: nameOf(a.dam_id),
+      sire_sire: nameOf(sire?.sire_id),
+      sire_dam: nameOf(sire?.dam_id),
+      dam_sire: nameOf(dam?.sire_id),
+      dam_dam: nameOf(dam?.dam_id),
+    };
     const sale = saleOf.get(a.id);
     const cell: Record<(typeof importColumns)[number], string> = {
       id: a.id,
@@ -383,6 +463,7 @@ export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<
       registered_name: a.registered_name ?? "",
       registry: a.registry ?? "",
       registration_number: a.registration_number ?? "",
+      ...ped,
       birth_date: birthText(a.birth_date, a.birth_precision),
       tagline: a.tagline ?? "",
       description: docToText(a.description as Json),

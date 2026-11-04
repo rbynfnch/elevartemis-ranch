@@ -622,3 +622,9 @@ commit. Photo storage (upload/download) is verified manually (see README).
 
 - The animals template, import and "Download my animals" export now include `height`, `tagline`, `highlights` (up to 4, separated by `;`) and `video_url`, matching the fields on the animal's page. Older exports without these columns still upload; blank cells never erase anything.
 - Pedigrees have their own template and import (see above); sire and dam are not columns of the animals sheet.
+
+## Animals CSV: sire, dam and grandparents
+
+- The animals template, import and export now have `sire`, `dam`, `sire_sire`, `sire_dam`, `dam_sire` and `dam_dam` (names only). They run through the same matching as the pedigree import: a name that is one of the ranch's own animals links to it (including one added in the same sheet), an already-recorded ancestor is reused, anything else is recorded once for pedigrees only. Ambiguous names and places already filled are reported, never guessed or overwritten.
+- Pedigrees are applied after every animal in the sheet is saved. A pedigree problem never fails the animal's own row; it is listed under "Pedigrees" in the preview and the result. Deeper generations (to seven) use the pedigree import.
+- "Download my animals" fills these columns from what is recorded, so an edited export can be uploaded back.

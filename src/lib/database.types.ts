@@ -929,6 +929,48 @@ export type Database = {
           },
         ];
       };
+      page_banners: {
+        Row: {
+          headline: string | null;
+          media_id: string | null;
+          page_key: string;
+          ranch_id: string;
+          subheadline: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          headline?: string | null;
+          media_id?: string | null;
+          page_key: string;
+          ranch_id: string;
+          subheadline?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          headline?: string | null;
+          media_id?: string | null;
+          page_key?: string;
+          ranch_id?: string;
+          subheadline?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "page_banners_ranch_id_fkey";
+            columns: ["ranch_id"];
+            isOneToOne: false;
+            referencedRelation: "ranches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "page_banners_ranch_id_media_id_fkey";
+            columns: ["ranch_id", "media_id"];
+            isOneToOne: false;
+            referencedRelation: "media";
+            referencedColumns: ["ranch_id", "id"];
+          },
+        ];
+      };
       pages: {
         Row: {
           key: string;

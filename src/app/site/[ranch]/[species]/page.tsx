@@ -7,7 +7,9 @@ import { ranchCategories } from "@/lib/site/navigation";
 import { getListing } from "@/lib/animals/listings";
 import { groupByCategory } from "@/lib/animals/listing-groups";
 import { speciesTerms, type Species } from "@/lib/domain/species";
-import { AnimalGrid, EmptyListing, ListingHeader } from "@/components/animals/listing";
+import { AnimalGrid, EmptyListing } from "@/components/animals/listing";
+import { PageHero } from "@/components/site/page-hero";
+import { getPageHero } from "@/lib/site/page-hero";
 
 type Params = PageProps<"/site/[ranch]/[species]">["params"];
 
@@ -54,6 +56,10 @@ async function Overview({ params }: { params: Params }) {
   const settings = site.speciesSettings?.[species];
   const animals = await getListing(site.ranchId, site.slug, { kind: "overview", species });
   const groups = groupByCategory(animals, ranchCategories(species, site.categories, settings));
+  const hero = await getPageHero(site, species === "horse" ? "horses" : "cattle", {
+    title: settings?.navLabel ?? terms.plural,
+    subtitle: settings?.breedHeading,
+  });
 
   // Pages beyond the categories, when the ranch offers them and they have animals.
   const counts = site.navCounts[species] ?? {};
@@ -81,57 +87,54 @@ async function Overview({ params }: { params: Params }) {
   ].filter((l) => l.show);
 
   return (
-    <div className="mx-auto max-w-[88rem] space-y-14 px-[var(--gutter)] py-10 lg:py-14">
-      <ListingHeader
-        eyebrow={settings?.breedHeading}
-        title={settings?.navLabel ?? terms.plural}
-        crumbs={[{ label: settings?.navLabel ?? terms.plural }]}
-      />
+    <>
+      <PageHero eyebrow={site.name} title={hero.title} subtitle={hero.subtitle} photo={hero.photo} />
+      <div className="mx-auto max-w-[88rem] space-y-14 px-[var(--gutter)] py-10 lg:py-14">
+        {groups.length === 0 ? (
+          <EmptyListing />
+        ) : (
+          groups.map(({ category, animals: list }) => (
+            <section key={category.id} aria-labelledby={`cat-${category.id}`} className="space-y-6">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <h2 id={`cat-${category.id}`} className="font-display text-2xl">
+                  <Link
+                    href={`/${terms.path}/${category.path_segment}`}
+                    className="no-underline hover:underline hover:decoration-accent hover:decoration-2 hover:underline-offset-8"
+                  >
+                    {category.label_plural}
+                  </Link>
+                </h2>
+                {list.length > PER_CATEGORY ? (
+                  <Link
+                    href={`/${terms.path}/${category.path_segment}`}
+                    className="text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-primary no-underline decoration-accent decoration-2 underline-offset-8 hover:underline"
+                  >
+                    View all {list.length}
+                  </Link>
+                ) : null}
+              </div>
+              <AnimalGrid animals={list.slice(0, PER_CATEGORY)} brandMark={site.brand.mark} />
+            </section>
+          ))
+        )}
 
-      {groups.length === 0 ? (
-        <EmptyListing />
-      ) : (
-        groups.map(({ category, animals: list }) => (
-          <section key={category.id} aria-labelledby={`cat-${category.id}`} className="space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 id={`cat-${category.id}`} className="font-display text-2xl">
-                <Link
-                  href={`/${terms.path}/${category.path_segment}`}
-                  className="no-underline hover:underline hover:decoration-accent hover:decoration-2 hover:underline-offset-8"
-                >
-                  {category.label_plural}
-                </Link>
-              </h2>
-              {list.length > PER_CATEGORY ? (
-                <Link
-                  href={`/${terms.path}/${category.path_segment}`}
-                  className="text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-primary no-underline decoration-accent decoration-2 underline-offset-8 hover:underline"
-                >
-                  View all {list.length}
-                </Link>
-              ) : null}
-            </div>
-            <AnimalGrid animals={list.slice(0, PER_CATEGORY)} brandMark={site.brand.mark} />
-          </section>
-        ))
-      )}
-
-      {more.length > 0 ? (
-        <nav aria-label={`More ${terms.plural.toLowerCase()}`} className="border-t border-rule pt-8">
-          <ul className="flex flex-wrap gap-x-8 gap-y-2">
-            {more.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className="inline-flex min-h-11 items-center text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-primary no-underline decoration-accent decoration-2 underline-offset-8 hover:underline"
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ) : null}
-    </div>
+        {more.length > 0 ? (
+          <nav aria-label={`More ${terms.plural.toLowerCase()}`} className="border-t border-rule pt-8">
+            <ul className="flex flex-wrap gap-x-8 gap-y-2">
+              {more.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    className="inline-flex min-h-11 items-center text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-primary no-underline decoration-accent decoration-2 underline-offset-8 hover:underline"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
+      </div>
+    </>
   );
 }

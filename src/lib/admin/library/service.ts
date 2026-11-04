@@ -46,7 +46,7 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
   if (!media.length) return ok([]);
 
   const ids = media.map((m) => m.id);
-  const [animalLinks, postLinks, featured, slides] = await Promise.all([
+  const [animalLinks, postLinks, featured, slides, banners] = await Promise.all([
     db
       .from("animal_media")
       .select("media_id, animals ( id, name, species )")
@@ -55,6 +55,8 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
     db.from("post_media").select("media_id").in("media_id", ids),
     db.from("posts").select("featured_media_id").eq("ranch_id", ranchId).in("featured_media_id", ids),
     db.from("hero_slides").select("media_id").eq("ranch_id", ranchId).in("media_id", ids),
+    // (Missing on a database that hasn't had the page banners update yet; then nothing is counted.)
+    db.from("page_banners").select("media_id").eq("ranch_id", ranchId).in("media_id", ids),
   ]);
   for (const r of [animalLinks, postLinks, featured, slides]) if (r.error) return fail(dbErrorMessage(r.error));
 
@@ -70,6 +72,7 @@ export async function listLibrary(db: Db, ranchId: string): Promise<Result<Libra
     ...(postLinks.data ?? []).map((r) => r.media_id),
     ...(featured.data ?? []).map((r) => r.featured_media_id).filter((id): id is string => Boolean(id)),
     ...(slides.data ?? []).map((r) => r.media_id).filter((id): id is string => Boolean(id)),
+    ...(banners.data ?? []).map((r) => r.media_id).filter((id): id is string => Boolean(id)),
     ...media.filter((m) => m.in_gallery).map((m) => m.id),
   ]);
 

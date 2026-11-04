@@ -15,6 +15,7 @@ export const adminSections = [
   { href: "/admin/gallery", label: "Gallery" },
   { href: "/admin/faqs", label: "FAQs" },
   { href: "/admin/about-page", label: "About Page" },
+  { href: "/admin/page-banners", label: "Page Banners" },
   { href: "/admin/ranch-info", label: "Ranch Info" },
   { href: "/admin/recently-deleted", label: "Recently Deleted" },
 ] as const;

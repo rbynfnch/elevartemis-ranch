@@ -664,3 +664,9 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Unsaved-changes prompt on the animal page
 
 - The edit form compares what it holds with what was last saved or loaded. When they differ it shows "You have unsaved changes" next to Save, and asks before the Previous and Next arrows, the arrow keys, any other link inside the site, or closing or reloading the tab would lose them. A successful Save becomes the new starting point. Photos and pedigree choices save immediately and are not part of this.
+
+## Page banners
+
+- Horses, Cattle, For Sale, About and Contact share one hero banner (`PageHero`): the owner's photo, headline and subheadline. Category pages (Bulls, Cows, Mares…) get the photograph only, and nothing if none is chosen. Owners set them under **Page Banners** in the admin, picking the photo from the Photo Library (migration `20260928001200`, table `page_banners`; one row per page, key `about`, `horses`, `cattle`, `for-sale`, `contact` or `category:<id>`).
+- A page with no banner (or a blank headline) uses its own title, the species heading or the ranch tagline as the subheadline, and one of the ranch's homepage photographs for the image, so a banner is never blank and never a stock picture. A photo used in a banner counts as "used elsewhere" in the Photo Library.
+- The Contact page itself is not built yet; its banner can already be set.

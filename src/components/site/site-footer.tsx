@@ -63,7 +63,12 @@ export function SiteFooter({ site, items }: { site: SiteSettings; items: NavItem
 
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-[88rem] flex-col gap-2 px-[var(--gutter)] py-5 text-sm opacity-70 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {site.name}</p>
+          <p>
+            © {site.name} ·{" "}
+            <Link href="/privacy" className="underline underline-offset-4">
+              Privacy
+            </Link>
+          </p>
           {site.profile.tagline ? <p className="font-serif italic">{site.profile.tagline}</p> : null}
           {place || site.profile.publicPhone ? (
             <p>

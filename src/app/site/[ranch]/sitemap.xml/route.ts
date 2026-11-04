@@ -13,7 +13,10 @@ export async function GET(request: Request, ctx: RouteContext<"/site/[ranch]/sit
   const host = new URL(request.url).host;
   const origin = `https://${site.primaryHostname ?? host}`;
 
-  const entries: SitemapEntry[] = [{ path: "/", priority: 1 }];
+  const entries: SitemapEntry[] = [
+    { path: "/", priority: 1 },
+    { path: "/privacy", priority: 0.2 },
+  ];
   const walk = (items: ReturnType<typeof buildNavigation>) => {
     for (const item of items) {
       entries.push({ path: item.href, priority: 0.7 });

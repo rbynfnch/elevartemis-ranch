@@ -17,20 +17,20 @@ Where we are against "a rancher can get a finished, good-looking website without
 ## Must have before a ranch can launch
 
 - [ ] ⚠ Apply every database update to staging and later to production (`npx supabase db push`, check `migration list` ends at 001500)
-- [ ] **Homepage editor**: the slides exist in the database but the admin screen is still a placeholder
-- [ ] **Ranch Info screen**: public phone, city and region, social links (the footer and Contact page read them; nothing can set them yet)
+- [x] **Homepage editor** (up to three slides with photo, headline, subheadline and button)
+- [x] **Ranch Info screen** (tagline, introduction, phone, place, links, blog name)
 - [ ] ⚠ **Email notifications** for the Contact form: a Resend account, a verified sending domain, `RESEND_API_KEY` and `INQUIRY_FROM_ADDRESS` in Vercel (never in chat)
-- [ ] **Brand setup for a new ranch**: wordmark, brand mark, colors and fonts are set only by us, with no screen or documented steps; add a logo image option
-- [ ] **Blog** ("Happening on the Ranch" / "Experiences", the ranch chooses the name): posts admin, public list and post pages, linked animals, banner
-- [ ] **Breeding Services page** ("Stallion Services" for horses, "Breeding" for cattle): the owner's data and the public view already exist; needs the public page, a Services banner, a menu item that appears only when an animal is offered, and an inquiry button that opens Contact with the animal chosen
-- [ ] **A proper text editor** (bold, links, lists, photos in text), needed first by the blog
-- [ ] **Search engines**: an owner-editable meta title and description for every page, a share image, `sitemap.xml`, `robots.txt`, canonical addresses, and a clear "go live" step that turns indexing on and removes the "Preview site" banner
+- [~] **Brand setup for a new ranch**: steps are written down in `docs/launch-guide.md`; a logo image upload and an owner-facing style picker are still to do
+- [x] **Blog** ("Happening on the Ranch" / "Experiences", the ranch chooses the name): posts admin, public list and post pages, linked animals, banner
+- [x] **Breeding Services page** ("Stallion Services" for horses, "Breeding" for cattle): the owner's data and the public view already exist; needs the public page, a Services banner, a menu item that appears only when an animal is offered, and an inquiry button that opens Contact with the animal chosen
+- [x] **A proper text editor** (bold, links, lists, photos in text), needed first by the blog
+- [x] **Search engines**: an owner-editable meta title and description for every page, a share image, `sitemap.xml`, `robots.txt`, canonical addresses, and a clear "go live" step that turns indexing on and removes the "Preview site" banner
 - [ ] **Real content and no sample content**: ranch photos, About text, animals; delete the sample animals and bracketed placeholder text
-- [ ] ⚠ **Custom domain**: connect the ranch's domain and confirm HTTPS (steps written down)
+- [~] ⚠ **Custom domain**: steps are written down in `docs/launch-guide.md`; connecting each ranch's domain is still a manual step
 - [ ] **Phone and accessibility pass** on every public page and admin screen (tap sizes, text contrast, keyboard use, screen-reader labels), plus a speed check
-- [ ] **Privacy policy and terms pages** linked from the footer (the Contact form collects names and emails)
+- [~] **Privacy page** done (linked from the footer, worded from what the site actually collects); a terms page is not needed until the site takes orders linked from the footer (the Contact form collects names and emails)
 - [ ] **People and access**: invite an editor or a second owner from the admin, not by hand in the database
-- [ ] **Backups and recovery**: confirm database backups, and write down how to restore
+- [~] **Backups and recovery**: how to check and restore is in `docs/launch-guide.md`; ⚠ confirm the project's backups are on
 - [ ] **Error tracking and simple analytics**, so a broken page or a quiet week is noticed
 
 ## Should have (soon after launch)

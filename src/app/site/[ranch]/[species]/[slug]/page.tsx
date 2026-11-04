@@ -20,6 +20,7 @@ import { ListingPageView } from "@/components/animals/listing-page";
 import { Crumbs } from "@/components/animals/listing";
 import { getOffspringFor, getPedigreeFor } from "@/lib/animals/get-relations";
 import { PedigreeTree } from "@/components/animals/pedigree-tree";
+import { MobileActionBar } from "@/components/animals/mobile-action-bar";
 import { JsonLd } from "@/components/site/json-ld";
 import { animalOfferJsonLd, breadcrumbJsonLd, faqJsonLd, quickAnswers } from "@/lib/site/structured-data";
 import { Offspring } from "@/components/animals/offspring";
@@ -177,8 +178,11 @@ async function Portfolio({ params }: { params: Params }) {
   ].filter((b): b is string => Boolean(b));
 
   return (
-    <article className="mx-auto max-w-[88rem] px-[var(--gutter)] py-8 lg:py-12">
+    <article className="mx-auto max-w-[88rem] px-[var(--gutter)] pb-28 pt-8 lg:py-12">
       <JsonLd data={structured} />
+      {a.programStatus !== "deceased" && saleStatus !== "sold" ? (
+        <MobileActionBar inquiryHref={inquiryHref} phone={site.profile.publicPhone} />
+      ) : null}
       <Crumbs
         items={[
           { label: speciesLabel, href: `/${path}` },

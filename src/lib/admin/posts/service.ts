@@ -3,6 +3,7 @@ import type { Json } from "@/lib/database.types";
 import { dbErrorMessage } from "@/lib/auth/messages";
 import type { Db, Result } from "@/lib/admin/animals/service";
 import { mediaUrl, pickVariant } from "@/lib/media/variants";
+import { stripBrokenPhotos } from "@/lib/content/photos";
 import { slugify, tidyPost, type PostInput } from "./fields";
 
 const ok = <T>(data: T): Result<T> => ({ ok: true, data });
@@ -148,7 +149,8 @@ export async function savePost(
   const { meta_title, meta_description, focus_phrase, ...core } = tidy.post;
   const row = {
     ...core,
-    body: (input.body ?? null) as Json | null,
+    // A photo spot that names no photo could never show; it is left out rather than saved.
+    body: (stripBrokenPhotos(input.body ?? null) ?? null) as Json | null,
     featured_media_id: input.featuredMediaId,
     category_id: input.categoryId,
     status: input.status,

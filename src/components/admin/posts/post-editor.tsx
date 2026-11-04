@@ -10,7 +10,7 @@ import { metaHint, slugify } from "@/lib/admin/posts/fields";
 import { Field, FormMessage, TextArea, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import { collectPhotoIds } from "@/lib/content/photos";
+import { collectPhotoIds, countPhotoSpots } from "@/lib/content/photos";
 import { PhotoPick } from "@/components/admin/banners/photo-pick";
 import { PhotoChooser } from "@/components/admin/banners/photo-chooser";
 
@@ -147,6 +147,15 @@ export function PostEditor({
             allowPhotos
             allowHtml
           />
+          {countPhotoSpots(f.body).broken > 0 ? (
+            <p role="alert" className="border-l-2 border-[#8a2b1d] bg-[#8a2b1d]/5 px-3 py-2 text-sm">
+              {countPhotoSpots(f.body).broken === 1
+                ? "One photo spot in your story has no photo in it, so it won't show on the website."
+                : `${countPhotoSpots(f.body).broken} photo spots in your story have no photo in them, so they won't show on the website.`}{" "}
+              Click it and press Remove photo, then add the photo again with the Photo button. Empty spots are left out
+              when you save.
+            </p>
+          ) : null}
           <p className="text-sm text-ink-muted" aria-live="polite">
             {collectPhotoIds(f.body).length === 0
               ? "No photos placed in the story yet. Use the Photo button in the toolbar."

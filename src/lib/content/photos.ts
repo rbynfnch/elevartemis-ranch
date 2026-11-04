@@ -17,3 +17,35 @@ export function collectPhotoIds(doc: unknown): string[] {
   walk(doc as Node);
   return ids;
 }
+
+/** How many photo spots a document has, and how many of them name no real photo (so would never show). */
+export function countPhotoSpots(doc: unknown): { total: number; broken: number } {
+  let total = 0;
+  let broken = 0;
+  const walk = (node: Node | undefined) => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "image") {
+      total += 1;
+      if (!isPhotoId(node.attrs?.mediaId)) broken += 1;
+    }
+    for (const child of node.content ?? []) walk(child);
+  };
+  walk(doc as Node);
+  return { total, broken };
+}
+
+/** The same document without photo spots that name no real photo. Nothing else changes. */
+export function stripBrokenPhotos<T>(doc: T): T {
+  const clean = (node: unknown): unknown => {
+    if (!node || typeof node !== "object") return node;
+    const n = node as Node;
+    if (!Array.isArray(n.content)) return n;
+    const content = n.content
+      .filter(
+        (child) => !(child && typeof child === "object" && child.type === "image" && !isPhotoId(child.attrs?.mediaId)),
+      )
+      .map(clean);
+    return { ...n, content };
+  };
+  return clean(doc) as T;
+}

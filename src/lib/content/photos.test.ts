@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectPhotoIds, isPhotoId } from "./photos";
+import { collectPhotoIds, countPhotoSpots, isPhotoId, stripBrokenPhotos } from "./photos";
 
 const a = "00000000-0000-4000-8000-000000000001";
 const b = "00000000-0000-4000-8000-000000000002";
@@ -27,5 +27,27 @@ describe("collectPhotoIds", () => {
     expect(collectPhotoIds(null)).toEqual([]);
     expect(isPhotoId(a)).toBe(true);
     expect(isPhotoId("nope")).toBe(false);
+  });
+});
+
+describe("broken photo spots", () => {
+  const doc = {
+    type: "doc",
+    content: [
+      { type: "paragraph", content: [{ type: "text", text: "Hi" }] },
+      { type: "image", attrs: { mediaId: null, thumb: null } },
+      { type: "image", attrs: { mediaId: a } },
+      { type: "blockquote", content: [{ type: "image", attrs: { mediaId: "" } }] },
+    ],
+  };
+  it("counts the spots and the ones with no photo", () => {
+    expect(countPhotoSpots(doc)).toEqual({ total: 3, broken: 2 });
+    expect(countPhotoSpots(null)).toEqual({ total: 0, broken: 0 });
+  });
+  it("removes only the spots with no photo", () => {
+    const clean = stripBrokenPhotos(doc);
+    expect(countPhotoSpots(clean)).toEqual({ total: 1, broken: 0 });
+    expect(JSON.stringify(clean)).toContain("Hi");
+    expect(stripBrokenPhotos(null)).toBeNull();
   });
 });

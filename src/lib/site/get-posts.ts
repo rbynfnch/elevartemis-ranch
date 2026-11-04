@@ -146,6 +146,9 @@ export async function getPost(ranchId: string, slug: string, postSlug: string): 
     (id): id is string => Boolean(id),
   );
   const photos = await photosFor(db, ranchId, mediaIds);
+  // Visible in the host's logs if a photo placed in the story can't be found (not ready, or not this ranch's).
+  for (const id of inText)
+    if (!photos.get(id)) console.warn(`[post ${post.slug}] story photo ${id} could not be loaded`);
   const animalIds = (mentioned.data ?? []).map((a) => a.animal_id);
   const { data: cards } = animalIds.length
     ? await db.from("public_animal_cards").select("*").eq("ranch_id", ranchId).in("id", animalIds)

@@ -69,3 +69,15 @@ describe("RichText photos", () => {
     expect(renderToStaticMarkup(<RichText doc={bad} photos={photos} />)).toBe("<div></div>");
   });
 });
+
+describe("RichText photo fallback", () => {
+  const id = "00000000-0000-4000-8000-000000000002";
+  const withThumb = (thumb: string) => ({ type: "doc", content: [{ type: "image", attrs: { mediaId: id, thumb } }] });
+  it("uses the saved preview when the photo can't be looked up, only if it is in the site's own storage", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://abc.supabase.co";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "k".repeat(30);
+    const own = "https://abc.supabase.co/storage/v1/object/public/ranch-media/r/p/480.webp";
+    expect(renderToStaticMarkup(<RichText doc={withThumb(own)} />)).toContain(`src="${own}"`);
+    expect(renderToStaticMarkup(<RichText doc={withThumb("https://evil.example/x.webp")} />)).not.toContain("<figure");
+  });
+});

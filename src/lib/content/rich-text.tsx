@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { richTextIsEmpty } from "./empty";
 import { isPhotoId } from "./photos";
+import { mediaUrl } from "@/lib/media/variants";
 
 /**
  * Renders stored Tiptap JSON to React through an allowlist. Unknown node
@@ -75,7 +76,20 @@ function renderNode(node: Node, key: number, photos?: TextPhotos): ReactNode {
     case "image": {
       // Only a real photo of this ranch that the page looked up is shown; anything else is skipped.
       const id = node.attrs?.mediaId;
-      const photo = isPhotoId(id) ? photos?.[id] : null;
+      let photo: TextPhoto | null | undefined = isPhotoId(id) ? photos?.[id] : null;
+      if (!photo) {
+        // If the page couldn't look the photo up, the small preview saved with it is still the right picture,
+        // as long as it is a file in this site's own photo storage.
+        const preview = typeof node.attrs?.thumb === "string" ? node.attrs.thumb : "";
+        let base = "";
+        try {
+          base = mediaUrl("");
+        } catch {
+          base = "";
+        }
+        if (base && preview.startsWith(base) && !/\s/.test(preview))
+          photo = { src: preview, srcSet: "", alt: "", focalX: 0.5, focalY: 0.5 };
+      }
       if (!photo) return null;
       const caption = typeof node.attrs?.caption === "string" ? node.attrs.caption.trim() : "";
       const alt = typeof node.attrs?.alt === "string" && node.attrs.alt.trim() ? node.attrs.alt.trim() : photo.alt;

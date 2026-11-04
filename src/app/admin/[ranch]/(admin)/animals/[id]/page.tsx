@@ -5,7 +5,8 @@ import { Suspense } from "react";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/admin-context";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getAnimal } from "@/lib/admin/animals/service";
+import { animalNeighbors, getAnimal } from "@/lib/admin/animals/service";
+import { AnimalStepper } from "@/components/admin/animals/animal-stepper";
 import { keepCategoryAction } from "@/lib/admin/animals/actions";
 import { loadBreeds, loadFactLabels, loadRanchCategories } from "@/lib/admin/animals/categories";
 import { isAtLeastYearsOld } from "@/lib/admin/dashboard";
@@ -60,6 +61,19 @@ async function EditAnimal({
     loadRanchCategories(db, ctx.ranch.id),
     loadBreeds(db, ctx.ranch.id),
   ]);
+  // Previous / Next follow the Animals list the owner came from (its species, filter and search).
+  const from = typeof q.from === "string" ? q.from : "";
+  const fromParams = new URLSearchParams(from);
+  const fromSpecies = fromParams.get("species");
+  const neighbors = result.ok
+    ? await animalNeighbors(db, ctx.ranch.id, id, {
+        species: fromSpecies === "horse" || fromSpecies === "cattle" ? fromSpecies : undefined,
+        show: fromParams.get("show") ?? undefined,
+        q: fromParams.get("q") ?? undefined,
+      })
+    : null;
+  const stepHref = (animalId: string | undefined) =>
+    animalId ? `/admin/animals/${animalId}${from ? `?from=${encodeURIComponent(from)}` : ""}` : null;
   const pedigreeNodes = result.ok ? await loadPedigree(db, id) : null;
   const factLabels = result.ok ? await loadFactLabels(db, ctx.ranch.id, result.data.animal.species) : [];
   if (!result.ok) notFound();
@@ -87,11 +101,23 @@ async function EditAnimal({
 
   return (
     <div className="space-y-10">
-      <p className="text-sm">
-        <Link href="/admin/animals" className="text-primary underline decoration-accent underline-offset-4">
-          Animals
-        </Link>
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm">
+          <Link
+            href={`/admin/animals${from ? `?${from}` : ""}`}
+            className="text-primary underline decoration-accent underline-offset-4"
+          >
+            Animals
+          </Link>
+        </p>
+        {neighbors && neighbors.total > 1 ? (
+          <AnimalStepper
+            neighbors={neighbors}
+            prevHref={stepHref(neighbors.prev?.id)}
+            nextHref={stepHref(neighbors.next?.id)}
+          />
+        ) : null}
+      </div>
       <header className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-3xl">{animal.name}</h1>

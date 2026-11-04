@@ -655,3 +655,8 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Cattle categories offered to ranches with a narrowed list
 
 - A ranch's cattle category list can be narrowed in its species settings (the demo ranch had Bulls, Yearlings, Cows), which also hides categories from the animal form and the CSV import and blocks saving an animal in them. Migration `20260928001100` appends Heifer, Steer, Calf and Sale Lot to any narrowed cattle list, after the existing entries, so they can be used. There is still no screen for editing this list (the settings table is only writable from migrations or the service role); an owner-facing editor is a later item.
+
+## Previous / Next on an animal's admin page
+
+- The admin animal page has ← and → buttons (and the left and right arrow keys when nothing is being typed into) that move to the previous and next animal in the Animals list the owner came from. The list's species tab, filter and search are carried in the address (`?from=…`), so going down "No photo" works. An animal that has just left a filtered list (it now has a photo) still has neighbours: the list is the filter plus the current animal, in the list's order.
+- Unsaved edits in the form are not kept when moving to another animal; save first. (Photos are saved immediately, so adding photos and moving on is safe.)

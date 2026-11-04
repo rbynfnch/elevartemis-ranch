@@ -10,6 +10,7 @@ import { dbErrorMessage } from "@/lib/auth/messages";
 import { processImage } from "@/lib/media/process";
 import { takenFileNames } from "@/lib/admin/library/service";
 import { uniqueFileName } from "@/lib/admin/library/file-names";
+import { neighborsOf, type Neighbors } from "./neighbors";
 import type {
   BasicsInput,
   BreedingInput,
@@ -64,7 +65,26 @@ export type AnimalListItem = {
 
 export type ListFilter = { species?: "horse" | "cattle"; show?: string; q?: string; archived?: boolean };
 
-export async function listAnimals(db: Db, ranchId: string, filter: ListFilter = {}): Promise<Result<AnimalListItem[]>> {
+/** The animals either side of this one in the Animals list (with the list's filter), for Previous and Next. */
+export async function animalNeighbors(
+  db: Db,
+  ranchId: string,
+  id: string,
+  filter: ListFilter,
+): Promise<Neighbors | null> {
+  const [filtered, everyone] = await Promise.all([
+    listAnimals(db, ranchId, { ...filter, light: true }),
+    listAnimals(db, ranchId, { species: filter.species, light: true }),
+  ]);
+  if (!filtered.ok || !everyone.ok) return null;
+  return neighborsOf(everyone.data, new Set(filtered.data.map((a) => a.id)), id);
+}
+
+export async function listAnimals(
+  db: Db,
+  ranchId: string,
+  filter: ListFilter & { /** Skip loading thumbnails. */ light?: boolean } = {},
+): Promise<Result<AnimalListItem[]>> {
   let query = db
     .from("animals")
     .select(
@@ -85,7 +105,7 @@ export async function listAnimals(db: Db, ranchId: string, filter: ListFilter = 
     .order("name");
   if (error) return dbFail(error);
 
-  const mediaIds = data.map((a) => a.primary_media_id).filter((id): id is string => Boolean(id));
+  const mediaIds = filter.light ? [] : data.map((a) => a.primary_media_id).filter((id): id is string => Boolean(id));
   const media = new Map<string, { variants: Json; focal_x: number; focal_y: number }>();
   if (mediaIds.length) {
     const { data: rows, error: mediaError } = await db

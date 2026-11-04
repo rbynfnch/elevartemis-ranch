@@ -53,6 +53,9 @@ async function Animals({
     return `/admin/animals${s ? `?${s}` : ""}`;
   };
 
+  // Remembered on each animal's page so Previous and Next follow this list.
+  const listQuery = href({}).split("?")[1] ?? "";
+
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -139,7 +142,7 @@ async function Animals({
           {animals.map((a) => (
             <li key={a.id}>
               <Link
-                href={`/admin/animals/${a.id}`}
+                href={`/admin/animals/${a.id}${listQuery ? `?from=${encodeURIComponent(listQuery)}` : ""}`}
                 className="flex items-center gap-4 py-3 no-underline hover:bg-surface"
               >
                 <AnimalThumb thumb={a.thumb} className="h-16 w-20 shrink-0 sm:h-20 sm:w-28" />

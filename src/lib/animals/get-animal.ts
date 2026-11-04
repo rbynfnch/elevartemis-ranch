@@ -30,6 +30,7 @@ export type AnimalPage = {
   sex: string;
   breed: string | null;
   color: string | null;
+  height: string | null;
   registry: string | null;
   registrationNumber: string | null;
   birthDate: string | null;
@@ -140,6 +141,7 @@ export async function getAnimalPage(
       sex: a.sex,
       breed: a.breed,
       color: a.color,
+      height: a.height ?? null,
       registry: a.registry,
       registrationNumber: a.registration_number,
       birthDate: a.birth_date,

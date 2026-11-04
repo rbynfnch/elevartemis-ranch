@@ -20,6 +20,7 @@ type AnimalLike = {
   sex: string;
   breed: string | null;
   color: string | null;
+  height?: string | null;
   registry: string | null;
   registration_number: string | null;
   birth_date: string | null;
@@ -259,9 +260,14 @@ export function BasicsFields({
             </Field>
           ) : null}
         </div>
-        <Field id="color" label="Color">
-          <TextInput id="color" name="color" defaultValue={animal?.color ?? ""} />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id="color" label="Color">
+            <TextInput id="color" name="color" defaultValue={animal?.color ?? ""} />
+          </Field>
+          <Field id="height" label="Height" hint="Optional. Like 15.3hh." error={err.height}>
+            <TextInput id="height" name="height" maxLength={12} defaultValue={animal?.height ?? ""} hasHint />
+          </Field>
+        </div>
       </div>
 
       <details

@@ -46,6 +46,11 @@ describe("toNodes", () => {
     expect(nodes.find((n) => n.path === "D")).toMatchObject({ owned: true, href: null });
     expect(nodes.find((n) => n.path === "SS")).toMatchObject({ owned: false, href: null, registration: "AQHA #123" });
   });
+  it("carries height when the database returns one, and null when it doesn't", () => {
+    const [withH, without] = toNodes([row("S", { height: "15.3hh" } as Partial<PedigreeRow>), row("D")]);
+    expect(withH.height).toBe("15.3hh");
+    expect(without.height).toBeNull();
+  });
   it("uses the cattle address for cattle", () => {
     expect(toNodes([row("S", { species: "cattle" })])[0].href).toBe("/cattle/horse-S");
   });

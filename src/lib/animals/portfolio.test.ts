@@ -172,6 +172,10 @@ describe("profileFacts", () => {
       { label: "Registration", value: "AQHA #5957423" },
     ]);
   });
+  it("prefers the animal's own height over a Height quick fact", () => {
+    const r = profileFacts({ ...base, height: "15.3hh", ownerFacts: [{ label: "Height", value: "15 hands" }] });
+    expect(r.strip.find((f) => f.label === "Height")?.value).toBe("15.3hh");
+  });
   it("leaves out a missing attribute instead of showing a blank", () => {
     const r = profileFacts({ ...base, ownerFacts: [], color: null, registry: null, registrationNumber: null });
     expect(r.strip.map((f) => f.label)).toEqual(["Birth year", "Sex"]);

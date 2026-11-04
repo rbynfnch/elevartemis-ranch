@@ -222,6 +222,11 @@ function Filled({ node, onChange, onEdit }: { node: PedigreeNode; onChange: () =
   return (
     <div className="w-full bg-surface px-3 py-2 text-sm">
       <p className="font-semibold">{node.name}</p>
+      {[node.color, node.height, node.birthYear].filter(Boolean).length ? (
+        <p className="text-xs text-ink-muted">
+          {[node.color, node.height, node.birthYear].filter(Boolean).join(" · ")}
+        </p>
+      ) : null}
       {node.registration ? <p className="text-xs text-ink-muted">{node.registration}</p> : null}
       <p className="mt-0.5 text-xs text-ink-muted">{node.owned ? "Yours" : "Not owned"}</p>
       <p className="mt-0.5 flex flex-wrap items-center gap-x-4 text-xs">
@@ -278,6 +283,7 @@ function ParentDialog({
     registrationNumber: "",
     birthYear: "",
     color: "",
+    height: "",
     notes: "",
   });
 
@@ -289,7 +295,7 @@ function ParentDialog({
       setQuery("");
       setResults(null);
       setError("");
-      setForm({ name: "", registry: "", registrationNumber: "", birthYear: "", color: "", notes: "" });
+      setForm({ name: "", registry: "", registrationNumber: "", birthYear: "", color: "", height: "", notes: "" });
       el.showModal();
     } else if (!target && el.open) el.close();
   }, [target]);
@@ -347,6 +353,7 @@ function ParentDialog({
       registrationNumber: form.registrationNumber || null,
       birthYear: Number.isInteger(year) && year > 0 ? year : null,
       color: form.color || null,
+      height: form.height || null,
       notes: form.notes || null,
     });
     setBusy(false);
@@ -497,6 +504,7 @@ type AncestorForm = {
   registrationNumber: string;
   birthYear: string;
   color: string;
+  height: string;
   notes: string;
 };
 
@@ -557,6 +565,9 @@ function AncestorFields({
         <Field id={`${idPrefix}-color`} label="Color (optional)">
           <TextInput id={`${idPrefix}-color`} value={form.color} onChange={set("color")} />
         </Field>
+        <Field id={`${idPrefix}-height`} label="Height (optional)" hint="Like 15.3hh.">
+          <TextInput id={`${idPrefix}-height`} value={form.height} onChange={set("height")} maxLength={12} hasHint />
+        </Field>
       </div>
       <Field id={`${idPrefix}-notes`} label="Notes (optional)" hint="Shown on this ancestor's card in the pedigree.">
         <TextArea id={`${idPrefix}-notes`} rows={3} value={form.notes} onChange={set("notes")} hasHint />
@@ -597,6 +608,7 @@ function EditAncestorDialog({
           registrationNumber: r.data.registrationNumber,
           birthYear: r.data.birthYear,
           color: r.data.color,
+          height: r.data.height,
           notes: r.data.notes,
         });
       });
@@ -615,6 +627,7 @@ function EditAncestorDialog({
       registrationNumber: form.registrationNumber || null,
       birthYear: Number.isInteger(year) && year > 0 ? year : null,
       color: form.color || null,
+      height: form.height || null,
       notes: form.notes || null,
     });
     setBusy(false);

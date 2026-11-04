@@ -103,6 +103,7 @@ async function Portfolio({ params }: { params: Params }) {
     species: a.species,
     breed: a.breed,
     color: a.color,
+    height: a.height,
     sex: a.sex,
     birthDate: a.birthDate,
     birthPrecision: a.birthPrecision,
@@ -253,7 +254,7 @@ async function Portfolio({ params }: { params: Params }) {
 
         {pedigree.ancestors.size > 0 ? (
           <Block title="Pedigree" id="pedigree">
-            <PedigreeTree pedigree={pedigree} animalName={a.name} />
+            <PedigreeTree pedigree={pedigree} animalName={a.name} breed={a.breed} />
           </Block>
         ) : null}
 

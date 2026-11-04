@@ -12,7 +12,7 @@ export async function getPedigreeFor(animalId: string, ranchSlug: string): Promi
   cacheLife("hours");
   cacheTag(cacheTags.ranch(ranchSlug), cacheTags.animals(ranchSlug));
 
-  const { data, error } = await createPublicClient().rpc("get_pedigree", { p_animal: animalId, p_generations: 3 });
+  const { data, error } = await createPublicClient().rpc("get_pedigree", { p_animal: animalId, p_generations: 5 });
   if (error) throw new Error(`Loading the pedigree failed: ${error.message}`);
   return buildPedigree(toNodes(data ?? []));
 }

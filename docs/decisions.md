@@ -12,7 +12,7 @@ Decisions confirmed in Phase 1 (defaults accepted) and made during Phases 2–3.
 3. **Pedigree depth:** 3 generations back (sire/dam, grandparents,
    great-grandparents; 14 ancestors), the standard horse pedigree.
    `get_pedigree(id, 3)`, capped at 5. Unknown ancestors are omitted.
-4. **Reclassification is the ranch's call.** The dashboard *suggests* moving a
+4. **Reclassification is the ranch's call.** The dashboard _suggests_ moving a
    foal/calf over a year old; "keep as is" sets `category_confirmed_at` and
    silences it. Changing the category resets the confirmation.
 5. **In Memory:** deceased animals (`program_status = 'deceased'`, optional
@@ -185,37 +185,37 @@ Services page without re-entering data.
 Defined once in the `public_animal_cards` view. All require: ranch-owned,
 published, not archived, ranch not suspended.
 
-| Page | Rule |
-|---|---|
-| Category (Stallions, Mares, …) | program status active, not sold |
-| Foals / Calves | category rule, grouped by `birth_year` |
-| Retired | program status retired, not sold |
-| Previous Stallions / Reference Sires | program status reference |
-| For Sale | sale available or pending, not deceased (also shown in its category) |
-| Sold | sale sold and `show_on_sold_page` |
+| Page                                 | Rule                                                                 |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| Category (Stallions, Mares, …)       | program status active, not sold                                      |
+| Foals / Calves                       | category rule, grouped by `birth_year`                               |
+| Retired                              | program status retired, not sold                                     |
+| Previous Stallions / Reference Sires | program status reference                                             |
+| For Sale                             | sale available or pending, not deceased (also shown in its category) |
+| Sold                                 | sale sold and `show_on_sold_page`                                    |
 
 Navigation is built from `public_nav_counts()`: empty buckets don't appear.
 
 ## Error codes (database → admin messages)
 
-| Code | Meaning |
-|---|---|
-| RA001 | Category doesn't match species |
-| RA002 | Sex not allowed for category |
-| RA003 | Sire recorded as female |
-| RA004 | Dam not female |
-| RA005 | Outside ancestor can't be listed for sale |
-| RA006 | Parent is a different species |
-| RA007 | Would make an animal its own ancestor |
-| RA008 | Sex change contradicts recorded offspring |
-| RA009 | Species change contradicts relatives |
-| RA010 | Main photo isn't one of the animal's photos |
-| RA011 | More than 3 active homepage slides |
+| Code  | Meaning                                                   |
+| ----- | --------------------------------------------------------- |
+| RA001 | Category doesn't match species                            |
+| RA002 | Sex not allowed for category                              |
+| RA003 | Sire recorded as female                                   |
+| RA004 | Dam not female                                            |
+| RA005 | Outside ancestor can't be listed for sale                 |
+| RA006 | Parent is a different species                             |
+| RA007 | Would make an animal its own ancestor                     |
+| RA008 | Sex change contradicts recorded offspring                 |
+| RA009 | Species change contradicts relatives                      |
+| RA010 | Main photo isn't one of the animal's photos               |
+| RA011 | More than 3 active homepage slides                        |
 | RA012 | Breeding services on something other than a stallion/bull |
 | RA013 | Category not offered by this ranch (or settings conflict) |
-| RA014 | Unknown time zone |
-| RA015 | Performance records on a non-cattle animal |
-| RA016 | Animal not found (or not yours) in an admin function |
+| RA014 | Unknown time zone                                         |
+| RA015 | Performance records on a non-cattle animal                |
+| RA016 | Animal not found (or not yours) in an admin function      |
 
 Messages are written for owners and raised by the database, so every client
 gets the same rules.
@@ -242,7 +242,7 @@ gets the same rules.
   when the owner clicks Continue (a POST). Email security scanners follow links
   with GET and would otherwise burn the token.
 - Every admin page calls `getAdminContext(slug)`: `getUser()` (validated with
-  Supabase), AAL check, membership in *this* ranch, and the ranch's two-step
+  Supabase), AAL check, membership in _this_ ranch, and the ranch's two-step
   requirement. The database re-enforces all of it.
 - Two-step verification: TOTP authenticator apps; owners can add a backup
   authenticator. Restrictive RLS policies require an `aal2` session for anyone
@@ -594,3 +594,11 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - Needs migrations `20260928000500` (tagline, highlights) and `20260928000600`
   (video sites). Until they are applied, saving the Headline section fails with a
   message and the public page shows no tagline, highlights or video.
+
+## Pedigree shaped like the all-breed charts (height, 5 generations)
+
+- Each ancestor can now carry what the all-breed pedigree charts show: name, color, **height** (like 15.3hh), birth year, breed and registration. Height is a new `animals.height` column (migration `20260928000700`), also returned by `get_pedigree`.
+- Height is on the ancestor form, the animal's Basics form and the profile's attribute strip (the animal's own height wins over a "Height" Quick Fact).
+- The public pedigree loads up to 5 generations and starts at 3; a "Show 3 / 4 / 5 generations" toggle appears only when more are recorded. Outer generations use compact cards. A card shows "color · height · year", the breed only when it differs from the animal's, and the registration number.
+- Saving Basics still works before the height migration is applied (it retries without the height column).
+- The "Find on Pedigree Online" import is deliberately not started; it waits on their reply about API access.

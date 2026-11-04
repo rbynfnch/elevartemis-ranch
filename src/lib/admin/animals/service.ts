@@ -162,32 +162,44 @@ export async function getAnimal(db: Db, ranchId: string, id: string) {
 export type AnimalDetail = Extract<Awaited<ReturnType<typeof getAnimal>>, { ok: true }>["data"];
 
 // ─── Create and edit ─────────────────────────────────────────────────────────
+/** True when the database doesn't have the animals.height column yet (its migration isn't applied). */
+const noHeightColumn = (error: { message?: string } | null) => Boolean(error?.message?.includes("height"));
+
 export async function createAnimal(db: Db, ranchId: string, input: BasicsInput): Promise<Result<{ id: string }>> {
-  const { data, error } = await db
-    .from("animals")
-    .insert({
-      ...input,
-      description: input.description as Json,
-      ranch_id: ranchId,
-      // New animals start Active and on the website; the owner can hide one at any time.
-      is_published: true,
-      program_status: "active",
-      slug: "",
-    })
-    .select("id")
-    .single();
-  if (error) return dbFail(error);
+  const { height, ...rest } = input;
+  const insert = (withHeight: boolean) =>
+    db
+      .from("animals")
+      .insert({
+        ...rest,
+        ...(withHeight && height ? { height } : {}),
+        description: input.description as Json,
+        ranch_id: ranchId,
+        // New animals start Active and on the website; the owner can hide one at any time.
+        is_published: true,
+        program_status: "active",
+        slug: "",
+      })
+      .select("id")
+      .single();
+  let { data, error } = await insert(true);
+  if (error && noHeightColumn(error)) ({ data, error } = await insert(false));
+  if (error || !data) return dbFail(error!);
   return ok({ id: data.id });
 }
 
 export async function updateBasics(db: Db, id: string, input: BasicsInput): Promise<Result> {
-  return changed(
-    await db
+  const { height, ...rest } = input;
+  const update = (withHeight: boolean) =>
+    db
       .from("animals")
-      .update({ ...input, description: input.description as Json })
+      .update({ ...rest, ...(withHeight && height !== undefined ? { height } : {}), description: input.description as Json })
       .eq("id", id)
-      .select("id"),
-  );
+      .select("id");
+  const first = await update(true);
+  // Until the height migration is applied, save everything else rather than failing.
+  if (first.error && noHeightColumn(first.error)) return changed(await update(false));
+  return changed(first);
 }
 
 /** Tagline, highlights and the video link: what the top of the animal's page says. */

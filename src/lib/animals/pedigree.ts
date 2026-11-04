@@ -14,6 +14,8 @@ export type PedigreeNode = {
   registration: string | null;
   breed: string | null;
   color: string | null;
+  /** Height as the owner writes it, like "15.3hh". */
+  height: string | null;
   birthYear: number | null;
   sex: string;
   /** The ranch owns this animal. False for an ancestor entered only for the pedigree. */
@@ -44,6 +46,7 @@ export function toNodes(rows: PedigreeRow[]): PedigreeNode[] {
     registration: registrationText(r.registry, r.registration_number),
     breed: r.breed ?? null,
     color: r.color ?? null,
+    height: (r as { height?: string | null }).height ?? null,
     birthYear: r.birth_year ?? null,
     sex: r.sex,
     owned: r.record_scope === "inventory",

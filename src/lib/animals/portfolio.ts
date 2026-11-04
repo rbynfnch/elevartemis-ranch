@@ -41,6 +41,8 @@ export type PortfolioFactsInput = {
   species: Species;
   breed: string | null;
   color: string | null;
+  /** The animal's own height, when recorded; otherwise a "Height" Quick Fact is used. */
+  height?: string | null;
   sex: string;
   birthDate: string | null;
   birthPrecision: Precision;
@@ -229,7 +231,7 @@ export function profileFacts(input: ProfileFactsInput): {
   const strip = compactFacts([
     { label: "Birth year", value: year },
     { label: "Sex", value: sexWords[input.sex] },
-    { label: "Height", value: take("height") },
+    { label: "Height", value: input.height?.trim() || take("height") },
     { label: "Color", value: take("color") ?? input.color },
     { label: "Registration", value: registration },
   ]);

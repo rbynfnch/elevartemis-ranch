@@ -72,6 +72,7 @@ const outside = z.object({
   registrationNumber: z.string().max(200).nullish(),
   birthYear: z.number().int().nullish(),
   color: z.string().max(200).nullish(),
+  height: z.string().max(40).nullish(),
   breed: z.string().max(200).nullish(),
   notes: z.string().max(5000).nullish(),
 });

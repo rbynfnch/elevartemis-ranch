@@ -116,6 +116,7 @@ export type AncestorDetails = {
   registrationNumber: string;
   birthYear: string;
   color: string;
+  height: string;
   notes: string;
 };
 
@@ -123,7 +124,7 @@ export type AncestorDetails = {
 export async function getAncestor(db: Db, ranchId: string, id: string): Promise<Result<AncestorDetails>> {
   const { data, error } = await db
     .from("animals")
-    .select("id, name, record_scope, registry, registration_number, birth_year, color, description")
+    .select("id, name, record_scope, registry, registration_number, birth_year, color, height, description")
     .eq("id", id)
     .eq("ranch_id", ranchId)
     .maybeSingle();
@@ -137,6 +138,7 @@ export async function getAncestor(db: Db, ranchId: string, id: string): Promise<
     registrationNumber: data.registration_number ?? "",
     birthYear: data.birth_year ? String(data.birth_year) : "",
     color: data.color ?? "",
+    height: data.height ?? "",
     notes: docToText(data.description),
   });
 }

@@ -32,6 +32,7 @@ export type BasicsInput = {
   sex: Enums["animal_sex"];
   breed: string | null;
   color: string | null;
+  height?: string | null;
   registry: string | null;
   registration_number: string | null;
   birth_date: string | null;
@@ -53,6 +54,8 @@ export function parseBasics(fd: FormData): Parsed<BasicsInput> {
   if (!species) errors.species = "Choose horse or cattle.";
   if (!name) errors.name = "Enter a name.";
   else if (name.length > 120) errors.name = "Use 120 characters or fewer.";
+  const height = text(fd, "height");
+  if (height && height.length > 12) errors.height = "Use 12 characters or fewer, like 15.3hh.";
   if (!category) errors.category_id = "Choose a category.";
   if (!sex) errors.sex = "Choose the sex.";
   const birth = parsePartialDate({
@@ -74,6 +77,7 @@ export function parseBasics(fd: FormData): Parsed<BasicsInput> {
       sex: sex!,
       breed,
       color: text(fd, "color"),
+      height: text(fd, "height"),
       registry: text(fd, "registry"),
       registration_number: text(fd, "registration_number"),
       birth_date: b.date,

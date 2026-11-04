@@ -6,6 +6,7 @@ export type AncestorInput = {
   registrationNumber?: string | null;
   birthYear?: number | null;
   color?: string | null;
+  height?: string | null;
   breed?: string | null;
   notes?: string | null;
 };
@@ -34,6 +35,7 @@ export function ancestorColumns(input: AncestorInput) {
       birth_date: year ? `${year}-01-01` : null,
       birth_precision: "year" as const,
       color: clean(input.color, 80),
+      height: clean(input.height, 12),
       breed: clean(input.breed, 80),
       description: textToDoc(input.notes ?? null),
     },

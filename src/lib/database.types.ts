@@ -1234,7 +1234,17 @@ export type Database = {
           body: Json | null;
           category_id: string | null;
           created_at: string;
+          author_name: string | null;
+          content_version: number;
           created_by: string | null;
+          deleted_at: string | null;
+          draft_data: Json | null;
+          draft_saved_at: string | null;
+          last_edited_by: string | null;
+          og_description: string | null;
+          og_media_id: string | null;
+          og_title: string | null;
+          show_author: boolean;
           date_precision: Database["public"]["Enums"]["birth_precision"];
           excerpt: string | null;
           featured_media_id: string | null;
@@ -1255,7 +1265,17 @@ export type Database = {
           body?: Json | null;
           category_id?: string | null;
           created_at?: string;
+          author_name?: string | null;
+          content_version?: number;
           created_by?: string | null;
+          deleted_at?: string | null;
+          draft_data?: Json | null;
+          draft_saved_at?: string | null;
+          last_edited_by?: string | null;
+          og_description?: string | null;
+          og_media_id?: string | null;
+          og_title?: string | null;
+          show_author?: boolean;
           date_precision?: Database["public"]["Enums"]["birth_precision"];
           excerpt?: string | null;
           featured_media_id?: string | null;
@@ -1276,7 +1296,17 @@ export type Database = {
           body?: Json | null;
           category_id?: string | null;
           created_at?: string;
+          author_name?: string | null;
+          content_version?: number;
           created_by?: string | null;
+          deleted_at?: string | null;
+          draft_data?: Json | null;
+          draft_saved_at?: string | null;
+          last_edited_by?: string | null;
+          og_description?: string | null;
+          og_media_id?: string | null;
+          og_title?: string | null;
+          show_author?: boolean;
           date_precision?: Database["public"]["Enums"]["birth_precision"];
           excerpt?: string | null;
           featured_media_id?: string | null;
@@ -1315,6 +1345,135 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      post_media_refs: {
+        Row: {
+          media_id: string;
+          post_id: string;
+          ranch_id: string;
+        };
+        Insert: {
+          media_id: string;
+          post_id: string;
+          ranch_id: string;
+        };
+        Update: {
+          media_id?: string;
+          post_id?: string;
+          ranch_id?: string;
+        };
+        Relationships: [];
+      };
+      post_related: {
+        Row: {
+          post_id: string;
+          ranch_id: string;
+          related_post_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          post_id: string;
+          ranch_id: string;
+          related_post_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          post_id?: string;
+          ranch_id?: string;
+          related_post_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      post_revisions: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          post_id: string;
+          ranch_id: string;
+          reason: string;
+          snapshot: Json;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          post_id: string;
+          ranch_id: string;
+          reason: string;
+          snapshot: Json;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          post_id?: string;
+          ranch_id?: string;
+          reason?: string;
+          snapshot?: Json;
+        };
+        Relationships: [];
+      };
+      post_slug_history: {
+        Row: {
+          created_at: string;
+          old_slug: string;
+          post_id: string;
+          ranch_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          old_slug: string;
+          post_id: string;
+          ranch_id: string;
+        };
+        Update: {
+          created_at?: string;
+          old_slug?: string;
+          post_id?: string;
+          ranch_id?: string;
+        };
+        Relationships: [];
+      };
+      post_tag_links: {
+        Row: {
+          post_id: string;
+          ranch_id: string;
+          tag_id: string;
+        };
+        Insert: {
+          post_id: string;
+          ranch_id: string;
+          tag_id: string;
+        };
+        Update: {
+          post_id?: string;
+          ranch_id?: string;
+          tag_id?: string;
+        };
+        Relationships: [];
+      };
+      post_tags: {
+        Row: {
+          id: string;
+          name: string;
+          ranch_id: string;
+          slug: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          ranch_id: string;
+          slug: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          ranch_id?: string;
+          slug?: string;
+        };
+        Relationships: [];
       };
       ranch_branding: {
         Row: {

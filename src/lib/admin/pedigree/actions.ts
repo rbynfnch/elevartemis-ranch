@@ -93,3 +93,10 @@ export async function addAncestorAction(childId: string, roleName: string, input
   refreshSite(c.slug);
   return added;
 }
+
+/** The animal's current pedigree, so the builder can update itself without reloading the page. */
+export async function loadPedigreeAction(animalId: string) {
+  const c = await context();
+  if (!c || !uuid.safeParse(animalId).success) return noAccess;
+  return pedigree.loadPedigree(c.db, animalId);
+}

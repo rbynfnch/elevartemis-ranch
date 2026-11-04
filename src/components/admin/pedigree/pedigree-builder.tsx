@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { addAncestorAction, searchParentsAction, setParentAction } from "@/lib/admin/pedigree/actions";
+import {
+  addAncestorAction,
+  loadPedigreeAction,
+  searchParentsAction,
+  setParentAction,
+} from "@/lib/admin/pedigree/actions";
 import type { ParentCandidate } from "@/lib/admin/pedigree/service";
 import { bracketPlace, buildPedigree, parentPaths, type PedigreeNode } from "@/lib/animals/pedigree";
 import { Field, FormMessage, TextArea, TextInput } from "@/components/admin/forms";
@@ -39,13 +43,21 @@ export function PedigreeBuilder({
   animalId,
   animalName,
   species,
-  nodes,
+  nodes: initial,
 }: {
   animalId: string;
   animalName: string;
   species: "horse" | "cattle";
   nodes: PedigreeNode[];
 }) {
+  // The pedigree updates itself after each change, so the page never reloads or jumps to the top.
+  const [nodes, setNodes] = useState(initial);
+  const [lastInitial, setLastInitial] = useState(initial);
+  if (initial !== lastInitial) {
+    // Fresh data from the server for some other reason: adopt it.
+    setLastInitial(initial);
+    setNodes(initial);
+  }
   const pedigree = buildPedigree(nodes);
   const [target, setTarget] = useState<Target | null>(null);
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
@@ -143,9 +155,16 @@ export function PedigreeBuilder({
         target={target}
         species={species}
         onClose={() => setTarget(null)}
-        onDone={(text) => {
+        onDone={async (text) => {
           setTarget(null);
           setMessage({ tone: "success", text });
+          const fresh = await loadPedigreeAction(animalId);
+          if (fresh.ok) setNodes(fresh.data);
+          else
+            setMessage({
+              tone: "error",
+              text: `${text} (The pedigree on screen may be out of date. Refresh the page.)`,
+            });
         }}
       />
     </div>
@@ -221,9 +240,8 @@ function ParentDialog({
   target: Target | null;
   species: "horse" | "cattle";
   onClose: () => void;
-  onDone: (message: string) => void;
+  onDone: (message: string) => void | Promise<void>;
 }) {
-  const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const [tab, setTab] = useState<"mine" | "new">("mine");
   const [query, setQuery] = useState("");
@@ -280,7 +298,6 @@ function ParentDialog({
     const r = await setParentAction(target.childId, target.role, id);
     setBusy(false);
     if (!r.ok) return setError(r.message);
-    router.refresh();
     onDone(`${name} is now ${target.childName}'s ${target.role}.`);
   }
 
@@ -291,7 +308,6 @@ function ParentDialog({
     const r = await setParentAction(target.childId, target.role, null);
     setBusy(false);
     if (!r.ok) return setError(r.message);
-    router.refresh();
     onDone(`${target.current.name} was removed as ${target.childName}'s ${target.role}. Their record is kept.`);
   }
 
@@ -311,7 +327,6 @@ function ParentDialog({
     });
     setBusy(false);
     if (!r.ok) return setError(r.message);
-    router.refresh();
     onDone(`${r.data.name} was added as ${target.childName}'s ${target.role}.`);
   }
 

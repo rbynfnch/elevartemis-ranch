@@ -81,3 +81,65 @@ describe("RichText photo fallback", () => {
     expect(renderToStaticMarkup(<RichText doc={withThumb("https://evil.example/x.webp")} />)).not.toContain("<figure");
   });
 });
+
+describe("RichText blog blocks", () => {
+  const id = "00000000-0000-4000-8000-0000000000b1";
+  const photos = { [id]: { src: "https://x/p.webp", srcSet: "", alt: "A mare", focalX: 0.5, focalY: 0.5 } };
+  const render = (content: unknown[]) =>
+    renderToStaticMarkup(<RichText doc={{ type: "doc", content }} photos={photos} />);
+
+  it("shows headings H2 to H4, alignment, underline, dividers, small text and pull quotes", () => {
+    const html = render([
+      { type: "heading", attrs: { level: 4, textAlign: "center" }, content: [{ type: "text", text: "Small" }] },
+      { type: "paragraph", content: [{ type: "text", text: "Under", marks: [{ type: "underline" }] }] },
+      { type: "horizontalRule" },
+      { type: "smallText", content: [{ type: "text", text: "Photo by us" }] },
+      { type: "pullquote", content: [{ type: "text", text: "A great day." }] },
+    ]);
+    expect(html).toContain("<h4");
+    expect(html).toContain("text-center");
+    expect(html).toContain("<u>Under</u>");
+    expect(html).toContain("<hr");
+    expect(html).toContain("Photo by us");
+    expect(html).toContain("A great day.");
+  });
+  it("shows an image in a chosen shape, floated, with caption and link", () => {
+    const html = render([
+      {
+        type: "image",
+        attrs: { mediaId: id, layout: "left", aspect: "16:9", zoom: 1.5, caption: "Her first day", href: "/horses/x" },
+      },
+    ]);
+    expect(html).toContain("float-left");
+    expect(html).toContain("aspect-ratio:16 / 9");
+    expect(html).toContain("scale(1.50)");
+    expect(html).toContain("Her first day");
+    expect(html).toContain('href="/horses/x"');
+  });
+  it("shows a gallery, a privacy-friendly video, a callout and a button", () => {
+    const html = render([
+      { type: "gallery", attrs: { layout: "grid", items: [{ mediaId: id, caption: "One" }] } },
+      { type: "video", attrs: { provider: "youtube", videoId: "dQw4w9WgXcQ", caption: "Branding" } },
+      {
+        type: "callout",
+        attrs: { tone: "tip" },
+        content: [{ type: "paragraph", content: [{ type: "text", text: "Bring boots." }] }],
+      },
+      { type: "cta", attrs: { heading: "Meet Our Horses", label: "View Horses", href: "/horses" } },
+    ]);
+    expect(html).toContain("youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(html).toContain("Bring boots.");
+    expect(html).toContain("Meet Our Horses");
+    expect(html).toContain('href="/horses"');
+    expect(html).toContain("One");
+  });
+  it("never shows a block with an unsafe address or an unknown video", () => {
+    const html = render([
+      { type: "cta", attrs: { label: "Go", href: "javascript:alert(1)" } },
+      { type: "video", attrs: { provider: "evil", videoId: "abc" } },
+      { type: "image", attrs: { mediaId: id, href: "javascript:x" } },
+    ]);
+    expect(html).not.toContain("javascript");
+    expect(html).not.toContain("<iframe");
+  });
+});

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { richTextIsEmpty } from "./empty";
-import { isPhotoId } from "./photos";
-import { mediaUrl } from "@/lib/media/variants";
+import { CtaBlock, Callout, GalleryBlock, ImageBlock, VideoBlock } from "@/components/blog/blocks";
 
 /**
  * Renders stored Tiptap JSON to React through an allowlist. Unknown node
@@ -30,6 +29,7 @@ function renderText(node: Node, key: number): ReactNode {
   for (const mark of node.marks ?? []) {
     if (mark.type === "bold") out = <strong key={key}>{out}</strong>;
     else if (mark.type === "italic") out = <em key={key}>{out}</em>;
+    else if (mark.type === "underline") out = <u key={key}>{out}</u>;
     else if (mark.type === "link") {
       const href = safeHref(mark.attrs?.href);
       if (href) {
@@ -45,6 +45,10 @@ function renderText(node: Node, key: number): ReactNode {
   return out;
 }
 
+function alignClass(a: unknown): string | undefined {
+  return a === "center" ? "text-center" : a === "right" ? "text-right" : undefined;
+}
+
 function renderNodes(nodes: Node[] | undefined, photos?: TextPhotos): ReactNode[] {
   return (nodes ?? []).map((node, i) => renderNode(node, i, photos));
 }
@@ -54,13 +58,19 @@ function renderNode(node: Node, key: number, photos?: TextPhotos): ReactNode {
     case "text":
       return renderText(node, key);
     case "paragraph":
-      return richTextIsEmpty(node) ? null : <p key={key}>{renderNodes(node.content, photos)}</p>;
+      return richTextIsEmpty(node) ? null : (
+        <p key={key} className={alignClass(node.attrs?.textAlign)}>
+          {renderNodes(node.content, photos)}
+        </p>
+      );
     case "heading": {
       if (richTextIsEmpty(node)) return null;
-      return node.attrs?.level === 3 ? (
-        <h3 key={key}>{renderNodes(node.content, photos)}</h3>
-      ) : (
-        <h2 key={key}>{renderNodes(node.content, photos)}</h2>
+      const level = node.attrs?.level === 4 ? 4 : node.attrs?.level === 3 ? 3 : 2;
+      const Tag = `h${level}` as "h2" | "h3" | "h4";
+      return (
+        <Tag key={key} className={alignClass(node.attrs?.textAlign)}>
+          {renderNodes(node.content, photos)}
+        </Tag>
       );
     }
     case "bulletList":
@@ -73,43 +83,37 @@ function renderNode(node: Node, key: number, photos?: TextPhotos): ReactNode {
       return <blockquote key={key}>{renderNodes(node.content, photos)}</blockquote>;
     case "hardBreak":
       return <br key={key} />;
-    case "image": {
-      // Only a real photo of this ranch that the page looked up is shown; anything else is skipped.
-      const id = node.attrs?.mediaId;
-      let photo: TextPhoto | null | undefined = isPhotoId(id) ? photos?.[id] : null;
-      if (!photo) {
-        // If the page couldn't look the photo up, the small preview saved with it is still the right picture,
-        // as long as it is a file in this site's own photo storage.
-        const preview = typeof node.attrs?.thumb === "string" ? node.attrs.thumb : "";
-        let base = "";
-        try {
-          base = mediaUrl("");
-        } catch {
-          base = "";
-        }
-        if (base && preview.startsWith(base) && !/\s/.test(preview))
-          photo = { src: preview, srcSet: "", alt: "", focalX: 0.5, focalY: 0.5 };
-      }
-      if (!photo) return null;
-      const caption = typeof node.attrs?.caption === "string" ? node.attrs.caption.trim() : "";
-      const alt = typeof node.attrs?.alt === "string" && node.attrs.alt.trim() ? node.attrs.alt.trim() : photo.alt;
-      const wide = node.attrs?.layout === "wide";
+    case "image":
+      return <ImageBlock key={key} attrs={node.attrs ?? {}} photos={photos} />;
+    case "gallery":
+      return <GalleryBlock key={key} attrs={node.attrs ?? {}} photos={photos} />;
+    case "video":
+      return <VideoBlock key={key} attrs={node.attrs ?? {}} />;
+    case "cta":
+      return <CtaBlock key={key} attrs={node.attrs ?? {}} photos={photos} />;
+    case "callout":
       return (
-        <figure key={key} className={wide ? "my-10 lg:-mx-12" : "my-8"}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={photo.src}
-            srcSet={photo.srcSet || undefined}
-            sizes={wide ? "(min-width: 1024px) 60rem, 100vw" : "(min-width: 768px) 44rem, 100vw"}
-            alt={alt}
-            loading="lazy"
-            decoding="async"
-            className="h-auto w-full"
-          />
-          {caption ? <figcaption className="mt-2 text-sm italic text-ink-muted">{caption}</figcaption> : null}
-        </figure>
+        <Callout key={key} tone={node.attrs?.tone}>
+          {renderNodes(node.content, photos)}
+        </Callout>
       );
-    }
+    case "pullquote":
+      return richTextIsEmpty(node) ? null : (
+        <blockquote
+          key={key}
+          className="my-10 border-l-4 border-accent pl-6 font-serif text-2xl italic leading-snug text-ink"
+        >
+          {renderNodes(node.content, photos)}
+        </blockquote>
+      );
+    case "smallText":
+      return richTextIsEmpty(node) ? null : (
+        <p key={key} className="text-sm text-ink-muted">
+          {renderNodes(node.content, photos)}
+        </p>
+      );
+    case "horizontalRule":
+      return <hr key={key} className="my-10 border-rule" />;
     default:
       return <span key={key}>{renderNodes(node.content, photos)}</span>;
   }

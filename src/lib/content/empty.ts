@@ -22,14 +22,21 @@ type RichNode = { type?: string; text?: string; content?: RichNode[] };
 
 /**
  * Mirrors private.rich_text_is_empty() in the database: a Tiptap document is
- * empty unless it contains visible text or an image.
+ * empty unless it contains visible text or a block that shows something by itself (photo, gallery, video, button, divider).
  */
 export function richTextIsEmpty(doc: unknown): boolean {
   if (!doc || typeof doc !== "object") return true;
   const stack: RichNode[] = [doc as RichNode];
   while (stack.length) {
     const node = stack.pop()!;
-    if (node.type === "image") return false;
+    if (
+      node.type === "image" ||
+      node.type === "gallery" ||
+      node.type === "video" ||
+      node.type === "cta" ||
+      node.type === "horizontalRule"
+    )
+      return false;
     if (typeof node.text === "string" && node.text.trim()) return false;
     if (Array.isArray(node.content)) stack.push(...node.content);
   }

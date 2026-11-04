@@ -4,6 +4,22 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { mediaUrl, parseVariants, srcSet } from "@/lib/media/variants";
 import type { HeroSlideData } from "./get-home";
 
+type MediaRow = { variants: unknown; alt_text: string | null; focal_x: number; focal_y: number; status: string };
+
+/** A ready photo as the hero banner and About page use it, or null when it isn't ready. */
+export function photoFromMedia(media: MediaRow | null | undefined): HeroSlideData["photo"] {
+  if (!media || media.status !== "ready") return null;
+  const largest = parseVariants(media.variants).at(-1);
+  if (!largest) return null;
+  return {
+    src: mediaUrl(largest.path),
+    srcSet: srcSet(media.variants),
+    alt: media.alt_text ?? "",
+    focalX: Number(media.focal_x),
+    focalY: Number(media.focal_y),
+  };
+}
+
 export type PageBanner = {
   headline: string | null;
   subheadline: string | null;
@@ -28,20 +44,9 @@ export async function getPageBanner(ranchId: string, slug: string, pageKey: stri
   // Before the page_banners migration is applied there is simply no banner.
   if (error) return null;
   if (!data) return null;
-  const media = data.media && data.media.status === "ready" ? data.media : null;
-  const largest = media ? parseVariants(media.variants).at(-1) : undefined;
   return {
     headline: data.headline,
     subheadline: data.subheadline,
-    photo:
-      media && largest
-        ? {
-            src: mediaUrl(largest.path),
-            srcSet: srcSet(media.variants),
-            alt: media.alt_text ?? "",
-            focalX: Number(media.focal_x),
-            focalY: Number(media.focal_y),
-          }
-        : null,
+    photo: photoFromMedia(data.media),
   };
 }

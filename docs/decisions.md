@@ -670,3 +670,8 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - Horses, Cattle, For Sale, About and Contact share one hero banner (`PageHero`): the owner's photo, headline and subheadline. Category pages (Bulls, Cows, Mares…) get the photograph only, and nothing if none is chosen. Owners set them under **Page Banners** in the admin, picking the photo from the Photo Library (migration `20260928001200`, table `page_banners`; one row per page, key `about`, `horses`, `cattle`, `for-sale`, `contact` or `category:<id>`).
 - A page with no banner (or a blank headline) uses its own title, the species heading or the ranch tagline as the subheadline, and one of the ranch's homepage photographs for the image, so a banner is never blank and never a stock picture. A photo used in a banner counts as "used elsewhere" in the Photo Library.
 - The Contact page itself is not built yet; its banner can already be set.
+
+## About page
+
+- `/about` is built from the owner's own content in `pages.sections` (key `about`): an introduction (heading, text, photo, optional brand mark), up to three highlights, the story (heading, text, photo, optional button to a page on the site or an https address), up to four values under a heading, and a photograph across the bottom. Highlights and values can each carry one of eight simple outline icons. Nothing is ranch wording in the code: a part left empty is not shown, and with nothing filled in the page shows the ranch profile's intro, or "More about <ranch> is coming soon."
+- The banner at the top is the About banner from Page Banners. The owner edits the rest under **About Page** in the admin. Text is plain paragraphs for now; richer formatting comes with the editor planned later.

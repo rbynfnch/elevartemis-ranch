@@ -57,6 +57,12 @@ export function dbErrorMessage(error: DbLikeError): string {
     case "42501":
     case "PGRST301":
       return "You don't have permission to do that. Try signing in again.";
+    // A column or table the code expects isn't in the database: its update (migration) hasn't been applied yet.
+    case "PGRST204":
+    case "PGRST205":
+    case "42703":
+    case "42P01":
+      return "This part of the site needs a database update that hasn't been applied yet. Ask your site developer to apply the latest updates.";
     default:
       return "Something went wrong and nothing was saved. Please try again.";
   }

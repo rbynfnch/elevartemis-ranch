@@ -50,6 +50,10 @@ describe("messages", () => {
     expect(authErrorMessage({ code: "something_new" })).toBe("Something went wrong. Please try again.");
   });
   it("passes through ranch rule messages and maps Postgres codes", () => {
+    expect(dbErrorMessage({ code: "PGRST204", message: "Could not find the 'tagline' column" })).toMatch(
+      /database update/,
+    );
+    expect(dbErrorMessage({ code: "42703" })).toMatch(/database update/);
     expect(dbErrorMessage({ code: "RA004", message: "Big Red isn't recorded as female, so can't be a dam." })).toMatch(
       /Big Red/,
     );

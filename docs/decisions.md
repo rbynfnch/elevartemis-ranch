@@ -651,3 +651,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - A sale lot is an animal with a **head count** (two or more; a head count of 1 is just an animal and is stored as none). Its price has a **price basis**: for this animal (default), per head, or total for the lot. Cards and the animal page say "$1,650 per head" accordingly.
 - **Ear tag** and **weight** (whole pounds) are real fields on cattle: shown in the attribute strip and on cards, searchable (ear tag) on the For Sale page, and in the CSV (`ear_tag`, `weight_lb`, `head_count`, `price_basis`). Existing "Ear tag" and "Weight" Quick Facts still show until the new fields are filled. A lot's weight range or age stays a Quick Fact.
 - Saving works before the migration is applied: the new columns are left out instead of failing.
+
+## Cattle categories offered to ranches with a narrowed list
+
+- A ranch's cattle category list can be narrowed in its species settings (the demo ranch had Bulls, Yearlings, Cows), which also hides categories from the animal form and the CSV import and blocks saving an animal in them. Migration `20260928001100` appends Heifer, Steer, Calf and Sale Lot to any narrowed cattle list, after the existing entries, so they can be used. There is still no screen for editing this list (the settings table is only writable from migrations or the service role); an owner-facing editor is a later item.

@@ -83,6 +83,10 @@ const FIELD_LABELS: Record<string, string> = {
   sex: "sex",
   breed: "breed",
   color: "color",
+  height: "height",
+  tagline: "tagline",
+  highlights: "highlights",
+  video_url: "video link",
   registered_name: "registered name",
   registry: "registry",
   registration_number: "registration number",
@@ -178,6 +182,7 @@ async function applyRow(db: Db, ranchId: string, p: PlannedAnimal): Promise<RowO
       sex: f.sex as never,
       breed: f.breed ?? null,
       color: f.color ?? null,
+      height: f.height ?? null,
       registry: f.registry ?? null,
       registration_number: f.registration_number ?? null,
       birth_date: f.birth?.date ?? null,
@@ -200,6 +205,7 @@ async function applyRow(db: Db, ranchId: string, p: PlannedAnimal): Promise<RowO
       sex: (f.sex ?? a.sex) as never,
       breed: f.breed ?? a.breed,
       color: f.color ?? a.color,
+      height: f.height ?? a.height ?? null,
       registry: f.registry ?? a.registry,
       registration_number: f.registration_number ?? a.registration_number,
       birth_date: f.birth?.date ?? a.birth_date,
@@ -214,6 +220,19 @@ async function applyRow(db: Db, ranchId: string, p: PlannedAnimal): Promise<RowO
   const note = (what: string, r: Result<unknown>) => {
     if (!r.ok) notes.push(`${what}: ${r.message}`);
   };
+
+  // ── Tagline, highlights and video link ───────────────────────────────────
+  if (f.tagline !== undefined || f.highlights !== undefined || f.video_url !== undefined) {
+    const a = existing?.animal;
+    note(
+      "headline",
+      await animals.saveProfile(db, ranchId, id, {
+        tagline: f.tagline ?? a?.tagline ?? null,
+        highlights: f.highlights ?? a?.highlights ?? [],
+        video_url: f.video_url ?? existing?.videoUrl ?? null,
+      }),
+    );
+  }
 
   // ── On the website ───────────────────────────────────────────────────────
   if (f.status || f.published !== undefined || f.featured !== undefined) {
@@ -314,7 +333,7 @@ const birthText = (date: string | null, precision: string) =>
 
 /** Every animal as a spreadsheet in the same columns the importer reads, so an edited export can be uploaded back. */
 export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<string>> {
-  const [rows, categories, sales, facts, media] = await Promise.all([
+  const [rows, categories, sales, facts, media, videos] = await Promise.all([
     db
       .from("animals")
       .select("*")
@@ -332,7 +351,9 @@ export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<
       .select("animal_id, sort_order, media ( file_name )")
       .eq("ranch_id", ranchId)
       .order("sort_order"),
+    db.from("animal_videos").select("animal_id, url, sort_order").eq("ranch_id", ranchId).order("sort_order"),
   ]);
+  // (A missing videos table on an older database just means no video links in the export.)
   for (const r of [rows, categories, sales, facts, media]) if (r.error) return fail(dbErrorMessage(r.error));
 
   const categoryLabel = new Map((categories.data ?? []).map((c) => [c.id, c.label_singular]));
@@ -340,6 +361,8 @@ export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<
   const factsOf = new Map<string, string[]>();
   for (const f of facts.data ?? [])
     factsOf.set(f.animal_id, [...(factsOf.get(f.animal_id) ?? []), `${f.label}: ${f.value}`]);
+  const videoOf = new Map<string, string>();
+  for (const v of videos.data ?? []) if (!videoOf.has(v.animal_id)) videoOf.set(v.animal_id, v.url);
   const photosOf = new Map<string, string[]>();
   for (const m of media.data ?? []) {
     const media_ = Array.isArray(m.media) ? m.media[0] : m.media;
@@ -356,11 +379,15 @@ export async function exportAnimalsCsv(db: Db, ranchId: string): Promise<Result<
       sex: a.sex === "unknown" ? "" : a.sex,
       breed: a.breed ?? "",
       color: a.color ?? "",
+      height: a.height ?? "",
       registered_name: a.registered_name ?? "",
       registry: a.registry ?? "",
       registration_number: a.registration_number ?? "",
       birth_date: birthText(a.birth_date, a.birth_precision),
+      tagline: a.tagline ?? "",
       description: docToText(a.description as Json),
+      highlights: (a.highlights ?? []).join("; "),
+      video_url: videoOf.get(a.id) ?? "",
       status: a.program_status,
       published: a.is_published ? "yes" : "no",
       featured: a.is_featured ? "yes" : "no",

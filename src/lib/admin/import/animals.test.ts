@@ -98,6 +98,22 @@ describe("planImport", () => {
     });
   });
 
+  it("reads height, tagline, highlights and a video link, and explains bad ones", () => {
+    const good = plan(
+      "name,species,category,height,tagline,highlights,video_url\nStar,horse,Mare,15.3hh,Gentle and fast,Barrel racer; Kid safe,https://youtu.be/abc",
+    );
+    expect(good.results[0].errors).toEqual([]);
+    expect(good.results[0].planned?.fields).toMatchObject({
+      height: "15.3hh",
+      tagline: "Gentle and fast",
+      highlights: ["Barrel racer", "Kid safe"],
+      video_url: "https://youtu.be/abc",
+    });
+    const bad = plan(
+      "name,species,category,height,highlights,video_url\nStar,horse,Mare,fifteen point three hands,a;b;c;d;e,http://example.com/x",
+    );
+    expect(bad.results[0].errors).toHaveLength(3);
+  });
   it("updates an existing animal by id or by unique name, and leaves blank cells alone", () => {
     const byName = plan("name,category,breed,color\nblue star,Mare,Appaloosa,\n").results[0].planned!;
     expect(byName).toMatchObject({ action: "update", existingId: "a-1" });
@@ -167,11 +183,15 @@ describe("the downloadable template", () => {
       "sex",
       "breed",
       "color",
+      "height",
       "registered_name",
       "registry",
       "registration_number",
       "birth_date",
+      "tagline",
       "description",
+      "highlights",
+      "video_url",
       "status",
       "published",
       "featured",
@@ -188,7 +208,12 @@ describe("the downloadable template", () => {
   });
   it("still imports a real animal sitting next to the example rows", () => {
     const rows = parseCsv(templateCsv());
-    rows.rows.push(["", "Copper Ridge", "cattle", "Bull", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    rows.rows.push(
+      ["Copper Ridge", "cattle", "Bull"].reduce<string[]>(
+        (r, v, i) => ((r[i + 1] = v), r),
+        Array(rows.header.length).fill(""),
+      ),
+    );
     const result = planImport(rows, ctx);
     expect(result.results).toHaveLength(1);
     expect(result.results[0].planned?.action).toBe("create");

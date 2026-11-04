@@ -617,3 +617,8 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - Places already filled on an animal are kept and reported; a row gives the same animal two different parents across pedigrees is rejected; parents must precede their own parents in the pedigree (any row order is fine). "Unknown" or a blank name leaves a place empty.
 - Rows with problems are skipped and explained; the rest import. The preview shows every row's outcome before anything is saved. Limit: 500 rows per file.
 - The planner (`src/lib/admin/import/pedigree.ts`) is pure and tested; `pedigree-service.ts` does the database work. It works before the height migration is applied.
+
+## Animals CSV: height, tagline, highlights, video link
+
+- The animals template, import and "Download my animals" export now include `height`, `tagline`, `highlights` (up to 4, separated by `;`) and `video_url`, matching the fields on the animal's page. Older exports without these columns still upload; blank cells never erase anything.
+- Pedigrees have their own template and import (see above); sire and dam are not columns of the animals sheet.

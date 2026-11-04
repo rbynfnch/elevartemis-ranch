@@ -13,6 +13,8 @@
 import type { Species } from "@/lib/domain/species";
 import { fileNameKey, splitFileName } from "@/lib/admin/library/file-names";
 import type { Csv } from "./csv";
+import { HIGHLIGHTS, HIGHLIGHT_MAX, TAGLINE_MAX } from "@/lib/admin/animals/limits";
+import { parseVideoUrl } from "@/lib/animals/video";
 
 export const MAX_ROWS = 500;
 
@@ -24,11 +26,15 @@ export const importColumns = [
   "sex",
   "breed",
   "color",
+  "height",
   "registered_name",
   "registry",
   "registration_number",
   "birth_date",
+  "tagline",
   "description",
+  "highlights",
+  "video_url",
   "status",
   "published",
   "featured",
@@ -52,11 +58,15 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     sex: "female",
     breed: "Quarter Horse",
     color: "Bay",
+    height: "15.1hh",
     registered_name: "Example Registered Name",
     registry: "AQHA",
     registration_number: "1234567",
     birth_date: "2021-04-12",
+    tagline: "A short line under the name",
     description: "A sentence or two about this horse.",
+    highlights: "Barrel racer; Gentle with kids; Proven producer",
+    video_url: "https://www.youtube.com/watch?v=example",
     status: "active",
     published: "yes",
     featured: "no",
@@ -73,11 +83,15 @@ export const templateExamples: Record<ImportColumn, string>[] = [
     sex: "",
     breed: "Hereford",
     color: "",
+    height: "",
     registered_name: "",
     registry: "",
     registration_number: "",
     birth_date: "2022",
+    tagline: "",
     description: "",
+    highlights: "",
+    video_url: "",
     status: "",
     published: "",
     featured: "",
@@ -336,6 +350,10 @@ export type PlannedAnimal = {
     sex?: string;
     breed?: string;
     color?: string;
+    height?: string;
+    tagline?: string;
+    highlights?: string[];
+    video_url?: string;
     registered_name?: string;
     registry?: string;
     registration_number?: string;
@@ -499,6 +517,8 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
     for (const [column, limit, key] of [
       ["breed", 80, "breed"],
       ["color", 80, "color"],
+      ["height", 12, "height"],
+      ["tagline", TAGLINE_MAX, "tagline"],
       ["registered_name", 160, "registered_name"],
       ["registry", 80, "registry"],
       ["registration_number", 60, "registration_number"],
@@ -511,6 +531,20 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
     if (fields.breed && species && !breeds.has(`${species}:${lower(fields.breed)}`)) {
       // The first spelling seen wins; the database matches the rest to it.
       breeds.set(`${species}:${lower(fields.breed)}`, { species, name: fields.breed });
+    }
+    const highlightsCell = cell("highlights");
+    if (highlightsCell) {
+      const list = splitList(highlightsCell);
+      if (list.length > HIGHLIGHTS) fail("highlights", `use up to ${HIGHLIGHTS} highlights, separated by ;.`);
+      else if (list.some((h) => h.length > HIGHLIGHT_MAX))
+        fail("highlights", `keep each highlight to ${HIGHLIGHT_MAX} characters.`);
+      else fields.highlights = list;
+    }
+    const videoCell = cell("video_url");
+    if (videoCell) {
+      const video = parseVideoUrl(videoCell);
+      if (!video.ok) fail("video_url", video.message);
+      else fields.video_url = video.url;
     }
     const description = cell("description");
     if (description) fields.description = description;

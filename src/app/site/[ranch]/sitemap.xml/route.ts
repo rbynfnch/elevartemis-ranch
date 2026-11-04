@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { getSiteSettings } from "@/lib/site/get-site";
 import { buildNavigation } from "@/lib/site/navigation";
 import { getPosts } from "@/lib/site/get-posts";
@@ -7,6 +8,8 @@ import { sitemapXml, type SitemapEntry } from "@/lib/site/sitemap";
 
 /** Every public page the ranch has: the pages in its menu, each animal and each post. */
 export async function GET(request: Request, ctx: RouteContext<"/site/[ranch]/sitemap.xml">) {
+  // Built per request (each ranch has its own host), never at build time.
+  await connection();
   const { ranch } = await ctx.params;
   const site = await getSiteSettings(ranch);
   if (!site) return new Response("Not found", { status: 404 });

@@ -20,7 +20,7 @@ Where we are against "a rancher can get a finished, good-looking website without
 - [x] **Homepage editor** (up to three slides with photo, headline, subheadline and button)
 - [x] **Ranch Info screen** (tagline, introduction, phone, place, links, blog name)
 - [ ] ⚠ **Email notifications** for the Contact form: a Resend account, a verified sending domain, `RESEND_API_KEY` and `INQUIRY_FROM_ADDRESS` in Vercel (never in chat)
-- [~] **Brand setup for a new ranch**: steps are written down in `docs/launch-guide.md`; a logo image upload and an owner-facing style picker are still to do
+- [~] **Brand setup for a new ranch**: the owner picks name, mark, one of four color looks and a font pair on the Brand screen; a logo image upload is still to do
 - [x] **Blog** ("Happening on the Ranch" / "Experiences", the ranch chooses the name): posts admin, public list and post pages, linked animals, banner
 - [x] **Breeding Services page** ("Stallion Services" for horses, "Breeding" for cattle): the owner's data and the public view already exist; needs the public page, a Services banner, a menu item that appears only when an animal is offered, and an inquiry button that opens Contact with the animal chosen
 - [x] **A proper text editor** (bold, links, lists, photos in text), needed first by the blog
@@ -29,7 +29,7 @@ Where we are against "a rancher can get a finished, good-looking website without
 - [~] ⚠ **Custom domain**: steps are written down in `docs/launch-guide.md`; connecting each ranch's domain is still a manual step
 - [ ] **Phone and accessibility pass** on every public page and admin screen (tap sizes, text contrast, keyboard use, screen-reader labels), plus a speed check
 - [~] **Privacy page** done (linked from the footer, worded from what the site actually collects); a terms page is not needed until the site takes orders linked from the footer (the Contact form collects names and emails)
-- [ ] **People and access**: invite an editor or a second owner from the admin, not by hand in the database
+- [x] **People and access**: invite an editor or a second owner from the admin (Team screen)
 - [~] **Backups and recovery**: how to check and restore is in `docs/launch-guide.md`; ⚠ confirm the project's backups are on
 - [ ] **Error tracking and simple analytics**, so a broken page or a quiet week is noticed
 

@@ -20,6 +20,7 @@ export const adminSections = [
   { href: "/admin/page-banners", label: "Page Banners" },
   { href: "/admin/search-engines", label: "Search Engines" },
   { href: "/admin/ranch-info", label: "Ranch Info" },
+  { href: "/admin/brand", label: "Brand" },
   { href: "/admin/launch", label: "Launch" },
   { href: "/admin/team", label: "Team" },
   { href: "/admin/recently-deleted", label: "Recently Deleted" },

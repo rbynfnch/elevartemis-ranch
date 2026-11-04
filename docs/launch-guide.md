@@ -13,9 +13,9 @@ npm run provision:ranch -- --slug flying-w-ranch --name "Flying W Ranch" \
 
 This creates the ranch, its settings rows (including the About and Contact pages), the owner's invitation and the domains. The first domain is the primary one. Run it only from a trusted machine with `SUPABASE_SECRET_KEY` in `.env.local`.
 
-## 2. Brand (us, for now)
+## 2. Brand (the owner, with us for anything custom)
 
-Wordmark, brand mark, palette and font preset live in the ranch's branding settings and can be changed only by us. Pick a palette and font preset together with the owner, set them in the database (or the provisioning script's options), and check the site on a phone. A logo image upload is on the list for the next phase; until then the brand mark (two or three letters) is the logo.
+The owner chooses the header name, a short mark, one of four color looks and a font pair on the **Brand** screen. A fully custom palette is still set by us in the ranch's branding settings (it shows as "custom" to the owner). A logo image upload is on the list for the next phase; until then the brand mark (two to four letters) is the logo.
 
 ## 3. Custom domain (us and the owner)
 
@@ -49,4 +49,4 @@ The owner presses **Go live** on the Launch screen. That removes the "Preview si
 
 - **Backups:** confirm the Supabase project's backups are on (Settings > Database > Backups) and note how long they are kept. For a restore, use the dashboard's restore tool on the project.
 - **Monitoring:** watch the Vercel deployment and function logs after launch. Error tracking (for example Sentry) and simple privacy-friendly analytics are still to be chosen; both need an account and a key set in the Vercel environment, never in the code.
-- **People:** to add an editor or a second owner, use the invitation flow (next phase: an admin screen); until then run the provisioning tooling with `--skip-invite` against an existing account.
+- **People:** the ranch's owner adds editors and other owners on the **Team** screen.

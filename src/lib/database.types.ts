@@ -300,6 +300,7 @@ export type Database = {
           deceased_precision: Database["public"]["Enums"]["birth_precision"];
           description: Json | null;
           display_order: number;
+          highlights: string[];
           id: string;
           is_demo: boolean;
           is_featured: boolean;
@@ -317,6 +318,7 @@ export type Database = {
           slug: string;
           species: Database["public"]["Enums"]["species"];
           species_attrs: NonNullable<Json>;
+          tagline: string | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -337,6 +339,7 @@ export type Database = {
           deceased_precision?: Database["public"]["Enums"]["birth_precision"];
           description?: Json | null;
           display_order?: number;
+          highlights?: string[];
           id?: string;
           is_demo?: boolean;
           is_featured?: boolean;
@@ -354,6 +357,7 @@ export type Database = {
           slug: string;
           species: Database["public"]["Enums"]["species"];
           species_attrs?: NonNullable<Json>;
+          tagline?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -374,6 +378,7 @@ export type Database = {
           deceased_precision?: Database["public"]["Enums"]["birth_precision"];
           description?: Json | null;
           display_order?: number;
+          highlights?: string[];
           id?: string;
           is_demo?: boolean;
           is_featured?: boolean;
@@ -391,6 +396,7 @@ export type Database = {
           slug?: string;
           species?: Database["public"]["Enums"]["species"];
           species_attrs?: NonNullable<Json>;
+          tagline?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -1740,6 +1746,8 @@ export type Database = {
           photo_variants: Json;
           record_scope: Database["public"]["Enums"]["record_scope"];
           registered_name: string;
+          registration_number: string;
+          registry: string;
           sex: Database["public"]["Enums"]["animal_sex"];
           slug: string;
           species: Database["public"]["Enums"]["species"];

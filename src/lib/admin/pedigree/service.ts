@@ -10,7 +10,7 @@ import { dbErrorMessage } from "@/lib/auth/messages";
 import { docToText } from "@/lib/admin/form-values";
 import type { Species } from "@/lib/domain/species";
 import type { Db, Result } from "@/lib/admin/animals/service";
-import { toNodes, type PedigreeNode } from "@/lib/animals/pedigree";
+import { registrationText, toNodes, type PedigreeNode } from "@/lib/animals/pedigree";
 import { ancestorColumns, type AncestorInput } from "./fields";
 
 const ok = <T>(data: T): Result<T> => ({ ok: true, data });
@@ -30,7 +30,17 @@ export type ParentCandidate = {
 export async function loadPedigree(db: Db, animalId: string): Promise<Result<PedigreeNode[]>> {
   const { data, error } = await db.rpc("get_pedigree", { p_animal: animalId, p_generations: 3 });
   if (error) return fail(dbErrorMessage(error));
-  return ok(toNodes(data ?? []));
+  const nodes = toNodes(data ?? []);
+
+  // The owner can read every record in the ranch, so registration details come straight from the animals.
+  // That way they show here even before the database's pedigree function reports them.
+  const ids = [...new Set(nodes.map((n) => n.animalId))];
+  if (ids.length > 0) {
+    const { data: regs } = await db.from("animals").select("id, registry, registration_number").in("id", ids);
+    const byId = new Map((regs ?? []).map((r) => [r.id, registrationText(r.registry, r.registration_number)]));
+    for (const n of nodes) n.registration = byId.get(n.animalId) ?? n.registration;
+  }
+  return ok(nodes);
 }
 
 /** Animals that could be this animal's sire or dam: same species, the right sex, found by name. */

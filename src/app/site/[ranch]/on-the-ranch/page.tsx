@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { getSiteSettings } from "@/lib/site/get-site";
 import { pageMetadata } from "@/lib/site/seo";
 import { getPageHero } from "@/lib/site/page-hero";
-import { getPostCategories, getPosts, type PostCard } from "@/lib/site/get-posts";
+import { getPostCategories, getPostList, getPostTags, type PostCard } from "@/lib/site/get-posts";
 import { PageHero } from "@/components/site/page-hero";
 import { PostCardView } from "@/components/site/post-card";
 
@@ -38,15 +38,29 @@ async function Page({ params, searchParams }: { params: Params; searchParams: Se
   const site = await getSiteSettings(ranch);
   if (!site) notFound();
   const label = site.blogLabel ?? "Happening on the Ranch";
-  const category =
-    typeof (await searchParams).category === "string" ? ((await searchParams).category as string) : undefined;
+  const sp = await searchParams;
+  const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
+  const category = one(sp.category);
+  const tag = one(sp.tag);
+  const pageNo = Number(one(sp.page)) || 1;
 
-  const [posts, categories, hero] = await Promise.all([
-    getPosts(site.ranchId, site.slug, category),
+  const [list, categories, tags, hero] = await Promise.all([
+    getPostList(site.ranchId, site.slug, { category, tag, page: pageNo }),
     getPostCategories(site.ranchId, site.slug),
+    getPostTags(site.ranchId, site.slug),
     getPageHero(site, "on-the-ranch", { title: label }),
   ]);
+  const posts = list.posts;
   const active = categories.find((c) => c.slug === category);
+  const activeTag = tags.find((t) => t.slug === tag);
+  const link = (q: { category?: string; tag?: string; page?: number }) => {
+    const p = new URLSearchParams();
+    if (q.category) p.set("category", q.category);
+    if (q.tag) p.set("tag", q.tag);
+    if (q.page && q.page > 1) p.set("page", String(q.page));
+    const str = p.toString();
+    return `/on-the-ranch${str ? `?${str}` : ""}`;
+  };
 
   return (
     <>
@@ -59,7 +73,7 @@ async function Page({ params, searchParams }: { params: Params; searchParams: Se
               return (
                 <Link
                   key={c.slug || "all"}
-                  href={c.slug ? `/on-the-ranch?category=${c.slug}` : "/on-the-ranch"}
+                  href={link({ category: c.slug || undefined })}
                   aria-current={current ? "page" : undefined}
                   className={clsx(
                     "inline-flex min-h-11 items-center border px-4 text-sm no-underline",
@@ -72,6 +86,14 @@ async function Page({ params, searchParams }: { params: Params; searchParams: Se
             })}
           </nav>
         ) : null}
+        {activeTag ? (
+          <p className="text-ink-muted">
+            Stories tagged <strong>{activeTag.name}</strong>.{" "}
+            <Link href={link({ category })} className="text-primary underline underline-offset-4">
+              Show all
+            </Link>
+          </p>
+        ) : null}
         {posts.length === 0 ? (
           <p className="text-ink-muted">Nothing here yet. Check back soon.</p>
         ) : (
@@ -83,6 +105,27 @@ async function Page({ params, searchParams }: { params: Params; searchParams: Se
             ))}
           </ul>
         )}
+        {list.pages > 1 ? (
+          <nav aria-label="More stories" className="flex items-center justify-between border-t border-rule pt-6 text-sm">
+            {list.page > 1 ? (
+              <Link href={link({ category, tag, page: list.page - 1 })} rel="prev" className="inline-flex min-h-11 items-center">
+                ← Newer stories
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-ink-muted">
+              Page {list.page} of {list.pages}
+            </span>
+            {list.page < list.pages ? (
+              <Link href={link({ category, tag, page: list.page + 1 })} rel="next" className="inline-flex min-h-11 items-center">
+                Older stories →
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        ) : null}
       </div>
     </>
   );

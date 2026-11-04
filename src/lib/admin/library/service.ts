@@ -130,7 +130,7 @@ export async function renamePhoto(db: Db, mediaId: string, rawName: string): Pro
 
 /** What is using a photo, in words the owner can act on. Empty when nothing does. */
 async function usage(db: Db, ranchId: string, mediaId: string): Promise<string[] | null> {
-  const [animals, posts, featured, slides, gallery] = await Promise.all([
+  const [animals, posts, featured, slides, gallery, refs] = await Promise.all([
     db.from("animal_media").select("animals ( name )").eq("ranch_id", ranchId).eq("media_id", mediaId),
     db.from("post_media").select("media_id", { count: "exact", head: true }).eq("media_id", mediaId),
     db
@@ -140,6 +140,8 @@ async function usage(db: Db, ranchId: string, mediaId: string): Promise<string[]
       .eq("featured_media_id", mediaId),
     db.from("hero_slides").select("id", { count: "exact", head: true }).eq("ranch_id", ranchId).eq("media_id", mediaId),
     db.from("media").select("in_gallery").eq("id", mediaId).maybeSingle(),
+    // Photos placed inside a story or used for sharing. Before the blog update this table doesn't exist.
+    db.from("post_media_refs").select("post_id", { count: "exact", head: true }).eq("media_id", mediaId),
   ]);
   if ([animals, posts, featured, slides, gallery].some((r) => r.error)) return null;
   const out: string[] = [];
@@ -148,7 +150,7 @@ async function usage(db: Db, ranchId: string, mediaId: string): Promise<string[]
     .filter((n): n is string => Boolean(n));
   if (names.length)
     out.push(names.length > 2 ? `${names.slice(0, 2).join(", ")} and ${names.length - 2} more` : names.join(" and "));
-  if ((posts.count ?? 0) + (featured.count ?? 0) > 0) out.push("an update post");
+  if ((posts.count ?? 0) + (featured.count ?? 0) + (refs.error ? 0 : (refs.count ?? 0)) > 0) out.push("an update post");
   if ((slides.count ?? 0) > 0) out.push("a homepage slide");
   if (gallery.data?.in_gallery) out.push("the Gallery");
   return out;
@@ -167,17 +169,22 @@ export async function deleteLibraryPhoto(db: Db, ranchId: string, mediaId: strin
     .eq("ranch_id", ranchId)
     .maybeSingle();
   if (!media) return fail("That photo could not be found. Refresh the page and try again.");
-  const variantPaths = Object.values((media.variants ?? {}) as Record<string, { path: string }>).map((v) => v.path);
-  if (variantPaths.length) await db.storage.from("ranch-media").remove(variantPaths);
-  if (media.original_path) await db.storage.from("ranch-originals").remove([media.original_path]);
+  // The record goes first: if it can't be deleted the files stay, so a photo is never left without its pictures.
   const { data: deleted, error } = await db
     .from("media")
     .delete()
     .eq("id", mediaId)
     .eq("ranch_id", ranchId)
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) {
+    return error.code === "23503"
+      ? fail("This photo is still used in an update post. Remove it there first.")
+      : fail(dbErrorMessage(error));
+  }
   if (!deleted?.length) return fail("That photo couldn't be deleted. Please try again.");
+  const variantPaths = Object.values((media.variants ?? {}) as Record<string, { path: string }>).map((v) => v.path);
+  if (variantPaths.length) await db.storage.from("ranch-media").remove(variantPaths);
+  if (media.original_path) await db.storage.from("ranch-originals").remove([media.original_path]);
   return ok(null);
 }
 

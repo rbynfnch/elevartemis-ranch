@@ -11,10 +11,13 @@ import { UploadButton, usePhotoUpload } from "@/components/admin/library/use-pho
 export function PhotoChooser({
   label,
   onChoose,
+  onChooseMany,
   trigger,
 }: {
   label: string;
-  onChoose: (photo: { id: string; thumb: string | null }) => void;
+  onChoose?: (photo: { id: string; thumb: string | null }) => void;
+  /** When given, several photos can be ticked and added together. */
+  onChooseMany?: (photos: { id: string; thumb: string | null }[]) => void;
   /** Lays out what opens the chooser (for example a clickable photo box). Without it, a button with `label`. */
   trigger?: (open: () => void) => ReactNode;
 }) {
@@ -22,12 +25,15 @@ export function PhotoChooser({
   const [photos, setPhotos] = useState<LibraryPhoto[] | null>(null);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
+  const many = Boolean(onChooseMany);
 
   // Opening is a request (a counter), so what lays out the trigger never touches the dialog itself.
   const [requests, setRequests] = useState(0);
   const open = () => {
     setError("");
     setQuery("");
+    setPicked([]);
     setRequests((n) => n + 1);
   };
 
@@ -53,10 +59,11 @@ export function PhotoChooser({
     const fresh = await listLibraryAction();
     if (!fresh.ok) return setError(fresh.message);
     setPhotos(fresh.data);
-    if (ids.length === 1) {
+    if (many) setPicked((now) => [...now, ...ids.filter((i) => !now.includes(i))]);
+    else if (ids.length === 1) {
       const p = fresh.data.find((x) => x.id === ids[0]);
       if (p) {
-        onChoose({ id: p.id, thumb: p.thumb });
+        onChoose?.({ id: p.id, thumb: p.thumb });
         dialog.current?.close();
       }
     }
@@ -82,7 +89,7 @@ export function PhotoChooser({
       >
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule px-5 py-4">
           <h2 id="chooser-title" className="font-display text-xl">
-            Choose a photo
+            {many ? "Choose photos" : "Choose a photo"}
           </h2>
           <div className="flex items-center gap-3">
             <label htmlFor="chooser-search" className="sr-only">
@@ -132,12 +139,19 @@ export function PhotoChooser({
               <li key={p.id}>
                 <button
                   type="button"
+                  aria-pressed={many ? picked.includes(p.id) : undefined}
                   onClick={() => {
-                    onChoose({ id: p.id, thumb: p.thumb });
+                    if (many) return setPicked((now) => (now.includes(p.id) ? now.filter((i) => i !== p.id) : [...now, p.id]));
+                    onChoose?.({ id: p.id, thumb: p.thumb });
                     dialog.current?.close();
                   }}
-                  className="group block w-full border border-rule bg-white text-left hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                  className={`group relative block w-full border bg-white text-left hover:border-primary focus-visible:outline-2 focus-visible:outline-primary ${picked.includes(p.id) ? "border-primary ring-2 ring-primary" : "border-rule"}`}
                 >
+                  {picked.includes(p.id) ? (
+                    <span className="absolute right-1 top-1 z-10 bg-primary px-1.5 text-xs font-semibold text-on-primary">
+                      {picked.indexOf(p.id) + 1}
+                    </span>
+                  ) : null}
                   {p.thumb ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.thumb} alt="" className="aspect-[4/3] w-full object-cover" loading="lazy" />
@@ -150,6 +164,30 @@ export function PhotoChooser({
             ))}
           </ul>
         </div>
+        {many ? (
+          <div className="flex items-center justify-between gap-3 border-t border-rule px-5 py-3">
+            <p className="text-sm text-ink-muted" role="status">
+              {picked.length ? `${picked.length} selected` : "Tick the photos you want, in the order you want them."}
+            </p>
+            <button
+              type="button"
+              disabled={!picked.length}
+              className={buttonClasses("primary", "py-2 disabled:opacity-40")}
+              onClick={() => {
+                const byId = new Map((photos ?? []).map((p) => [p.id, p]));
+                onChooseMany?.(
+                  picked.flatMap((id) => {
+                    const p = byId.get(id);
+                    return p ? [{ id: p.id, thumb: p.thumb }] : [];
+                  }),
+                );
+                dialog.current?.close();
+              }}
+            >
+              Add {picked.length || ""} photo{picked.length === 1 ? "" : "s"}
+            </button>
+          </div>
+        ) : null}
       </dialog>
     </>
   );

@@ -4,8 +4,8 @@ import { Suspense } from "react";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/admin-context";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getPostForEdit } from "@/lib/admin/posts/service";
-import { PostEditor } from "@/components/admin/posts/post-editor";
+import { getEditorData, getTaxonomy } from "@/lib/admin/blog/service";
+import { PostEditor } from "@/components/admin/blog/post-editor";
 
 export const metadata: Metadata = { title: "Edit post" };
 
@@ -22,13 +22,14 @@ async function EditPost({ params }: { params: PageProps<"/admin/[ranch]/updates/
   if (!z.uuid().safeParse(id).success) notFound();
   const ctx = await requireAdmin(ranch);
   if (!ctx) return null;
-  const result = await getPostForEdit(await createServerSupabase(), ctx.ranch.id, id);
+  const db = await createServerSupabase();
+  const [result, taxonomy] = await Promise.all([getEditorData(db, ctx.ranch.id, id), getTaxonomy(db, ctx.ranch.id)]);
   if (!result.ok) notFound();
-  const post = result.data;
   return (
-    <div className="space-y-6">
-      <h1 className="font-display text-3xl">{post.title === "Untitled post" ? "New post" : "Edit post"}</h1>
-      <PostEditor initial={post} ranchLabel="Happening on the Ranch" publicHref={`/on-the-ranch/${post.slug}`} />
-    </div>
+    <PostEditor
+      data={result.data}
+      taxonomy={taxonomy}
+      ranchName={ctx.ranch.name}
+    />
   );
 }

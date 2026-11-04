@@ -679,3 +679,8 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Sold Horses and Sold Cattle banners
 
 - The Sold Horses and Sold Cattle pages have a full banner (photo, headline, subheadline) set under Page Banners, like For Sale (migration `20260928001300` allows the keys `sold-horses` and `sold-cattle`). Their title is the default headline. Retired, Previous Stallions and In Memory pages don't have banners yet.
+
+## A banner on every page
+
+- In Memory, and the Sold, Retired and Previous Stallions / Reference Sires pages of each species, now have full banners too (migration `20260928001400` widens the allowed keys and supersedes `…001300`). Page Banners lists every page the ranch has: About, Horses, Cattle, For Sale, then Sold, Retired and Reference for each species, In Memory, Contact, and each category (photo only). The homepage keeps its own slider; animal pages have their photo gallery instead.
+- Ranch Life, Gallery and FAQs get a banner key when those pages are built. (An earlier commit also reformatted `globals.css` and `layout.tsx` by accident; that was reverted.)

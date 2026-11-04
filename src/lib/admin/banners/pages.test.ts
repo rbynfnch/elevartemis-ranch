@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryBannerKey, isBannerKey, tidyBanner } from "./pages";
+import { bannerPages, categoryBannerKey, isBannerKey, tidyBanner } from "./pages";
 
 describe("banner keys", () => {
   it("accepts the main pages and category pages only", () => {
@@ -28,5 +28,15 @@ describe("tidyBanner", () => {
   });
   it("cuts over-long text", () => {
     expect(tidyBanner({ headline: "x".repeat(200), subheadline: "", mediaId: "m" }).headline).toHaveLength(120);
+  });
+});
+
+describe("bannerPages", () => {
+  it("offers a species' pages only when the ranch has it, and every offered key can be saved", () => {
+    const cattleOnly = bannerPages(["cattle"]).map((p) => p.key);
+    expect(cattleOnly).toContain("sold-cattle");
+    expect(cattleOnly).not.toContain("horses");
+    expect(cattleOnly).not.toContain("sold-horses");
+    for (const p of bannerPages(["horse", "cattle"])) expect(isBannerKey(p.key)).toBe(true);
   });
 });

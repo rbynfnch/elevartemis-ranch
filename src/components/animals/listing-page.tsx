@@ -30,9 +30,10 @@ export async function ListingPageView({
   });
   const byYear = Boolean(page.category?.groups_by_birth_year) && animals.some((a) => a.birthYear);
 
-  // Sold Horses / Sold Cattle have a full banner (photo, headline, subheadline) like the other main pages.
-  if (page.kind === "sold") {
-    const hero = await getPageHero(site, `sold-${terms.path}`, { title: page.title });
+  // Sold, Retired and Previous Stallions / Reference Sires pages have a full banner (photo, headline,
+  // subheadline) like the other main pages, set under Page Banners.
+  if (page.kind === "sold" || page.kind === "retired" || page.kind === "reference") {
+    const hero = await getPageHero(site, `${page.kind}-${terms.path}`, { title: page.title });
     return (
       <>
         <PageHero

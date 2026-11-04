@@ -1,13 +1,28 @@
-/** The pages that have a banner the owner can set. Category pages are added from the ranch's own categories. */
-export const bannerPages = [
-  { key: "about", label: "About", note: "Headline, subheadline and photo." },
-  { key: "horses", label: "Horses", note: "Headline, subheadline and photo." },
-  { key: "cattle", label: "Cattle", note: "Headline, subheadline and photo." },
-  { key: "for-sale", label: "For Sale", note: "Headline, subheadline and photo." },
-  { key: "sold-horses", label: "Sold Horses", note: "Headline, subheadline and photo." },
-  { key: "sold-cattle", label: "Sold Cattle", note: "Headline, subheadline and photo." },
-  { key: "contact", label: "Contact", note: "Headline, subheadline and photo." },
-] as const;
+import { speciesTerms, type Species } from "@/lib/domain/species";
+
+export type BannerPage = { key: string; label: string };
+
+const speciesKey = (s: Species) => speciesTerms[s].path; // "horses" | "cattle"
+
+/**
+ * The pages that have a banner the owner can set, in the order the owner sees them. A species' pages are
+ * offered only when the ranch has that species. Category pages are added from the ranch's own categories.
+ */
+export function bannerPages(enabled: Species[]): BannerPage[] {
+  const pages: BannerPage[] = [{ key: "about", label: "About" }];
+  for (const s of enabled) pages.push({ key: speciesKey(s), label: speciesTerms[s].plural });
+  pages.push({ key: "for-sale", label: "For Sale" });
+  for (const s of enabled) {
+    const t = speciesTerms[s];
+    pages.push(
+      { key: `sold-${speciesKey(s)}`, label: `Sold ${t.plural}` },
+      { key: `retired-${speciesKey(s)}`, label: `Retired ${t.plural}` },
+      { key: `reference-${speciesKey(s)}`, label: `${t.referenceHeading} (${t.plural})` },
+    );
+  }
+  pages.push({ key: "in-memory", label: "In Memory" }, { key: "contact", label: "Contact" });
+  return pages;
+}
 
 export const categoryBannerKey = (categoryId: string) => `category:${categoryId}`;
 
@@ -28,6 +43,8 @@ export function tidyBanner(input: BannerInput): {
   };
 }
 
-/** Only these keys can be saved: the five pages, or category:<species>.<key>. */
+/** Only these keys can be saved: the main pages, the sold / retired / reference pages, or category:<species>.<key>. */
 export const isBannerKey = (key: string) =>
-  bannerPages.some((p) => p.key === key) || /^category:(horse|cattle)\.[a-z0-9_]+$/.test(key);
+  ["about", "horses", "cattle", "for-sale", "contact", "in-memory"].includes(key) ||
+  /^(sold|retired|reference)-(horses|cattle)$/.test(key) ||
+  /^category:(horse|cattle)\.[a-z0-9_]+$/.test(key);

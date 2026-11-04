@@ -27,11 +27,7 @@ async function Banners({ params }: { params: PageProps<"/admin/[ranch]/page-bann
     loadRanchCategories(db, ctx.ranch.id),
   ]);
   const found = banners.ok ? banners.data : {};
-  const enabled = ctx.ranch.enabledSpecies;
-  // A species' pages are offered only when the ranch has that species turned on.
-  const pages = bannerPages.filter((p) =>
-    p.key.endsWith("horses") ? enabled.includes("horse") : p.key.endsWith("cattle") ? enabled.includes("cattle") : true,
-  );
+  const pages = bannerPages(ctx.ranch.enabledSpecies);
 
   return (
     <div className="space-y-10">

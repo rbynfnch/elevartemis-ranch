@@ -81,23 +81,15 @@
     line-height: 1.65;
     font-feature-settings: "kern", "liga";
   }
-  h1,
-  h2,
-  h3 {
+  h1, h2, h3 {
     font-family: var(--ff-display);
     font-weight: 400;
     text-wrap: balance;
     letter-spacing: -0.005em;
   }
-  p {
-    text-wrap: pretty;
-  }
-  a {
-    color: inherit;
-  }
-  ::selection {
-    background: color-mix(in oklab, var(--c-accent) 35%, transparent);
-  }
+  p { text-wrap: pretty; }
+  a { color: inherit; }
+  ::selection { background: color-mix(in oklab, var(--c-accent) 35%, transparent); }
 
   /* Visible, on-brand keyboard focus everywhere */
   :focus-visible {
@@ -115,9 +107,7 @@
     font-size: 1.125rem;
     line-height: 1.75;
   }
-  .prose-ranch > * + * {
-    margin-top: 1em;
-  }
+  .prose-ranch > * + * { margin-top: 1em; }
 
   /* Hairline rule with a short brass lead: the system's one recurring ornament */
   .rule-lead {
@@ -134,16 +124,11 @@
   }
 
   /* Draft-content marker for placeholder copy in the demo */
-  .placeholder-copy {
-    color: var(--c-ink-muted);
-    font-style: italic;
-  }
+  .placeholder-copy { color: var(--c-ink-muted); font-style: italic; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

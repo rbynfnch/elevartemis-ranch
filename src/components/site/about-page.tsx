@@ -64,7 +64,10 @@ export function AboutSections({
   const hasStory = c.story.heading.trim() || !richTextIsEmpty(c.story.body) || storyPhoto;
 
   return (
-    <div className="mx-auto max-w-[88rem] space-y-16 px-[var(--gutter)] py-12 lg:space-y-20 lg:py-16">
+    <div
+      // A photo across the bottom meets the footer directly, with no gap beneath it.
+      className={`mx-auto max-w-[88rem] space-y-16 px-[var(--gutter)] pt-12 lg:space-y-20 lg:pt-16 ${bandPhoto ? "pb-0" : "pb-12 lg:pb-16"}`}
+    >
       {hasIntro ? (
         <section
           aria-label={c.intro.heading.trim() || `About ${ranchName}`}

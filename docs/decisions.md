@@ -701,3 +701,8 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Breeding Services page
 
 - `/breeding` lists every public sire offered for breeding with what the owner entered (fee, booking and collection fees, season, how it is available, guarantee, shipping, mare or cow requirements, terms, contract link) and an inquiry button that opens Contact with that animal. It reads the existing `public_breeding_services` view and `breeding_services` table, so no new database update is needed. The menu item appears when any animal of an enabled species is offered: "Stallion Services" for horses only, "Breeding" for cattle only, "Breeding Services" for both. It has a banner under Page Banners.
+
+## Ranch Info and Homepage screens
+
+- **Ranch Info** (admin): tagline, short introduction (with the text editor), phone, city and state, optional address and call times, links to other sites (https only, one per site except "another website"), and the blog's name. The footer, the home page, the Contact page and search engines read these.
+- **Homepage** (admin): up to three slides, each with a photo from the library, headline, subheadline and an optional button to a page, a category, one animal or another site. Slides can be reordered, switched off or removed; at least one must be on. The three-slide limit is enforced in the database and respected when saving (removed slides are archived first).

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { listLibraryAction } from "@/lib/admin/library/actions";
 import type { LibraryPhoto } from "@/lib/admin/library/service";
 import { FormMessage, TextInput } from "@/components/admin/forms";
@@ -10,24 +10,42 @@ import { buttonClasses } from "@/components/ui/button";
 export function PhotoChooser({
   label,
   onChoose,
+  trigger,
 }: {
   label: string;
   onChoose: (photo: { id: string; thumb: string | null }) => void;
+  /** Lays out what opens the chooser (for example a clickable photo box). Without it, a button with `label`. */
+  trigger?: (open: () => void) => ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [photos, setPhotos] = useState<LibraryPhoto[] | null>(null);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
 
-  async function open() {
+  // Opening is a request (a counter), so what lays out the trigger never touches the dialog itself.
+  const [requests, setRequests] = useState(0);
+  const open = () => {
     setError("");
     setQuery("");
+    setRequests((n) => n + 1);
+  };
+
+  useEffect(() => {
+    if (requests === 0) return;
     dialog.current?.showModal();
     if (photos) return;
-    const result = await listLibraryAction();
-    if (!result.ok) return setError(result.message);
-    setPhotos(result.data);
-  }
+    let cancelled = false;
+    void listLibraryAction().then((result) => {
+      if (cancelled) return;
+      if (!result.ok) setError(result.message);
+      else setPhotos(result.data);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Only a new request opens the chooser; the photo list is loaded once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requests]);
 
   const shown = (photos ?? []).filter(
     (p) => !query.trim() || (p.fileName ?? "").toLowerCase().includes(query.trim().toLowerCase()),
@@ -35,9 +53,13 @@ export function PhotoChooser({
 
   return (
     <>
-      <button type="button" className={buttonClasses("secondary", "py-2")} onClick={open}>
-        {label}
-      </button>
+      {trigger ? (
+        trigger(open)
+      ) : (
+        <button type="button" className={buttonClasses("secondary", "py-2")} onClick={open}>
+          {label}
+        </button>
+      )}
       <dialog
         ref={dialog}
         aria-labelledby="chooser-title"

@@ -23,30 +23,45 @@ const targets = [
 
 function PhotoPick({ label, photo, onChange }: { label: string; photo: Photo; onChange: (p: Photo) => void }) {
   return (
-    <div className="space-y-2">
-      <p className="text-sm font-semibold">{label}</p>
-      {photo.thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={photo.thumb} alt="" className="aspect-[4/3] w-48 border border-rule object-cover" />
-      ) : (
-        <p className="text-sm text-ink-muted">{photo.id ? "Photo chosen." : "No photo."}</p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <PhotoChooser
-          label={photo.id ? "Change photo" : "Choose photo"}
-          onChoose={(p) => onChange({ id: p.id, thumb: p.thumb })}
-        />
-        {photo.id ? (
+    <PhotoChooser
+      label={photo.id ? "Change photo" : "Choose photo"}
+      onChoose={(p) => onChange({ id: p.id, thumb: p.thumb })}
+      trigger={(open) => (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold">{label}</p>
+          {/* The picture itself is the button: click it to choose or change the photo. */}
           <button
             type="button"
-            className={buttonClasses("quiet", "py-2")}
-            onClick={() => onChange({ id: null, thumb: null })}
+            onClick={open}
+            aria-label={photo.id ? `Change ${label.toLowerCase()}` : `Choose a ${label.toLowerCase()}`}
+            className="group block text-left focus-visible:outline-2 focus-visible:outline-primary"
           >
-            Remove
+            {photo.thumb ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo.thumb} alt="" className="aspect-[4/3] w-48 border border-rule object-cover" />
+            ) : (
+              <span className="flex aspect-[4/3] w-48 items-center justify-center border border-dashed border-rule bg-surface px-3 text-center text-sm text-ink-muted group-hover:border-primary group-hover:text-ink">
+                {photo.id ? "Photo chosen" : "No photo yet. Click to choose."}
+              </span>
+            )}
           </button>
-        ) : null}
-      </div>
-    </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className={buttonClasses("secondary", "py-2")} onClick={open}>
+              {photo.id ? "Change photo" : "Choose photo"}
+            </button>
+            {photo.id ? (
+              <button
+                type="button"
+                className={buttonClasses("quiet", "py-2")}
+                onClick={() => onChange({ id: null, thumb: null })}
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+        </div>
+      )}
+    />
   );
 }
 

@@ -46,31 +46,48 @@ export function BannerEditor({
         {label}
       </h2>
       <div className="mt-4 grid gap-6 md:grid-cols-[16rem_1fr]">
-        <div className="space-y-3">
-          {photo.thumb ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo.thumb} alt="" className="aspect-[16/9] w-full border border-rule object-cover" />
-          ) : (
-            <div className="flex aspect-[16/9] items-center justify-center border border-dashed border-rule bg-surface px-3 text-center text-sm text-ink-muted">
-              {photo.id ? "Photo chosen" : imageOnly ? "No photo: no banner" : "No photo yet"}
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <PhotoChooser
-              label={photo.id ? "Change photo" : "Choose photo"}
-              onChoose={(p) => setPhoto({ id: p.id, thumb: p.thumb })}
-            />
-            {photo.id ? (
+        <PhotoChooser
+          label={photo.id ? "Change photo" : "Choose photo"}
+          onChoose={(p) => setPhoto({ id: p.id, thumb: p.thumb })}
+          trigger={(open) => (
+            <div className="space-y-3">
+              {/* The picture itself is the button: click it to choose or change the photo. */}
               <button
                 type="button"
-                className={buttonClasses("quiet", "py-2")}
-                onClick={() => setPhoto({ id: null, thumb: null })}
+                onClick={open}
+                aria-label={photo.id ? "Change photo" : "Choose a photo"}
+                className="group relative block w-full text-left focus-visible:outline-2 focus-visible:outline-primary"
               >
-                Remove
+                {photo.thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photo.thumb} alt="" className="aspect-[16/9] w-full border border-rule object-cover" />
+                ) : (
+                  <span className="flex aspect-[16/9] w-full items-center justify-center border border-dashed border-rule bg-surface px-3 text-center text-sm text-ink-muted group-hover:border-primary group-hover:text-ink">
+                    {photo.id
+                      ? "Photo chosen"
+                      : imageOnly
+                        ? "No photo: no banner. Click to choose."
+                        : "No photo yet. Click to choose."}
+                  </span>
+                )}
               </button>
-            ) : null}
-          </div>
-        </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className={buttonClasses("secondary", "py-2")} onClick={open}>
+                  {photo.id ? "Change photo" : "Choose photo"}
+                </button>
+                {photo.id ? (
+                  <button
+                    type="button"
+                    className={buttonClasses("quiet", "py-2")}
+                    onClick={() => setPhoto({ id: null, thumb: null })}
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          )}
+        />
         <div className="space-y-4">
           {imageOnly ? (
             <p className="text-sm text-ink-muted">

@@ -7,10 +7,11 @@
  */
 import type { Json } from "@/lib/database.types";
 import { dbErrorMessage } from "@/lib/auth/messages";
-import { textToDoc } from "@/lib/admin/form-values";
+import { docToText } from "@/lib/admin/form-values";
 import type { Species } from "@/lib/domain/species";
 import type { Db, Result } from "@/lib/admin/animals/service";
 import { toNodes, type PedigreeNode } from "@/lib/animals/pedigree";
+import { ancestorColumns, type AncestorInput } from "./fields";
 
 const ok = <T>(data: T): Result<T> => ({ ok: true, data });
 const fail = (message: string): Result<never> => ({ ok: false, message });
@@ -69,15 +70,7 @@ export async function searchParents(
   );
 }
 
-export type OutsideAncestorInput = {
-  name: string;
-  registry?: string | null;
-  registrationNumber?: string | null;
-  birthYear?: number | null;
-  color?: string | null;
-  breed?: string | null;
-  notes?: string | null;
-};
+export type OutsideAncestorInput = AncestorInput;
 
 /** Records an ancestor the ranch doesn't own, for the pedigree only. It never appears on the website as an animal. */
 export async function addOutsideAncestor(
@@ -87,37 +80,77 @@ export async function addOutsideAncestor(
   role: Role,
   input: OutsideAncestorInput,
 ): Promise<Result<{ id: string; name: string }>> {
-  const name = input.name.replace(/\s+/g, " ").trim();
-  if (!name) return fail("Enter a name.");
-  if (name.length > 120) return fail("Use 120 characters or fewer for the name.");
-  const clean = (v: string | null | undefined, max: number) => {
-    const t = v?.trim();
-    return t ? t.slice(0, max) : null;
-  };
-  const year =
-    input.birthYear && input.birthYear >= 1800 && input.birthYear <= new Date().getFullYear() ? input.birthYear : null;
-
+  const fields = ancestorColumns(input);
+  if (!fields.ok) return fail(fields.message);
   const { data, error } = await db
     .from("animals")
     .insert({
+      ...fields.columns,
+      description: fields.columns.description as Json | null,
       ranch_id: ranchId,
       species,
       record_scope: "pedigree_only",
-      name,
       slug: "",
       sex: role === "sire" ? "male" : "female",
-      registry: clean(input.registry, 80),
-      registration_number: clean(input.registrationNumber, 60),
-      birth_date: year ? `${year}-01-01` : null,
-      birth_precision: "year",
-      color: clean(input.color, 80),
-      breed: clean(input.breed, 80),
-      description: textToDoc(input.notes ?? null) as Json | null,
     })
     .select("id, name")
     .single();
   if (error) return fail(dbErrorMessage(error));
   return ok(data);
+}
+
+export type AncestorDetails = {
+  id: string;
+  name: string;
+  registry: string;
+  registrationNumber: string;
+  birthYear: string;
+  color: string;
+  notes: string;
+};
+
+/** An outside ancestor's details, for the edit form. Animals the ranch owns are edited on their own page. */
+export async function getAncestor(db: Db, ranchId: string, id: string): Promise<Result<AncestorDetails>> {
+  const { data, error } = await db
+    .from("animals")
+    .select("id, name, record_scope, registry, registration_number, birth_year, color, description")
+    .eq("id", id)
+    .eq("ranch_id", ranchId)
+    .maybeSingle();
+  if (error) return fail(dbErrorMessage(error));
+  if (!data) return fail("That animal could not be found. Refresh the page and try again.");
+  if (data.record_scope !== "pedigree_only") return fail("This animal is one of yours. Edit it on its own page.");
+  return ok({
+    id: data.id,
+    name: data.name,
+    registry: data.registry ?? "",
+    registrationNumber: data.registration_number ?? "",
+    birthYear: data.birth_year ? String(data.birth_year) : "",
+    color: data.color ?? "",
+    notes: docToText(data.description),
+  });
+}
+
+/** Saves changes to an outside ancestor. It only ever touches pedigree-only records. */
+export async function updateAncestor(
+  db: Db,
+  ranchId: string,
+  id: string,
+  input: AncestorInput,
+): Promise<Result<{ name: string }>> {
+  const fields = ancestorColumns(input);
+  if (!fields.ok) return fail(fields.message);
+  const { data, error } = await db
+    .from("animals")
+    .update({ ...fields.columns, description: fields.columns.description as Json | null })
+    .eq("id", id)
+    .eq("ranch_id", ranchId)
+    .eq("record_scope", "pedigree_only")
+    .select("id, name");
+  if (error) return fail(dbErrorMessage(error));
+  if (!data?.length)
+    return fail("That animal could not be found, or it's one of yours. Edit your own animals on their pages.");
+  return ok({ name: data[0].name });
 }
 
 /** Sets (or, with null, clears) one parent. The database refuses anything that doesn't make sense. */

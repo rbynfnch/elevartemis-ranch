@@ -563,3 +563,9 @@ commit. Photo storage (upload/download) is verified manually (see README).
   numbers just don't show yet.
 - Not built yet: "Move to My animals" for an outside ancestor that the ranch later
   acquires (the data model supports it); a pedigree print/share view.
+
+- Editing an ancestor: a horse the ranch doesn't own has "Edit details" in the
+  pedigree builder (name, registry, registration number, year, color, notes;
+  the same fields as adding, via `ancestorColumns`). It only ever changes
+  pedigree-only records; a horse the ranch owns shows "Open" instead, which goes
+  to its own admin page. The builder updates in place after saving.

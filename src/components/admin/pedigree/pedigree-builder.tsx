@@ -4,9 +4,11 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import clsx from "clsx";
 import {
   addAncestorAction,
+  getAncestorAction,
   loadPedigreeAction,
   searchParentsAction,
   setParentAction,
+  updateAncestorAction,
 } from "@/lib/admin/pedigree/actions";
 import type { ParentCandidate } from "@/lib/admin/pedigree/service";
 import { bracketPlace, buildPedigree, parentPaths, type PedigreeNode } from "@/lib/animals/pedigree";
@@ -60,6 +62,7 @@ export function PedigreeBuilder({
   }
   const pedigree = buildPedigree(nodes);
   const [target, setTarget] = useState<Target | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
 
   // A slot is offered where its child exists (the animal itself, or an ancestor already filled in).
@@ -84,7 +87,11 @@ export function PedigreeBuilder({
   const slot = (path: string) => {
     const node = pedigree.ancestors.get(path);
     return node ? (
-      <Filled node={node} onChange={() => open(path)} />
+      <Filled
+        node={node}
+        onChange={() => open(path)}
+        onEdit={() => setEditing({ id: node.animalId, name: node.name })}
+      />
     ) : (
       <Empty role={roleOf(path)} onAdd={() => open(path)} />
     );
@@ -151,6 +158,18 @@ export function PedigreeBuilder({
         appears on the pedigree (as plain text) and in the sire&apos;s or dam&apos;s list of offspring.
       </p>
 
+      <EditAncestorDialog
+        ancestor={editing}
+        species={species}
+        onClose={() => setEditing(null)}
+        onSaved={async (text) => {
+          setEditing(null);
+          setMessage({ tone: "success", text });
+          const fresh = await loadPedigreeAction(animalId);
+          if (fresh.ok) setNodes(fresh.data);
+        }}
+      />
+
       <ParentDialog
         target={target}
         species={species}
@@ -198,19 +217,24 @@ function Branch({
   );
 }
 
-function Filled({ node, onChange }: { node: PedigreeNode; onChange: () => void }) {
+function Filled({ node, onChange, onEdit }: { node: PedigreeNode; onChange: () => void; onEdit: () => void }) {
+  const link = "min-h-8 text-primary underline decoration-accent decoration-2 underline-offset-4";
   return (
     <div className="w-full bg-surface px-3 py-2 text-sm">
       <p className="font-semibold">{node.name}</p>
       {node.registration ? <p className="text-xs text-ink-muted">{node.registration}</p> : null}
-      <p className="mt-0.5 flex items-center justify-between gap-2 text-xs text-ink-muted">
-        <span>{node.owned ? "Yours" : "Not owned"}</span>
-        <button
-          type="button"
-          onClick={onChange}
-          className="min-h-8 text-primary underline decoration-accent decoration-2 underline-offset-4"
-          aria-label={`Change or remove ${node.name}`}
-        >
+      <p className="mt-0.5 text-xs text-ink-muted">{node.owned ? "Yours" : "Not owned"}</p>
+      <p className="mt-0.5 flex flex-wrap items-center gap-x-4 text-xs">
+        {node.owned ? (
+          <a href={`/admin/animals/${node.animalId}`} className={link} aria-label={`Open ${node.name}'s page`}>
+            Open
+          </a>
+        ) : (
+          <button type="button" onClick={onEdit} className={link} aria-label={`Edit details for ${node.name}`}>
+            Edit details
+          </button>
+        )}
+        <button type="button" onClick={onChange} className={link} aria-label={`Change or remove ${node.name}`}>
           Change
         </button>
       </p>
@@ -330,9 +354,6 @@ function ParentDialog({
     onDone(`${r.data.name} was added as ${target.childName}'s ${target.role}.`);
   }
 
-  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
-  const registries = species === "horse" ? ["AQHA", "ApHC", "APHA"] : ["American Hereford Association"];
-
   return (
     <dialog
       ref={dialog}
@@ -394,46 +415,8 @@ function ParentDialog({
               />
             </div>
           ) : (
-            <form id="ancestor-form" onSubmit={add} className="space-y-4">
-              <Field id="anc-name" label="Name" hint="As it appears on the registration papers.">
-                <TextInput
-                  id="anc-name"
-                  value={form.name}
-                  onChange={set("name")}
-                  maxLength={120}
-                  required
-                  autoComplete="off"
-                  hasHint
-                />
-              </Field>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field id="anc-registry" label="Registry">
-                  <TextInput id="anc-registry" value={form.registry} onChange={set("registry")} list="anc-registries" />
-                  <datalist id="anc-registries">
-                    {registries.map((r) => (
-                      <option key={r} value={r} />
-                    ))}
-                  </datalist>
-                </Field>
-                <Field id="anc-number" label="Registration number">
-                  <TextInput id="anc-number" value={form.registrationNumber} onChange={set("registrationNumber")} />
-                </Field>
-                <Field id="anc-year" label="Year born (optional)">
-                  <TextInput
-                    id="anc-year"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={form.birthYear}
-                    onChange={set("birthYear")}
-                  />
-                </Field>
-                <Field id="anc-color" label="Color (optional)">
-                  <TextInput id="anc-color" value={form.color} onChange={set("color")} />
-                </Field>
-              </div>
-              <Field id="anc-notes" label="Notes (optional)" hint="Shown on this ancestor's card in the pedigree.">
-                <TextArea id="anc-notes" rows={3} value={form.notes} onChange={set("notes")} hasHint />
-              </Field>
+            <form id="ancestor-form" onSubmit={add}>
+              <AncestorFields form={form} onChange={setForm} species={species} />
             </form>
           )}
 
@@ -504,6 +487,176 @@ function ParentDialog({
           ) : null}
         </div>
       </div>
+    </dialog>
+  );
+}
+
+type AncestorForm = {
+  name: string;
+  registry: string;
+  registrationNumber: string;
+  birthYear: string;
+  color: string;
+  notes: string;
+};
+
+/** The details of a horse the ranch doesn't own: the same fields when adding and when editing. */
+function AncestorFields({
+  form,
+  onChange,
+  species,
+  idPrefix = "anc",
+}: {
+  form: AncestorForm;
+  onChange: (form: AncestorForm) => void;
+  species: "horse" | "cattle";
+  idPrefix?: string;
+}) {
+  const set = (k: keyof AncestorForm) => (e: { target: { value: string } }) =>
+    onChange({ ...form, [k]: e.target.value });
+  const registries = species === "horse" ? ["AQHA", "ApHC", "APHA"] : ["American Hereford Association"];
+  return (
+    <div className="space-y-4">
+      <Field id={`${idPrefix}-name`} label="Name" hint="As it appears on the registration papers.">
+        <TextInput
+          id={`${idPrefix}-name`}
+          value={form.name}
+          onChange={set("name")}
+          maxLength={120}
+          required
+          autoComplete="off"
+          hasHint
+        />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id={`${idPrefix}-registry`} label="Registry">
+          <TextInput
+            id={`${idPrefix}-registry`}
+            value={form.registry}
+            onChange={set("registry")}
+            list={`${idPrefix}-registries`}
+          />
+          <datalist id={`${idPrefix}-registries`}>
+            {registries.map((r) => (
+              <option key={r} value={r} />
+            ))}
+          </datalist>
+        </Field>
+        <Field id={`${idPrefix}-number`} label="Registration number">
+          <TextInput id={`${idPrefix}-number`} value={form.registrationNumber} onChange={set("registrationNumber")} />
+        </Field>
+        <Field id={`${idPrefix}-year`} label="Year born (optional)">
+          <TextInput
+            id={`${idPrefix}-year`}
+            inputMode="numeric"
+            maxLength={4}
+            value={form.birthYear}
+            onChange={set("birthYear")}
+          />
+        </Field>
+        <Field id={`${idPrefix}-color`} label="Color (optional)">
+          <TextInput id={`${idPrefix}-color`} value={form.color} onChange={set("color")} />
+        </Field>
+      </div>
+      <Field id={`${idPrefix}-notes`} label="Notes (optional)" hint="Shown on this ancestor's card in the pedigree.">
+        <TextArea id={`${idPrefix}-notes`} rows={3} value={form.notes} onChange={set("notes")} hasHint />
+      </Field>
+    </div>
+  );
+}
+
+// ─── Editing a horse the ranch doesn't own ───────────────────────────────────
+function EditAncestorDialog({
+  ancestor,
+  species,
+  onClose,
+  onSaved,
+}: {
+  ancestor: { id: string; name: string } | null;
+  species: "horse" | "cattle";
+  onClose: () => void;
+  onSaved: (message: string) => void | Promise<void>;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [form, setForm] = useState<AncestorForm | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const el = dialog.current;
+    if (!el) return;
+    if (ancestor && !el.open) {
+      setForm(null);
+      setError("");
+      el.showModal();
+      void getAncestorAction(ancestor.id).then((r) => {
+        if (!r.ok) return setError(r.message);
+        setForm({
+          name: r.data.name,
+          registry: r.data.registry,
+          registrationNumber: r.data.registrationNumber,
+          birthYear: r.data.birthYear,
+          color: r.data.color,
+          notes: r.data.notes,
+        });
+      });
+    } else if (!ancestor && el.open) el.close();
+  }, [ancestor]);
+
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    if (!ancestor || !form) return;
+    setBusy(true);
+    setError("");
+    const year = Number(form.birthYear);
+    const r = await updateAncestorAction(ancestor.id, {
+      name: form.name,
+      registry: form.registry || null,
+      registrationNumber: form.registrationNumber || null,
+      birthYear: Number.isInteger(year) && year > 0 ? year : null,
+      color: form.color || null,
+      notes: form.notes || null,
+    });
+    setBusy(false);
+    if (!r.ok) return setError(r.message);
+    await onSaved(`${r.data.name} was updated.`);
+  }
+
+  return (
+    <dialog
+      ref={dialog}
+      aria-labelledby="edit-ancestor-title"
+      onClose={onClose}
+      className="m-auto w-[min(40rem,calc(100vw-2rem))] border border-rule bg-paper p-0 text-ink backdrop:bg-night/60"
+    >
+      <form onSubmit={save} className="flex h-[min(40rem,calc(100dvh-2rem))] flex-col">
+        <div className="flex items-center justify-between gap-4 border-b border-rule px-6 py-4">
+          <h3 id="edit-ancestor-title" className="font-display text-2xl">
+            Edit {ancestor?.name ?? "details"}
+          </h3>
+          <button type="button" className={buttonClasses("quiet")} onClick={onClose}>
+            Close
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-5">
+          <FormMessage tone="error">{error}</FormMessage>
+          {form ? (
+            <AncestorFields form={form} onChange={setForm} species={species} idPrefix="edit-anc" />
+          ) : error ? null : (
+            <p role="status" className="text-sm text-ink-muted">
+              Loading…
+            </p>
+          )}
+        </div>
+        <div className="flex justify-end gap-3 border-t border-rule px-6 py-4">
+          <button type="button" className={buttonClasses("quiet")} onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className={buttonClasses("primary")} disabled={busy || !form?.name.trim()}>
+            {busy ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </form>
     </dialog>
   );
 }

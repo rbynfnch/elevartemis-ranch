@@ -100,3 +100,19 @@ export async function loadPedigreeAction(animalId: string) {
   if (!c || !uuid.safeParse(animalId).success) return noAccess;
   return pedigree.loadPedigree(c.db, animalId);
 }
+
+export async function getAncestorAction(id: string) {
+  const c = await context();
+  if (!c || !uuid.safeParse(id).success) return noAccess;
+  return pedigree.getAncestor(c.db, c.ranchId, id);
+}
+
+export async function updateAncestorAction(id: string, input: unknown) {
+  const c = await context();
+  const parsed = outside.safeParse(input);
+  if (!c || !uuid.safeParse(id).success) return noAccess;
+  if (!parsed.success) return { ok: false as const, message: "Check the details and try again." };
+  const result = await pedigree.updateAncestor(c.db, c.ranchId, id, parsed.data);
+  if (result.ok) refreshSite(c.slug);
+  return result;
+}

@@ -1021,6 +1021,51 @@ export type Database = {
           },
         ];
       };
+      page_seo: {
+        Row: {
+          focus_phrase: string | null;
+          meta_description: string | null;
+          meta_title: string | null;
+          og_media_id: string | null;
+          page_key: string;
+          ranch_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          focus_phrase?: string | null;
+          meta_description?: string | null;
+          meta_title?: string | null;
+          og_media_id?: string | null;
+          page_key: string;
+          ranch_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          focus_phrase?: string | null;
+          meta_description?: string | null;
+          meta_title?: string | null;
+          og_media_id?: string | null;
+          page_key?: string;
+          ranch_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "page_seo_ranch_id_fkey";
+            columns: ["ranch_id"];
+            isOneToOne: false;
+            referencedRelation: "ranches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "page_seo_ranch_id_og_media_id_fkey";
+            columns: ["ranch_id", "og_media_id"];
+            isOneToOne: false;
+            referencedRelation: "media";
+            referencedColumns: ["ranch_id", "id"];
+          },
+        ];
+      };
       pages: {
         Row: {
           key: string;
@@ -1193,8 +1238,11 @@ export type Database = {
           date_precision: Database["public"]["Enums"]["birth_precision"];
           excerpt: string | null;
           featured_media_id: string | null;
+          focus_phrase: string | null;
           id: string;
           is_demo: boolean;
+          meta_description: string | null;
+          meta_title: string | null;
           published_at: string | null;
           ranch_id: string;
           slug: string;
@@ -1211,8 +1259,11 @@ export type Database = {
           date_precision?: Database["public"]["Enums"]["birth_precision"];
           excerpt?: string | null;
           featured_media_id?: string | null;
+          focus_phrase?: string | null;
           id?: string;
           is_demo?: boolean;
+          meta_description?: string | null;
+          meta_title?: string | null;
           published_at?: string | null;
           ranch_id: string;
           slug: string;
@@ -1229,8 +1280,11 @@ export type Database = {
           date_precision?: Database["public"]["Enums"]["birth_precision"];
           excerpt?: string | null;
           featured_media_id?: string | null;
+          focus_phrase?: string | null;
           id?: string;
           is_demo?: boolean;
+          meta_description?: string | null;
+          meta_title?: string | null;
           published_at?: string | null;
           ranch_id?: string;
           slug?: string;
@@ -1435,6 +1489,7 @@ export type Database = {
       ranch_profile: {
         Row: {
           address_display: string | null;
+          blog_label: string | null;
           city: string | null;
           hours_text: string | null;
           intro: Json | null;
@@ -1447,6 +1502,7 @@ export type Database = {
         };
         Insert: {
           address_display?: string | null;
+          blog_label?: string | null;
           city?: string | null;
           hours_text?: string | null;
           intro?: Json | null;
@@ -1459,6 +1515,7 @@ export type Database = {
         };
         Update: {
           address_display?: string | null;
+          blog_label?: string | null;
           city?: string | null;
           hours_text?: string | null;
           intro?: Json | null;

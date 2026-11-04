@@ -6,6 +6,7 @@ export type NavLink = { label: string; href: string };
 export type NavItem = NavLink & { heading?: string; children?: NavLink[] };
 
 type NavInput = Pick<SiteSettings, "enabledSpecies" | "navCounts" | "categories" | "contentCounts"> & {
+  blogLabel?: string | null;
   speciesSettings?: SiteSettings["speciesSettings"];
 };
 
@@ -53,7 +54,8 @@ export function buildNavigation(site: NavInput): NavItem[] {
   if (anyForSale) items.push({ label: "For Sale", href: "/for-sale" });
 
   if (site.contentCounts.gallery > 0) items.push({ label: "Gallery", href: "/gallery" });
-  if (site.contentCounts.posts > 0) items.push({ label: "Happening on the Ranch", href: "/on-the-ranch" });
+  if (site.contentCounts.posts > 0)
+    items.push({ label: site.blogLabel ?? "Happening on the Ranch", href: "/on-the-ranch" });
   if (site.contentCounts.faqs > 0) items.push({ label: "FAQ", href: "/faq" });
   items.push({ label: "Contact", href: "/contact" });
   return items;

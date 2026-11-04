@@ -48,6 +48,8 @@ export type SiteSettings = {
   /** Per-ranch choices (Elevartemis-managed). Missing species = platform defaults. */
   speciesSettings: Partial<Record<Species, SpeciesSettings>>;
   contentCounts: { posts: number; faqs: number; gallery: number };
+  /** What the ranch calls its blog; null means the default. */
+  blogLabel: string | null;
 };
 
 export type SpeciesSettings = {
@@ -125,6 +127,10 @@ export async function getSiteSettings(slug: string): Promise<SiteSettings | null
     if (r.error) throw new Error(`Loading site settings failed: ${r.error.message}`);
   }
 
+  // The blog's name comes from a later update; before it is applied the default is used.
+  const labelRow = await db.from("ranch_profile").select("blog_label").eq("ranch_id", ranch.id).maybeSingle();
+  const blogLabel = labelRow.error ? null : (labelRow.data?.blog_label ?? null);
+
   const navCounts: SiteSettings["navCounts"] = { horse: {}, cattle: {} };
   for (const row of counts ?? []) navCounts[row.species][row.bucket] = row.total;
 
@@ -180,5 +186,6 @@ export async function getSiteSettings(slug: string): Promise<SiteSettings | null
       ]),
     ),
     contentCounts: { posts: posts.count ?? 0, faqs: faqs.count ?? 0, gallery: gallery.count ?? 0 },
+    blogLabel,
   };
 }

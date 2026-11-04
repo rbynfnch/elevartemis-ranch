@@ -21,7 +21,9 @@ Where we are against "a rancher can get a finished, good-looking website without
 - [ ] **Ranch Info screen**: public phone, city and region, social links (the footer and Contact page read them; nothing can set them yet)
 - [ ] ⚠ **Email notifications** for the Contact form: a Resend account, a verified sending domain, `RESEND_API_KEY` and `INQUIRY_FROM_ADDRESS` in Vercel (never in chat)
 - [ ] **Brand setup for a new ranch**: wordmark, brand mark, colors and fonts are set only by us, with no screen or documented steps; add a logo image option
-- [ ] **Search engines**: `sitemap.xml`, `robots.txt`, a share image for each page, and a clear "go live" step that turns indexing on and removes the "Preview site" banner
+- [ ] **Blog** ("Happening on the Ranch" / "Experiences", the ranch chooses the name): posts admin, public list and post pages, linked animals, banner
+- [ ] **A proper text editor** (bold, links, lists, photos in text), needed first by the blog
+- [ ] **Search engines**: an owner-editable meta title and description for every page, a share image, `sitemap.xml`, `robots.txt`, canonical addresses, and a clear "go live" step that turns indexing on and removes the "Preview site" banner
 - [ ] **Real content and no sample content**: ranch photos, About text, animals; delete the sample animals and bracketed placeholder text
 - [ ] ⚠ **Custom domain**: connect the ranch's domain and confirm HTTPS (steps written down)
 - [ ] **Phone and accessibility pass** on every public page and admin screen (tap sizes, text contrast, keyboard use, screen-reader labels), plus a speed check
@@ -32,11 +34,9 @@ Where we are against "a rancher can get a finished, good-looking website without
 
 ## Should have (soon after launch)
 
-- [ ] Happening on the Ranch (Ranch Life): the posts screen and public page (tables exist, screens are placeholders)
 - [ ] Gallery page and its admin screen
 - [ ] FAQs page and its admin screen
 - [ ] Breeding / Stallion Services page (the data and view exist)
-- [ ] A proper text editor (bold, links, lists) for descriptions and the About page; today they are plain paragraphs
 - [ ] A screen to choose which categories and pages a ranch offers (today only a database change)
 - [ ] Owner guide: short help text in the admin, a first-login checklist, a short video
 - [ ] A second ranch set up from scratch with the provisioning steps, to prove the template really is reusable
@@ -49,3 +49,10 @@ Where we are against "a rancher can get a finished, good-looking website without
 ## Later
 
 - [ ] Newsletter sign-up, testimonials, reserving or deposits on an animal, printable pedigree sheet, another language, per-animal share cards
+
+## Next phase (see docs/roadmap.md)
+
+- [ ] Answer-engine layer: structured data on every page type, "Quick answers" from real facts on animal pages, FAQ page, `llms.txt`
+- [ ] Tap-to-call and a sticky Inquire button on animal pages; simple analytics for inquiries
+- [ ] Modern feel: scroll reveals, light parallax, page transitions, all optional for reduced motion
+- [ ] Setup wizard: a guided interview that drafts headlines, About text, Contact wording, meta descriptions and brand style from the owner's own answers

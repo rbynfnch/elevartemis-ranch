@@ -23,6 +23,8 @@ export function bannerPages(enabled: Species[]): BannerPage[] {
   pages.push(
     { key: "on-the-ranch", label: "Happening on the Ranch (blog)" },
     { key: "breeding", label: "Breeding Services" },
+    { key: "faq", label: "FAQ" },
+    { key: "gallery", label: "Gallery" },
     { key: "in-memory", label: "In Memory" },
     { key: "contact", label: "Contact" },
   );
@@ -50,6 +52,17 @@ export function tidyBanner(input: BannerInput): {
 
 /** Only these keys can be saved: the main pages, the sold / retired / reference pages, or category:<species>.<key>. */
 export const isBannerKey = (key: string) =>
-  ["about", "horses", "cattle", "for-sale", "contact", "in-memory", "on-the-ranch", "breeding"].includes(key) ||
+  [
+    "about",
+    "horses",
+    "cattle",
+    "for-sale",
+    "contact",
+    "in-memory",
+    "on-the-ranch",
+    "breeding",
+    "faq",
+    "gallery",
+  ].includes(key) ||
   /^(sold|retired|reference)-(horses|cattle)$/.test(key) ||
   /^category:(horse|cattle)\.[a-z0-9_]+$/.test(key);

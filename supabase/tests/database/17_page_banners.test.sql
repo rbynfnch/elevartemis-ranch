@@ -1,7 +1,7 @@
 -- Page banners: visitors read them, only the page keys we allow are accepted.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(8);
+select plan(9);
 
 insert into public.ranches (id, slug, name, status) values ('00000000-0000-4000-8000-00000000000a', 'banners', 'Banner Ranch', 'live');
 insert into public.page_banners (ranch_id, page_key, headline, subheadline) values
@@ -23,6 +23,8 @@ select lives_ok($$ insert into public.page_banners (ranch_id, page_key) values (
 
 select lives_ok($$ insert into public.page_banners (ranch_id, page_key) values ('00000000-0000-4000-8000-00000000000a', 'in-memory') $$, 'In Memory can have a banner');
 select lives_ok($$ insert into public.page_banners (ranch_id, page_key) values ('00000000-0000-4000-8000-00000000000a', 'retired-cattle') $$, 'so can the retired pages');
+
+select lives_ok($$ insert into public.page_banners (ranch_id, page_key) values ('00000000-0000-4000-8000-00000000000a', 'faq') $$, 'the FAQ can have a banner');
 
 select * from finish();
 rollback;

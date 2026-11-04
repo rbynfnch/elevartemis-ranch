@@ -182,3 +182,23 @@ export function plainSummary(doc: unknown, max = 160): string | null {
   const cut = text.slice(0, max - 1);
   return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 40)).trimEnd()}…`;
 }
+
+/**
+ * "2012 – 2024" for the In Memory page, using only what is known: both years,
+ * or "Born 2012" / "Passed 2024", or nothing. The passing date is shown as
+ * precisely as the owner entered it ("March 2024").
+ */
+export function lifespanText(
+  birthYear: number | null | undefined,
+  deceasedOn: string | null,
+  deceasedPrecision: Precision,
+): string | null {
+  const passed = formatPartialDate(deceasedOn, deceasedPrecision);
+  if (birthYear && passed) {
+    // Both years in the same style keeps a lifespan readable: "2012 – 2024", or "2012 – March 2024".
+    return `${birthYear} – ${passed}`;
+  }
+  if (passed) return `Passed ${passed}`;
+  if (birthYear) return `Born ${birthYear}`;
+  return null;
+}

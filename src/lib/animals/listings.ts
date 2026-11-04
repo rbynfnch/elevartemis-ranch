@@ -4,13 +4,14 @@ import { createPublicClient } from "@/lib/supabase/public";
 import type { Species } from "@/lib/domain/species";
 import { cardFromRow, type ListingCard } from "@/lib/animals/cards";
 
-export type ListingKind = "category" | "overview" | "for_sale" | "sold" | "retired" | "reference";
+export type ListingKind = "category" | "overview" | "for_sale" | "sold" | "retired" | "reference" | "memorial";
 
 const flag: Record<Exclude<ListingKind, "category" | "overview">, string> = {
   for_sale: "on_for_sale_page",
   sold: "on_sold_page",
   retired: "on_retired_page",
   reference: "on_reference_page",
+  memorial: "on_memorial_page",
 };
 
 /**

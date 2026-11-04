@@ -521,3 +521,17 @@ commit. Photo storage (upload/download) is verified manually (see README).
   crumb is a link only when the ranch offers that category page.
 - Known limits: a mistyped address shows the not-found page with a 200 status (the
   pages stream); In Memory (`/about/in-memory`) is not built yet.
+
+### In Memory page
+
+- `/about/in-memory`: every published animal marked "In Memory", grouped by horse
+  and cattle (headings only when the ranch has both), as cards with breed and a
+  lifespan line built only from what the owner entered: "2012 – 2024",
+  "2012 – March 2024", "Passed 2024" or "Born 2012". The page is reached from the
+  menu's About > In Memory, which appears only when someone is published there; a
+  direct visit with nobody to remember shows the not-found page.
+- Each card links to the animal's own page, which carries an In Memory badge and
+  "In loving memory · date".
+- The cards view doesn't carry the passing date, so it is read from the animals
+  themselves (the same published rows visitors may already read); no migration.
+- The "About" crumb is plain text until the About page exists.

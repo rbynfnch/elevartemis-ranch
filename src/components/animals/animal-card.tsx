@@ -10,6 +10,8 @@ export type AnimalCardData = {
   badge?: "For Sale" | "Sale Pending" | "Sold" | null;
   /** Shown under the details on for-sale cards. */
   price?: string | null;
+  /** On the In Memory page: the animal's lifespan, shown with the breed. */
+  memorial?: string | null;
   photo?: { src: string; alt: string; focalX: number; focalY: number } | null;
 };
 
@@ -19,8 +21,8 @@ export type AnimalCardData = {
  * category is still a complete card.
  */
 export function AnimalCard({ animal, brandMark }: { animal: AnimalCardData; brandMark?: string | null }) {
-  const details = [animal.breed, animal.birthYear ? String(animal.birthYear) : null].filter((d): d is string =>
-    Boolean(d && d.trim()),
+  const details = [animal.breed, animal.memorial ?? (animal.birthYear ? String(animal.birthYear) : null)].filter(
+    (d): d is string => Boolean(d && d.trim()),
   );
 
   return (

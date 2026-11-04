@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatPartialDate, performanceDisplay, plainSummary, quickFacts, saleDisplay } from "./portfolio";
+import {
+  formatPartialDate,
+  lifespanText,
+  performanceDisplay,
+  plainSummary,
+  quickFacts,
+  saleDisplay,
+} from "./portfolio";
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 
@@ -126,5 +133,15 @@ describe("plainSummary", () => {
   it("returns nothing for empty content", () => {
     expect(plainSummary(null)).toBeNull();
     expect(plainSummary(doc("   "))).toBeNull();
+  });
+});
+
+describe("lifespanText", () => {
+  it("shows both years, or whichever is known, or nothing", () => {
+    expect(lifespanText(2012, "2024-01-01", "year")).toBe("2012 – 2024");
+    expect(lifespanText(2012, "2024-03-01", "month")).toBe("2012 – March 2024");
+    expect(lifespanText(null, "2024-01-01", "year")).toBe("Passed 2024");
+    expect(lifespanText(2012, null, "year")).toBe("Born 2012");
+    expect(lifespanText(null, null, "year")).toBeNull();
   });
 });

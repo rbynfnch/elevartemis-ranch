@@ -7,6 +7,8 @@ import { paletteStyle } from "@/lib/brand/tokens";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { PreviewBanner } from "@/components/site/preview-banner";
+import { JsonLd } from "@/components/site/json-ld";
+import { ranchJsonLd } from "@/lib/site/structured-data";
 
 export async function generateMetadata({ params }: LayoutProps<"/site/[ranch]">): Promise<Metadata> {
   const { ranch } = await params;
@@ -53,6 +55,7 @@ async function RanchFrame({
       >
         Skip to content
       </a>
+      <JsonLd data={ranchJsonLd(site, site.primaryHostname ? `https://${site.primaryHostname}` : null)} />
       {site.status !== "live" ? <PreviewBanner /> : null}
       <SiteHeader brand={site.brand} items={buildNavigation(site)} />
       <main id="main" className="flex-1">

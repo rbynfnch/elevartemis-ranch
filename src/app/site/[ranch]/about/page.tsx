@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getSiteSettings } from "@/lib/site/get-site";
+import { pageMetadata } from "@/lib/site/seo";
 import { getAboutPage } from "@/lib/site/get-about";
 import { getPageHero } from "@/lib/site/page-hero";
 import { PageHero } from "@/components/site/page-hero";
@@ -13,11 +14,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { ranch } = await params;
   const site = await getSiteSettings(ranch);
   if (!site) return {};
-  return {
+  return pageMetadata(site, "about", {
     title: "About",
     description: site.profile.tagline ?? `About ${site.name}.`,
-    alternates: { canonical: "/about" },
-  };
+    path: "/about",
+  });
 }
 
 export default function About({ params }: PageProps<"/site/[ranch]/about">) {

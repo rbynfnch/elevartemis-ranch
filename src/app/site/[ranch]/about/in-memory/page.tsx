@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getSiteSettings } from "@/lib/site/get-site";
+import { pageMetadata } from "@/lib/site/seo";
 import { getMemorial } from "@/lib/animals/memorial";
 import { speciesTerms } from "@/lib/domain/species";
 import { AnimalGrid } from "@/components/animals/listing";
@@ -15,11 +16,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { ranch } = await params;
   const site = await getSiteSettings(ranch);
   if (!site) return {};
-  return {
+  return pageMetadata(site, "in-memory", {
     title: "In Memory",
     description: `Remembering the animals of ${site.name}.`,
-    alternates: { canonical: "/about/in-memory" },
-  };
+    path: "/about/in-memory",
+  });
 }
 
 export default function InMemory({ params }: PageProps<"/site/[ranch]/about/in-memory">) {

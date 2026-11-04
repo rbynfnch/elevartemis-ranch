@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getSiteSettings } from "@/lib/site/get-site";
+import { pageMetadata } from "@/lib/site/seo";
 import { ranchCategories } from "@/lib/site/navigation";
 import { getListing } from "@/lib/animals/listings";
 import { groupByCategory } from "@/lib/animals/listing-groups";
@@ -30,11 +31,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!species || !site || !site.enabledSpecies.includes(species)) return {};
   const settings = site.speciesSettings?.[species];
   const title = settings?.navLabel ?? speciesTerms[species].plural;
-  return {
+  return pageMetadata(site, species === "horse" ? "horses" : "cattle", {
     title,
     description: `${settings?.breedHeading ?? title} from ${site.name}.`,
-    alternates: { canonical: `/${path}` },
-  };
+    path: `/${path}`,
+  });
 }
 
 export default function SpeciesOverview({ params }: PageProps<"/site/[ranch]/[species]">) {

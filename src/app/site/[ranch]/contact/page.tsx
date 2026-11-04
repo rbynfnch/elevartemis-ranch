@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getSiteSettings } from "@/lib/site/get-site";
+import { pageMetadata } from "@/lib/site/seo";
 import { getContactPage } from "@/lib/site/get-contact";
 import { getPageHero } from "@/lib/site/page-hero";
 import { DEFAULT_FORM_HEADING, DEFAULT_FORM_HINT } from "@/lib/site/contact";
@@ -16,7 +17,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { ranch } = await params;
   const site = await getSiteSettings(ranch);
   if (!site) return {};
-  return { title: "Contact", description: `Get in touch with ${site.name}.`, alternates: { canonical: "/contact" } };
+  return pageMetadata(site, "contact", {
+    title: "Contact",
+    description: `Get in touch with ${site.name}.`,
+    path: "/contact",
+  });
 }
 
 export default function Contact({ params, searchParams }: PageProps<"/site/[ranch]/contact">) {

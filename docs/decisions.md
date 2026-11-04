@@ -706,3 +706,10 @@ commit. Photo storage (upload/download) is verified manually (see README).
 
 - **Ranch Info** (admin): tagline, short introduction (with the text editor), phone, city and state, optional address and call times, links to other sites (https only, one per site except "another website"), and the blog's name. The footer, the home page, the Contact page and search engines read these.
 - **Homepage** (admin): up to three slides, each with a photo from the library, headline, subheadline and an optional button to a page, a category, one animal or another site. Slides can be reordered, switched off or removed; at least one must be on. The three-slide limit is enforced in the database and respected when saving (removed slides are archived first).
+
+## Search engines and answer engines (first layer)
+
+- Every public page's title, description, canonical address and share card go through one helper (`pageMetadata`): the owner's text from the `page_seo` table where they wrote some, defaults otherwise. Home uses the title as written; other pages get the ranch name added by the site's title template.
+- **Structured data (JSON-LD):** every page carries the ranch as a local business and a website (name, place, phone and links only when recorded); animal pages add a breadcrumb, a product with an offer (price and availability only when for sale and the owner chose to show a price) and a question-and-answer list; posts are BlogPostings; the breeding page lists its services.
+- **Quick answers** on each animal page: plain questions answered only from recorded facts (is it for sale and for how much, its parents, registration, birth year, what it looks like). Visible to everyone and marked up for answer engines. Nothing is generated or invented.
+- `sitemap.xml` lists the pages in the menu, every public animal and every post; `robots.txt` tells search engines to stay out until the ranch is live with indexing on, and keeps `/admin` out.

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import clsx from "clsx";
 import { getSiteSettings } from "@/lib/site/get-site";
+import { pageMetadata } from "@/lib/site/seo";
 import { getPageHero } from "@/lib/site/page-hero";
 import { getPostCategories, getPosts, type PostCard } from "@/lib/site/get-posts";
 import { PageHero } from "@/components/site/page-hero";
@@ -17,11 +18,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const site = await getSiteSettings(ranch);
   if (!site) return {};
   const label = site.blogLabel ?? "Happening on the Ranch";
-  return {
+  return pageMetadata(site, "on-the-ranch", {
     title: label,
     description: `News, stories and experiences from ${site.name}.`,
-    alternates: { canonical: "/on-the-ranch" },
-  };
+    path: "/on-the-ranch",
+  });
 }
 
 export default function OnTheRanch({ params, searchParams }: PageProps<"/site/[ranch]/on-the-ranch">) {

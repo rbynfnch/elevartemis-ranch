@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getSiteSettings } from "@/lib/site/get-site";
+import { pageMetadata } from "@/lib/site/seo";
 import { getBreedingAnimals, type BreedingAnimal } from "@/lib/site/get-breeding";
 import { breedingLabel } from "@/lib/animals/breeding";
 import { getPageHero } from "@/lib/site/page-hero";
@@ -20,11 +21,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!site) return {};
   const animals = await getBreedingAnimals(site.ranchId, site.slug);
   const label = breedingLabel([...new Set(animals.map((a) => a.species))]);
-  return {
+  return pageMetadata(site, "breeding", {
     title: label,
     description: `${label} from ${site.name}: fees, availability and how to book.`,
-    alternates: { canonical: "/breeding" },
-  };
+    path: "/breeding",
+  });
 }
 
 export default function Breeding({ params }: PageProps<"/site/[ranch]/breeding">) {

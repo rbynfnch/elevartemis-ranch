@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { getSiteSettings } from "@/lib/site/get-site";
+import { pageMetadata } from "@/lib/site/seo";
 import { getHeroSlides } from "@/lib/site/get-home";
 import { buildNavigation } from "@/lib/site/navigation";
 import { getFeaturedAnimals } from "@/lib/animals/featured";
@@ -11,6 +13,13 @@ import { AnimalCard } from "@/components/animals/animal-card";
 import { HeroSlider } from "@/components/site/hero-slider";
 import { SectionLinks } from "@/components/site/section-links";
 import { ButtonLink } from "@/components/ui/button";
+
+export async function generateMetadata({ params }: PageProps<"/site/[ranch]">): Promise<Metadata> {
+  const { ranch } = await params;
+  const site = await getSiteSettings(ranch);
+  if (!site) return {};
+  return pageMetadata(site, "home", { title: site.name, description: site.profile.tagline, path: "/" });
+}
 
 export default function RanchHome({ params }: PageProps<"/site/[ranch]">) {
   return (

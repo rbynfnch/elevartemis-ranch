@@ -20,6 +20,8 @@ import { ListingPageView } from "@/components/animals/listing-page";
 import { Crumbs } from "@/components/animals/listing";
 import { getOffspringFor, getPedigreeFor } from "@/lib/animals/get-relations";
 import { PedigreeTree } from "@/components/animals/pedigree-tree";
+import { JsonLd } from "@/components/site/json-ld";
+import { animalOfferJsonLd, breadcrumbJsonLd, faqJsonLd, quickAnswers } from "@/lib/site/structured-data";
 import { Offspring } from "@/components/animals/offspring";
 import { PhotoGallery } from "@/components/animals/photo-gallery";
 import { PhotoPlaceholder } from "@/components/animals/photo-placeholder";
@@ -127,8 +129,46 @@ async function Portfolio({ params }: { params: Params }) {
     categoryRow && ranchCategories(a.species, site.categories, settings).some((c) => c.id === categoryRow.id)
       ? categoryRow
       : null;
+  const publicPath = `/${path}/${a.slug}`;
   const inquiryHref = `/contact?animal=${encodeURIComponent(a.slug)}`;
   const hasStory = !richTextIsEmpty(a.description);
+
+  // Plain answers to the questions people ask, from recorded facts only: shown on the page and marked up for answer engines.
+  const origin = site.primaryHostname ? `https://${site.primaryHostname}` : null;
+  const saleStatus =
+    a.sale?.status === "available" || a.sale?.status === "pending" || a.sale?.status === "sold" ? a.sale.status : null;
+  const answers = quickAnswers({
+    name: a.name,
+    forSale: saleStatus,
+    price: sale?.price ?? null,
+    birthYear: /^(\d{4})-/.test(a.birthDate ?? "") ? Number((a.birthDate ?? "").slice(0, 4)) : null,
+    height: a.height,
+    color: a.color,
+    breed: a.breed,
+    registration: [a.registry?.trim(), a.registrationNumber?.trim()].filter(Boolean).join(" #") || null,
+    sire: pedigree.ancestors.get("S")?.name ?? null,
+    dam: pedigree.ancestors.get("D")?.name ?? null,
+    ranchName: site.name,
+  });
+  const faq = faqJsonLd(answers);
+  const structured = [
+    breadcrumbJsonLd(origin, [
+      { name: "Home", path: "/" },
+      { name: speciesLabel, path: `/${path}` },
+      { name: a.name, path: publicPath },
+    ]),
+    animalOfferJsonLd(origin, {
+      name: a.name,
+      path: publicPath,
+      description: plainSummary(a.description, 300),
+      image: a.photos[0]?.large ?? null,
+      breed: a.breed,
+      priceCents: a.sale?.price_mode === "price" ? (a.sale.price_cents ?? null) : null,
+      currency: a.sale?.currency ?? null,
+      availability: saleStatus === "available" || saleStatus === "pending" ? saleStatus : null,
+    }),
+    ...(faq ? [faq] : []),
+  ];
 
   const ribbon = sale?.badge ?? null;
   const badges = [
@@ -138,6 +178,7 @@ async function Portfolio({ params }: { params: Params }) {
 
   return (
     <article className="mx-auto max-w-[88rem] px-[var(--gutter)] py-8 lg:py-12">
+      <JsonLd data={structured} />
       <Crumbs
         items={[
           { label: speciesLabel, href: `/${path}` },
@@ -254,6 +295,19 @@ async function Portfolio({ params }: { params: Params }) {
             <RichText doc={s.body} className="prose-ranch text-ink-muted" />
           </Block>
         ))}
+
+        {answers.length > 0 ? (
+          <Block title="Quick answers" id="quick-answers">
+            <dl className="grid gap-x-10 gap-y-5 md:grid-cols-2">
+              {answers.map((q) => (
+                <div key={q.question}>
+                  <dt className="font-semibold">{q.question}</dt>
+                  <dd className="mt-1 text-ink-muted">{q.answer}</dd>
+                </div>
+              ))}
+            </dl>
+          </Block>
+        ) : null}
 
         {pedigree.ancestors.size > 0 ? (
           <Block title="Pedigree" id="pedigree">

@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { saveBrandAction } from "@/lib/admin/brand/actions";
 import type { BrandForm } from "@/lib/admin/brand/service";
 import { fullPalette, palettePresets } from "@/lib/brand/presets";
-import { fontPresets, type FontPreset } from "@/lib/brand/tokens";
+import { fontPresets, fontStacks, type FontPreset } from "@/lib/brand/tokens";
 import { Field, FormMessage, TextInput } from "@/components/admin/forms";
 import { buttonClasses } from "@/components/ui/button";
 
@@ -135,7 +135,13 @@ export function BrandEditor({ initial, isOwner }: { initial: BrandForm; isOwner:
                 f.font === key ? "border-primary" : "border-rule hover:border-ink-muted",
               )}
             >
-              <span className="block text-sm text-ink-muted">{fontPresets[key].label}</span>
+              <span className="block text-2xl leading-tight" style={{ fontFamily: fontStacks[key].display }}>
+                {f.wordmark || "Your Ranch"}
+              </span>
+              <span className="mt-1 block text-sm" style={{ fontFamily: fontStacks[key].sans }}>
+                Horses, cattle and the people who raise them.
+              </span>
+              <span className="mt-2 block text-xs text-ink-muted">{fontPresets[key].label}</span>
               {f.font === key ? <span className="text-sm font-semibold text-primary">✓ Chosen</span> : null}
             </button>
           ))}

@@ -97,8 +97,21 @@ export function paletteStyle(palette: Palette): CSSProperties {
 export const fontPresets = {
   heritage: { label: "Heritage — Libre Caslon + Libre Franklin" },
   prairie: { label: "Prairie — Bitter + Source Sans 3" },
+  modern: { label: "Modern — Fraunces + Inter" },
+  editorial: { label: "Editorial — DM Serif Display + DM Sans" },
 } as const;
 export type FontPreset = keyof typeof fontPresets;
+
+/** The font stacks of each preset, so the Brand screen can show a sample in the real fonts. Kept in step with globals.css. */
+export const fontStacks: Record<FontPreset, { display: string; sans: string }> = {
+  heritage: { display: '"Libre Caslon Display", Georgia, serif', sans: '"Libre Franklin Variable", Arial, sans-serif' },
+  prairie: {
+    display: '"Bitter Variable", Rockwell, Georgia, serif',
+    sans: '"Source Sans 3 Variable", Arial, sans-serif',
+  },
+  modern: { display: '"Fraunces Variable", Georgia, serif', sans: '"Inter Variable", Arial, sans-serif' },
+  editorial: { display: '"DM Serif Display", Georgia, serif', sans: '"DM Sans Variable", Arial, sans-serif' },
+};
 
 export function resolveFontPreset(raw: string | null | undefined): FontPreset {
   return raw && raw in fontPresets ? (raw as FontPreset) : "heritage";

@@ -742,3 +742,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 ## Upload from the photo pickers
 
 - Both photo pickers (the one for blog posts, banners, About, Homepage and the like, and "Choose from library" on an animal) have an **Upload photos** button and accept photos dragged in. Files go to the Photo Library one at a time with progress, problems are listed in plain words without stopping the other photos. In the single-photo picker one uploaded photo is chosen straight away; in the animal picker the new photos appear already ticked.
+
+## More looks and fonts
+
+- The Brand screen now offers eight color looks (High Plains, Big Sky, Prairie Gold, Red Rock, plus Sagebrush, Copper Creek, Mountain Lake and Wild Plum; every one is tested to meet WCAG AA contrast) and four font pairs (Heritage, Prairie, plus Modern: Fraunces and Inter; and Editorial: DM Serif Display, Lora and DM Sans). Each font card shows a sample in the real fonts. Fonts are self-hosted; the browser downloads a font only when a ranch uses it.

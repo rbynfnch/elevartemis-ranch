@@ -35,6 +35,18 @@
   --ff-sans: "Source Sans 3 Variable", "Helvetica Neue", Arial, sans-serif;
 }
 
+[data-font-preset="modern"] {
+  --ff-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+  --ff-serif: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+  --ff-sans: "Inter Variable", "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-font-preset="editorial"] {
+  --ff-display: "DM Serif Display", "Iowan Old Style", Georgia, serif;
+  --ff-serif: "Lora Variable", "Iowan Old Style", Georgia, serif;
+  --ff-sans: "DM Sans Variable", "Helvetica Neue", Arial, sans-serif;
+}
+
 @theme inline {
   --color-paper: var(--c-paper);
   --color-surface: var(--c-surface);

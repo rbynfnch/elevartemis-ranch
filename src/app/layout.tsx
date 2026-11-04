@@ -7,6 +7,14 @@ import "@fontsource/libre-caslon-text/400-italic.css";
 import "@fontsource-variable/libre-franklin/index.css";
 import "@fontsource-variable/bitter/index.css";
 import "@fontsource-variable/source-sans-3/index.css";
+import "@fontsource-variable/fraunces/wght.css";
+import "@fontsource-variable/fraunces/wght-italic.css";
+import "@fontsource-variable/inter/index.css";
+import "@fontsource/dm-serif-display/400.css";
+import "@fontsource/dm-serif-display/400-italic.css";
+import "@fontsource-variable/lora/index.css";
+import "@fontsource-variable/lora/wght-italic.css";
+import "@fontsource-variable/dm-sans/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

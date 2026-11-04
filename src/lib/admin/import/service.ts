@@ -38,7 +38,7 @@ async function loadContext(db: Db, ranchId: string, enabledSpecies: Species[]): 
       .limit(5000),
     db
       .from("animals")
-      .select("id, species, name")
+      .select("id, species, name, program_status")
       .eq("ranch_id", ranchId)
       .eq("record_scope", "inventory")
       .is("archived_at", null)
@@ -57,7 +57,10 @@ async function loadContext(db: Db, ranchId: string, enabledSpecies: Species[]): 
       allowedSexes: c.allowedSexes,
     })),
     photos: (photos.data ?? []).map((p) => ({ id: p.id, name: p.file_name! })),
-    existing: existing.data ?? [],
+    existing: (existing.data ?? []).map(({ program_status, ...e }) => ({
+      ...e,
+      inMemory: program_status === "deceased",
+    })),
   });
 }
 

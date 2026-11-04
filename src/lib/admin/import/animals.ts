@@ -345,7 +345,8 @@ export type ImportContext = {
   /** Every ready library photo: its file name and id. */
   photos: { id: string; name: string }[];
   /** This ranch's animals that aren't in Recently Deleted. */
-  existing: { id: string; species: Species; name: string }[];
+  /** `inMemory` marks an animal whose status is In memory. */
+  existing: { id: string; species: Species; name: string; inMemory?: boolean }[];
 };
 
 export type PhotoIndex = { byName: Map<string, string>; byStem: Map<string, string[]> };
@@ -660,6 +661,20 @@ export function planImport(csv: Csv, ctx: ImportContext): ImportPlan {
         }
       }
       if (ids.length) fields.photoIds = ids;
+    }
+
+    // An animal In memory stays in memory: a sheet can't quietly move it back to Active or hide it.
+    if (existing?.inMemory) {
+      if (fields.status && fields.status !== "deceased") {
+        delete fields.status;
+        warnings.push(
+          `${name} is In memory, so the status was left as it is. To change it, use the animal's own page.`,
+        );
+      }
+      if (fields.published === false) {
+        delete fields.published;
+        warnings.push(`${name} is In memory, so it was kept on the website. To hide it, use the animal's own page.`);
+      }
     }
 
     plan.results.push({

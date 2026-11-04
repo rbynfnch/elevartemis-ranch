@@ -628,3 +628,7 @@ commit. Photo storage (upload/download) is verified manually (see README).
 - The animals template, import and export now have `sire`, `dam`, `sire_sire`, `sire_dam`, `dam_sire` and `dam_dam` (names only). They run through the same matching as the pedigree import: a name that is one of the ranch's own animals links to it (including one added in the same sheet), an already-recorded ancestor is reused, anything else is recorded once for pedigrees only. Ambiguous names and places already filled are reported, never guessed or overwritten.
 - Pedigrees are applied after every animal in the sheet is saved. A pedigree problem never fails the animal's own row; it is listed under "Pedigrees" in the preview and the result. Deeper generations (to seven) use the pedigree import.
 - "Download my animals" fills these columns from what is recorded, so an edited export can be uploaded back.
+
+## Import never moves an animal out of In memory
+
+- When a sheet updates an animal whose status is In memory, a `status` other than in memory and `published = no` are ignored, each with a warning in the preview. Everything else on the row still updates. Changing a memorial animal's status or hiding it is done on its own page. (The "In Memory" submenu under About appears only while at least one published animal is In memory.)

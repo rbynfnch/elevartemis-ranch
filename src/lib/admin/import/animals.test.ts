@@ -37,6 +37,7 @@ const ctx: ImportContext = {
     { id: "a-1", species: "horse", name: "Blue Star" },
     { id: "a-2", species: "horse", name: "Twin" },
     { id: "a-3", species: "horse", name: "Twin" },
+    { id: "a-4", species: "horse", name: "Old Friend", inMemory: true },
   ],
 };
 
@@ -123,6 +124,17 @@ describe("planImport", () => {
       { path: "SS", name: "Old Red" },
       { path: "DD", name: "Old Gal" },
     ]);
+  });
+  it("keeps an animal that is In memory in memory and on the website", () => {
+    const r = plan("name,species,status,published,color\nOld Friend,horse,active,no,Bay");
+    const p = r.results[0].planned!;
+    expect(r.results[0].errors).toEqual([]);
+    expect(p.fields.status).toBeUndefined();
+    expect(p.fields.published).toBeUndefined();
+    expect(p.fields.color).toBe("Bay");
+    expect(p.warnings).toHaveLength(2);
+    // Saying it is In memory again is fine.
+    expect(plan("name,species,status\nOld Friend,horse,in memory").results[0].planned?.fields.status).toBe("deceased");
   });
   it("updates an existing animal by id or by unique name, and leaves blank cells alone", () => {
     const byName = plan("name,category,breed,color\nblue star,Mare,Appaloosa,\n").results[0].planned!;

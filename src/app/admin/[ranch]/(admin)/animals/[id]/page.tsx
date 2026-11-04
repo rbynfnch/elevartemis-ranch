@@ -12,6 +12,7 @@ import { isAtLeastYearsOld } from "@/lib/admin/dashboard";
 import { mediaUrl, pickVariant } from "@/lib/media/variants";
 import { speciesTerms } from "@/lib/domain/species";
 import { BasicsFields } from "@/components/admin/animals/basics-form";
+import { ProfileFields } from "@/components/admin/animals/profile-fields";
 import { AnimalEditForm } from "@/components/admin/animals/edit-form";
 import { StatusForm } from "@/components/admin/animals/status-form";
 import { SaleForm } from "@/components/admin/animals/sale-form";
@@ -62,7 +63,7 @@ async function EditAnimal({
   const pedigreeNodes = result.ok ? await loadPedigree(db, id) : null;
   const factLabels = result.ok ? await loadFactLabels(db, ctx.ranch.id, result.data.animal.species) : [];
   if (!result.ok) notFound();
-  const { animal, sale, breeding, performance, facts, sections, photos } = result.data;
+  const { animal, sale, breeding, performance, facts, sections, photos, videoUrl } = result.data;
   if (animal.record_scope !== "inventory") notFound();
 
   const suggestion = animal.category_id ? growth[animal.category_id] : undefined;
@@ -75,6 +76,7 @@ async function EditAnimal({
   const sectionsNav = [
     ["photos", "Photos"],
     ["basics", "Basics"],
+    ["headline", "Headline"],
     ["website", "On the website"],
     ["for-sale", "For Sale"],
     ...(animal.sex === "male" ? [["breeding", "Breeding"]] : []),
@@ -179,6 +181,14 @@ async function EditAnimal({
             enabledSpecies={[animal.species]}
             breeds={breeds}
           />
+        </Panel>
+
+        <Panel
+          id="headline"
+          title="Headline and highlights"
+          description="What the top of this animal's page says besides its name. All optional."
+        >
+          <ProfileFields tagline={animal.tagline} highlights={animal.highlights} videoUrl={videoUrl} />
         </Panel>
 
         <Panel id="website" title="On the website">

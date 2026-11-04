@@ -202,3 +202,43 @@ export function lifespanText(
   if (birthYear) return `Born ${birthYear}`;
   return null;
 }
+
+export type ProfileFactsInput = PortfolioFactsInput & { registeredName?: string | null };
+
+/**
+ * The page header's attribute strip (birth year, sex, height, color, registration:
+ * a big value over a small label) and everything else, for a Details section.
+ * Only what exists appears; the breed is left out because it is the page's heading.
+ */
+export function profileFacts(input: ProfileFactsInput): {
+  strip: { label: string; value: string }[];
+  details: { label: string; value: string }[];
+} {
+  const own = compactFacts(input.ownerFacts);
+  const ownBy = new Map(own.map((f) => [f.label.toLowerCase(), f]));
+  const used = new Set<string>();
+  const take = (label: string): string | null => {
+    const hit = ownBy.get(label);
+    if (!hit) return null;
+    used.add(label);
+    return hit.value;
+  };
+
+  const year = /^(\d{4})-/.exec(input.birthDate ?? "")?.[1] ?? null;
+  const registration = [input.registry?.trim(), input.registrationNumber?.trim()].filter(Boolean).join(" #");
+  const strip = compactFacts([
+    { label: "Birth year", value: year },
+    { label: "Sex", value: sexWords[input.sex] },
+    { label: "Height", value: take("height") },
+    { label: "Color", value: take("color") ?? input.color },
+    { label: "Registration", value: registration },
+  ]);
+
+  const precise = input.birthPrecision !== "year" ? formatPartialDate(input.birthDate, input.birthPrecision) : null;
+  const details = compactFacts([
+    { label: input.species === "horse" ? "Foaled" : "Calved", value: precise },
+    { label: "Registered name", value: input.registeredName },
+    ...own.filter((f) => !used.has(f.label.toLowerCase())),
+  ]);
+  return { strip, details };
+}

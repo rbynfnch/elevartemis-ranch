@@ -4,6 +4,7 @@ import {
   lifespanText,
   performanceDisplay,
   plainSummary,
+  profileFacts,
   quickFacts,
   saleDisplay,
 } from "./portfolio";
@@ -143,5 +144,53 @@ describe("lifespanText", () => {
     expect(lifespanText(null, "2024-01-01", "year")).toBe("Passed 2024");
     expect(lifespanText(2012, null, "year")).toBe("Born 2012");
     expect(lifespanText(null, null, "year")).toBeNull();
+  });
+});
+
+describe("profileFacts", () => {
+  const base = {
+    species: "horse" as const,
+    breed: "American Quarter Horse",
+    color: "Sorrel roan",
+    sex: "gelding",
+    birthDate: "2019-01-01",
+    birthPrecision: "year" as const,
+    registry: "AQHA",
+    registrationNumber: "5957423",
+    registeredName: "FW High Country",
+    ownerFacts: [
+      { label: "Height", value: "15.1 HH" },
+      { label: "Discipline", value: "Ranch work" },
+    ],
+  };
+  it("builds the strip in a fixed order from what exists", () => {
+    expect(profileFacts(base).strip).toEqual([
+      { label: "Birth year", value: "2019" },
+      { label: "Sex", value: "Gelding" },
+      { label: "Height", value: "15.1 HH" },
+      { label: "Color", value: "Sorrel roan" },
+      { label: "Registration", value: "AQHA #5957423" },
+    ]);
+  });
+  it("leaves out a missing attribute instead of showing a blank", () => {
+    const r = profileFacts({ ...base, ownerFacts: [], color: null, registry: null, registrationNumber: null });
+    expect(r.strip.map((f) => f.label)).toEqual(["Birth year", "Sex"]);
+  });
+  it("puts everything else in the details, not twice", () => {
+    expect(profileFacts(base).details).toEqual([
+      { label: "Registered name", value: "FW High Country" },
+      { label: "Discipline", value: "Ranch work" },
+    ]);
+  });
+  it("shows a precise birth date in the details, and lets the owner's Color win", () => {
+    const r = profileFacts({
+      ...base,
+      birthDate: "2019-05-03",
+      birthPrecision: "day",
+      ownerFacts: [{ label: "Color", value: "Rich sorrel roan" }],
+    });
+    expect(r.details[0]).toEqual({ label: "Foaled", value: "May 3, 2019" });
+    expect(r.strip.find((f) => f.label === "Color")?.value).toBe("Rich sorrel roan");
+    expect(r.details.find((f) => f.label.toLowerCase() === "color")).toBeUndefined();
   });
 });

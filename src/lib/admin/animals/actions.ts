@@ -72,6 +72,7 @@ export async function saveAnimalAction(_prev: ActionState, fd: FormData): Promis
   type Step = [label: string, run: () => Promise<service.Result<unknown>>];
   const steps: Step[] = [
     ["Basics", () => service.updateBasics(c.db, id, d.basics)],
+    ["Headline and highlights", () => service.saveProfile(c.db, c.ranchId, id, d.profile)],
     ["On the website", () => service.saveStatus(c.db, id, d.status)],
     ["For Sale", () => service.saveSale(c.db, c.ranchId, id, d.sale)],
   ];

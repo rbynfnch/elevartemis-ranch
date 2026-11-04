@@ -3,6 +3,7 @@ import {
   parseAnimalEdit,
   parseBasics,
   parseBreeding,
+  parseProfile,
   parseDetails,
   parsePerformance,
   parseSale,
@@ -272,5 +273,39 @@ describe("parseBasics breed", () => {
   it("leaves the breed empty when none is chosen", () => {
     const r = parseBasics(fd([...base, ["breed", ""]]));
     expect(r.ok && r.data.breed).toBeNull();
+  });
+});
+
+describe("parseProfile (tagline, highlights, video)", () => {
+  it("reads all three, trimming and dropping blank highlights", () => {
+    const r = parseProfile(
+      fd([
+        ["tagline", "  A proven ranch gelding.  "],
+        ["highlight", "Ranch Proven"],
+        ["highlight", "  "],
+        ["highlight", " Trail   Ready "],
+        ["video_url", "https://www.tiktok.com/@ranch/video/1"],
+      ]),
+    );
+    expect(r.ok && r.data).toEqual({
+      tagline: "A proven ranch gelding.",
+      highlights: ["Ranch Proven", "Trail Ready"],
+      video_url: "https://www.tiktok.com/@ranch/video/1",
+    });
+  });
+  it("is all optional", () => {
+    expect(parseProfile(fd([])).ok).toBe(true);
+  });
+  it("reports a long tagline, a long or extra highlight, and a link from another site", () => {
+    const r = parseProfile(
+      fd([
+        ["tagline", "x".repeat(161)],
+        ["highlight", "y".repeat(31)],
+        ["video_url", "https://example.com/video"],
+      ]),
+    );
+    expect(!r.ok && Object.keys(r.fieldErrors).sort()).toEqual(["highlights", "tagline", "video_url"]);
+    const tooMany = parseProfile(fd(["a", "b", "c", "d", "e"].map((h) => ["highlight", h] as [string, string])));
+    expect(!tooMany.ok && tooMany.fieldErrors.highlights).toContain("up to 4");
   });
 });

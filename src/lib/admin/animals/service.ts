@@ -10,7 +10,15 @@ import { dbErrorMessage } from "@/lib/auth/messages";
 import { processImage } from "@/lib/media/process";
 import { takenFileNames } from "@/lib/admin/library/service";
 import { uniqueFileName } from "@/lib/admin/library/file-names";
-import type { BasicsInput, BreedingInput, DetailsInput, PerformanceInput, SaleInput, StatusInput } from "./schemas";
+import type {
+  BasicsInput,
+  BreedingInput,
+  DetailsInput,
+  PerformanceInput,
+  ProfileInput,
+  SaleInput,
+  StatusInput,
+} from "./schemas";
 
 export type Db = SupabaseClient<Database>;
 export type Result<T = null> =
@@ -115,7 +123,7 @@ export async function listAnimals(db: Db, ranchId: string, filter: ListFilter = 
 
 // ─── One animal, everything the editor needs ─────────────────────────────────
 export async function getAnimal(db: Db, ranchId: string, id: string) {
-  const [animal, sale, breeding, performance, facts, sections, photos] = await Promise.all([
+  const [animal, sale, breeding, performance, facts, sections, photos, videos] = await Promise.all([
     db.from("animals").select("*").eq("ranch_id", ranchId).eq("id", id).maybeSingle(),
     db.from("sale_listings").select("*").eq("animal_id", id).maybeSingle(),
     db.from("breeding_services").select("*").eq("animal_id", id).maybeSingle(),
@@ -129,8 +137,10 @@ export async function getAnimal(db: Db, ranchId: string, id: string) {
       )
       .eq("animal_id", id)
       .order("sort_order"),
+    db.from("animal_videos").select("url").eq("animal_id", id).order("sort_order"),
   ]);
-  for (const r of [animal, sale, breeding, performance, facts, sections, photos]) if (r.error) return dbFail(r.error);
+  for (const r of [animal, sale, breeding, performance, facts, sections, photos, videos])
+    if (r.error) return dbFail(r.error);
   if (!animal.data) return fail("That animal could not be found.");
   return ok({
     animal: animal.data,
@@ -139,6 +149,7 @@ export async function getAnimal(db: Db, ranchId: string, id: string) {
     performance: performance.data,
     facts: facts.data ?? [],
     sections: sections.data ?? [],
+    videoUrl: videos.data?.[0]?.url ?? null,
     photos: (photos.data ?? [])
       .map((p) => ({
         ...one(p.media)!,
@@ -177,6 +188,23 @@ export async function updateBasics(db: Db, id: string, input: BasicsInput): Prom
       .eq("id", id)
       .select("id"),
   );
+}
+
+/** Tagline, highlights and the video link: what the top of the animal's page says. */
+export async function saveProfile(db: Db, ranchId: string, id: string, input: ProfileInput): Promise<Result> {
+  const updated = changed(
+    await db.from("animals").update({ tagline: input.tagline, highlights: input.highlights }).eq("id", id).select("id"),
+  );
+  if (!updated.ok) return updated;
+  const cleared = await db.from("animal_videos").delete().eq("animal_id", id);
+  if (cleared.error) return dbFail(cleared.error);
+  if (input.video_url) {
+    const added = await db
+      .from("animal_videos")
+      .insert({ ranch_id: ranchId, animal_id: id, url: input.video_url, sort_order: 0 });
+    if (added.error) return dbFail(added.error);
+  }
+  return ok(null);
 }
 
 export async function saveStatus(db: Db, id: string, input: StatusInput): Promise<Result> {

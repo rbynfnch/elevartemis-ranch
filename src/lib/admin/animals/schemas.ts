@@ -9,6 +9,8 @@ import {
 import { parseEpdRows, type EpdEntry } from "@/lib/animals/epd";
 import type { Database } from "@/lib/database.types";
 import { NEW_BREED } from "./constants";
+import { parseVideoUrl } from "@/lib/animals/video";
+import { HIGHLIGHTS, HIGHLIGHT_MAX, TAGLINE_MAX } from "./limits";
 
 type Enums = Database["public"]["Enums"];
 export type Parsed<T> = { ok: true; data: T } | { ok: false; fieldErrors: Record<string, string> };
@@ -314,6 +316,7 @@ export function parseDetails(fd: FormData): Parsed<DetailsInput> {
 // ─── The whole animal page, saved at once ────────────────────────────────────
 export type AnimalEditInput = {
   basics: BasicsInput;
+  profile: ProfileInput;
   status: StatusInput;
   sale: SaleInput;
   /** Present only when the page showed the Breeding section (marker field `has_breeding`). */
@@ -330,6 +333,7 @@ export type AnimalEditInput = {
  */
 export function parseAnimalEdit(fd: FormData): Parsed<AnimalEditInput> {
   const basics = parseBasics(fd);
+  const profile = parseProfile(fd);
   const status = parseStatus(fd);
   const sale = parseSale(fd);
   const details = parseDetails(fd);
@@ -337,7 +341,7 @@ export function parseAnimalEdit(fd: FormData): Parsed<AnimalEditInput> {
   const performance = fd.get("has_performance") === "1" ? parsePerformance(fd) : undefined;
 
   const errors: Record<string, string> = {};
-  for (const r of [basics, status, sale, details, breeding, performance]) {
+  for (const r of [basics, profile, status, sale, details, breeding, performance]) {
     if (r && !r.ok) Object.assign(errors, r.fieldErrors);
   }
   if (Object.keys(errors).length) return { ok: false, fieldErrors: errors };
@@ -346,6 +350,7 @@ export function parseAnimalEdit(fd: FormData): Parsed<AnimalEditInput> {
     ok: true,
     data: {
       basics: (basics as { ok: true; data: BasicsInput }).data,
+      profile: (profile as { ok: true; data: ProfileInput }).data,
       status: (status as { ok: true; data: StatusInput }).data,
       sale: (sale as { ok: true; data: SaleInput }).data,
       details: (details as { ok: true; data: DetailsInput }).data,
@@ -353,4 +358,31 @@ export function parseAnimalEdit(fd: FormData): Parsed<AnimalEditInput> {
       ...(performance ? { performance: (performance as { ok: true; data: PerformanceInput }).data } : {}),
     },
   };
+}
+
+// ─── Headline: tagline, highlights, video link ───────────────────────────────
+export type ProfileInput = { tagline: string | null; highlights: string[]; video_url: string | null };
+
+export function parseProfile(fd: FormData): Parsed<ProfileInput> {
+  const errors: Record<string, string> = {};
+  const tagline = text(fd, "tagline");
+  if (tagline && tagline.length > TAGLINE_MAX) errors.tagline = `Use ${TAGLINE_MAX} characters or fewer.`;
+
+  const highlights = fd
+    .getAll("highlight")
+    .map((v) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : ""))
+    .filter(Boolean);
+  if (highlights.some((h) => h.length > HIGHLIGHT_MAX))
+    errors.highlights = `Keep each highlight to ${HIGHLIGHT_MAX} characters.`;
+  else if (highlights.length > HIGHLIGHTS) errors.highlights = `Use up to ${HIGHLIGHTS} highlights.`;
+
+  let videoUrl: string | null = null;
+  const rawVideo = text(fd, "video_url");
+  if (rawVideo) {
+    const video = parseVideoUrl(rawVideo);
+    if (!video.ok) errors.video_url = video.message;
+    else videoUrl = video.url;
+  }
+  if (Object.keys(errors).length) return { ok: false, fieldErrors: errors };
+  return { ok: true, data: { tagline, highlights, video_url: videoUrl } };
 }

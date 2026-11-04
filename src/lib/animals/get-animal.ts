@@ -39,6 +39,9 @@ export type AnimalPage = {
   deceasedPrecision: "year" | "month" | "day";
   breedingAvailable: boolean;
   description: unknown;
+  tagline: string | null;
+  highlights: string[];
+  videoUrl: string | null;
   ownerFacts: { label: string; value: string }[];
   sections: { heading: string; body: unknown }[];
   sale: SaleInput;
@@ -86,7 +89,7 @@ export async function getAnimalPage(
     return row?.is_redirect && row.slug !== slug ? { kind: "moved", slug: row.slug } : { kind: "missing" };
   }
 
-  const [facts, sections, sale, breeding, performance, photoLinks] = await Promise.all([
+  const [facts, sections, sale, breeding, performance, photoLinks, videos] = await Promise.all([
     db.from("animal_facts").select("label, value").eq("animal_id", a.id).order("sort_order"),
     db.from("animal_sections").select("heading, body").eq("animal_id", a.id).order("sort_order"),
     db.from("sale_listings").select("*").eq("animal_id", a.id).maybeSingle(),
@@ -97,8 +100,9 @@ export async function getAnimalPage(
       .select("sort_order, media ( id, variants, alt_text, focal_x, focal_y, status )")
       .eq("animal_id", a.id)
       .order("sort_order"),
+    db.from("animal_videos").select("url").eq("animal_id", a.id).order("sort_order").limit(1),
   ]);
-  for (const r of [facts, sections, sale, breeding, performance, photoLinks]) {
+  for (const r of [facts, sections, sale, breeding, performance, photoLinks, videos]) {
     if (r.error) throw new Error(`Loading the animal page failed: ${r.error.message}`);
   }
 
@@ -145,6 +149,9 @@ export async function getAnimalPage(
       deceasedPrecision: a.deceased_precision,
       breedingAvailable: a.breeding_available,
       description: a.description,
+      tagline: a.tagline ?? null,
+      highlights: a.highlights ?? [],
+      videoUrl: videos.data?.[0]?.url ?? null,
       ownerFacts: facts.data ?? [],
       sections: sections.data ?? [],
       sale: sale.data,

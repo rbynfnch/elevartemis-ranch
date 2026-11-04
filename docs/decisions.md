@@ -569,3 +569,28 @@ commit. Photo storage (upload/download) is verified manually (see README).
   the same fields as adding, via `ancestorColumns`). It only ever changes
   pedigree-only records; a horse the ranch owns shows "Open" instead, which goes
   to its own admin page. The builder updates in place after saving.
+
+### Animal profile header (from the Flying W concept)
+
+- Right of the photos, top to bottom: the breed in small capitals (falls back to
+  the category), the name, a For Sale / Sale Pending / Sold ribbon in the corner,
+  the tagline (italic), small chips for Retired / Previous Stallion / In Memory /
+  Standing at Stud, the attribute strip, the description, highlights, the price
+  box when for sale, then the Inquire button and Watch Video.
+- Attribute strip = birth year, sex, height (the owner's "Height" Quick Fact),
+  color (the owner's "Color" fact wins over the color field), registration; a
+  value over a small label, one row, only what exists. Everything else (a precise
+  foaling date, registered name, the owner's other Quick Facts) goes in a Details
+  section below; the breed is the heading, so it isn't repeated.
+- Highlights (up to four short phrases of at most 30 characters) all use one
+  small rosette mark: no icon library to maintain. A small curated set can be added
+  later if owners ask.
+- Tagline (at most 160 characters), highlights and a video link are edited under
+  "Headline and highlights" on the animal page and saved with the one Save button.
+- Watch Video opens the link in a new tab, so YouTube, Vimeo, TikTok, Instagram
+  and Facebook all work with nothing embedded. Only https links on those sites are
+  accepted (checked in the app and in the database, migration `20260928000600`).
+- The old "About {name}" block is gone: the description now sits in the header.
+- Needs migrations `20260928000500` (tagline, highlights) and `20260928000600`
+  (video sites). Until they are applied, saving the Headline section fails with a
+  message and the public page shows no tagline, highlights or video.

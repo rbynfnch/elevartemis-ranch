@@ -4,7 +4,13 @@ import { Suspense, type ReactNode } from "react";
 import { getSiteSettings } from "@/lib/site/get-site";
 import { getAnimalPage } from "@/lib/animals/get-animal";
 import { breedingDisplay } from "@/lib/animals/breeding";
-import { formatPartialDate, performanceDisplay, plainSummary, quickFacts, saleDisplay } from "@/lib/animals/portfolio";
+import {
+  formatPartialDate,
+  performanceDisplay,
+  plainSummary,
+  profileFacts,
+  saleDisplay,
+} from "@/lib/animals/portfolio";
 import { richTextIsEmpty } from "@/lib/content/empty";
 import { RichText } from "@/lib/content/rich-text";
 import { speciesTerms, type Species } from "@/lib/domain/species";
@@ -18,6 +24,7 @@ import { Offspring } from "@/components/animals/offspring";
 import { PhotoGallery } from "@/components/animals/photo-gallery";
 import { PhotoPlaceholder } from "@/components/animals/photo-placeholder";
 import { ButtonLink } from "@/components/ui/button";
+import { ArrowIcon, AttributeStrip, Highlights, SaleRibbon, WatchVideoLink } from "@/components/animals/profile";
 
 type Params = PageProps<"/site/[ranch]/[species]/[slug]">["params"];
 
@@ -92,7 +99,7 @@ async function Portfolio({ params }: { params: Params }) {
   ]);
 
   const category = site.categories.find((c) => c.id === a.categoryId)?.label_singular ?? null;
-  const facts = quickFacts({
+  const { strip, details } = profileFacts({
     species: a.species,
     breed: a.breed,
     color: a.color,
@@ -101,6 +108,7 @@ async function Portfolio({ params }: { params: Params }) {
     birthPrecision: a.birthPrecision,
     registry: a.registry,
     registrationNumber: a.registrationNumber,
+    registeredName: a.registeredName,
     ownerFacts: a.ownerFacts,
   });
   const sale = saleDisplay(a.sale);
@@ -118,8 +126,8 @@ async function Portfolio({ params }: { params: Params }) {
   const inquiryHref = `/contact?animal=${encodeURIComponent(a.slug)}`;
   const hasStory = !richTextIsEmpty(a.description);
 
+  const ribbon = sale?.badge ?? null;
   const badges = [
-    sale?.badge,
     a.programStatus !== "active" ? statusBadge[a.species][a.programStatus] : null,
     breeding?.badge,
   ].filter((b): b is string => Boolean(b));
@@ -149,40 +157,40 @@ async function Portfolio({ params }: { params: Params }) {
           )}
         </div>
 
-        <div className="space-y-7">
-          <header className="space-y-3">
-            {badges.length > 0 ? (
-              <ul className="flex flex-wrap gap-2">
-                {badges.map((b) => (
-                  <li
-                    key={b}
-                    className="bg-primary px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-on-primary"
-                  >
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+        <div className="relative space-y-7">
+          {ribbon ? <SaleRibbon>{ribbon}</SaleRibbon> : null}
+
+          <header className="space-y-3 pr-28 sm:pr-36">
+            <p className="text-sm uppercase tracking-[0.2em] text-ink-muted">{a.breed ?? category}</p>
             <h1 className="font-display text-3xl sm:text-[2.75rem] sm:leading-[1.05]">{a.name}</h1>
-            {a.registeredName ? <p className="font-serif text-lg italic text-ink-muted">{a.registeredName}</p> : null}
-            {memorial ? <p className="font-serif italic text-ink-muted">In loving memory · {memorial}</p> : null}
           </header>
 
-          {facts.length > 0 ? (
-            <section aria-labelledby="facts-heading">
-              <h2 id="facts-heading" className="sr-only">
-                Quick facts
-              </h2>
-              <dl className="divide-y divide-rule border-y border-rule">
-                {facts.map((f) => (
-                  <div key={f.label} className="grid grid-cols-[8.5rem_1fr] gap-4 py-3 sm:grid-cols-[10rem_1fr]">
-                    <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-ink-muted">
-                      {f.label}
-                    </dt>
-                    <dd>{f.value}</dd>
-                  </div>
-                ))}
-              </dl>
+          {a.tagline ? <p className="font-serif text-xl italic leading-snug text-ink-muted">{a.tagline}</p> : null}
+          {badges.length > 0 ? (
+            <ul className="flex flex-wrap gap-2">
+              {badges.map((b) => (
+                <li
+                  key={b}
+                  className="bg-primary px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-on-primary"
+                >
+                  {b}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {memorial ? <p className="font-serif italic text-ink-muted">In loving memory · {memorial}</p> : null}
+
+          {strip.length > 0 ? (
+            <section aria-label="Attributes" className="border-y border-rule py-4">
+              <AttributeStrip items={strip} />
+            </section>
+          ) : null}
+
+          {hasStory ? <RichText doc={a.description} className="prose-ranch text-base text-ink-muted" /> : null}
+
+          {a.highlights.length > 0 ? (
+            <section aria-label="Highlights">
+              <Highlights items={a.highlights} />
             </section>
           ) : null}
 
@@ -212,9 +220,11 @@ async function Portfolio({ params }: { params: Params }) {
           ) : null}
 
           <div className="flex flex-wrap gap-3">
-            <ButtonLink href={inquiryHref}>
+            <ButtonLink href={inquiryHref} className="gap-3 uppercase tracking-[0.14em]">
               {sale && sale.badge !== "Sold" ? `Inquire about ${a.name}` : `Ask about ${a.name}`}
+              <ArrowIcon />
             </ButtonLink>
+            {a.videoUrl ? <WatchVideoLink url={a.videoUrl} /> : null}
             {breeding?.cta ? (
               <ButtonLink
                 href={breeding.cta.href ?? `${inquiryHref}&topic=breeding`}
@@ -229,9 +239,9 @@ async function Portfolio({ params }: { params: Params }) {
       </div>
 
       <div className="mt-16 space-y-14 lg:mt-20">
-        {hasStory ? (
-          <Block title={`About ${a.name}`} id="about">
-            <RichText doc={a.description} className="prose-ranch text-ink-muted" />
+        {details.length > 0 ? (
+          <Block title="Details" id="details">
+            <FactGrid items={details} />
           </Block>
         ) : null}
 

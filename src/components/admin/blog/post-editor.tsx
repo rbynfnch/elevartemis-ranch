@@ -95,7 +95,8 @@ export function PostEditor({
   });
   const [minutes, setMinutes] = useState(() => readingMinutes(data.snapshot.body));
   const [slugTouched, setSlugTouched] = useState(
-    data.status !== "draft" || (Boolean(data.snapshot.slug) && data.snapshot.slug !== slugify(data.snapshot.title)),
+    data.status !== "draft" ||
+      (Boolean(data.snapshot.slug) && !data.snapshot.slug.startsWith("untitled-post") && data.snapshot.slug !== slugify(data.snapshot.title)),
   );
   const [editorKey, setEditorKey] = useState(0);
   const [menu, setMenu] = useState(false);
@@ -229,7 +230,13 @@ export function PostEditor({
     // Wait for any save in flight so the version is current.
     for (let i = 0; i < 40 && inFlight.current; i++) await new Promise((r) => setTimeout(r, 150));
     setBusy("publishing");
-    const r = await publishAction(data.id, payload(f), version.current);
+    let r: Awaited<ReturnType<typeof publishAction>>;
+    try {
+      r = await publishAction(data.id, payload(f), version.current);
+    } catch {
+      setBusy("");
+      return setMsg({ tone: "error", text: "Couldn't reach the server. Check your connection, or reload the page if this keeps happening, then try again." });
+    }
     setBusy("");
     if (!r.ok) {
       if (/changed somewhere else/.test(r.message)) blocked.current = true;

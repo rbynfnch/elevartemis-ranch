@@ -26,6 +26,18 @@ const expire = (slug: string) => {
 
 const id = z.uuid();
 
+/** An unexpected error is logged for the host and shown as a plain message, instead of a vague "couldn't reach the server". */
+async function guard<T>(run: () => Promise<T>) {
+  try {
+    return await run();
+  } catch (e) {
+    // A redirect (signed out) is not an error.
+    if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_")) throw e;
+    console.error("[blog action failed]", e);
+    return { ok: false as const, message: "Something went wrong on our side. Your text is still in the editor; try again in a moment." };
+  }
+}
+
 const input = z.object({
   title: z.string().max(1000),
   slug: z.string().max(500),
@@ -59,6 +71,9 @@ export async function newPostAction() {
 
 /** Autosave and "Save draft". Never changes what visitors see. */
 export async function saveDraftAction(postId: string, raw: unknown, base: string, reason: "save" | "autosave") {
+  return guard(() => saveDraft(postId, raw, base, reason));
+}
+async function saveDraft(postId: string, raw: unknown, base: string, reason: "save" | "autosave") {
   const c = await context();
   const parsed = input.safeParse(raw);
   if (!c || !id.safeParse(postId).success) return noAccess;
@@ -70,6 +85,9 @@ export async function saveDraftAction(postId: string, raw: unknown, base: string
 
 /** Publish now, schedule, or update a live post with its edits. */
 export async function publishAction(postId: string, raw: unknown, base: string) {
+  return guard(() => publish(postId, raw, base));
+}
+async function publish(postId: string, raw: unknown, base: string) {
   const c = await context();
   const parsed = input.safeParse(raw);
   if (!c || !id.safeParse(postId).success) return noAccess;

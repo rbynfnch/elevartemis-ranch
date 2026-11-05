@@ -115,7 +115,9 @@ export function EditorSurface({
       },
     },
     onUpdate: ({ editor: e }) => {
-      onChange(e.getJSON());
+      // The editor's own attribute objects have no normal prototype, which a server action cannot receive.
+      // A plain copy is what travels to the server.
+      onChange(JSON.parse(JSON.stringify(e.getJSON())) as JSONContent);
       if (onWords) {
         const text = plainText(e.getJSON());
         onWords(text ? text.split(/\s+/).length : 0, readingMinutes(e.getJSON()));
